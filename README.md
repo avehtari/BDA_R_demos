@@ -7,7 +7,7 @@ Currently there are demos for BDA3 Chapter 2 (and demos for chapters 2, 3, 4, 5,
 
 The demos were originally written for Matlab by [Aki
 Vehtari](http://users.aalto.fi/~ave/) and translated to R by
-Markus Paasiniemi
+[Markus Paasiniemi](https://github.com/paasim).
 
 The corresponding [Matlab/Octave demos](https://github.com/avehtari/BDA_m_demos)
 The corresponding [Python demos](https://github.com/avehtari/BDA_py_demos)
