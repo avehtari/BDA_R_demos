@@ -19,7 +19,8 @@ b <- 544
 th <- rbeta(10000,a,b)
 
 x <- seq(0.375,0.525,0.001)
-# animation about 200 draws MISSING
+
+# animation of 200 draws MISSING
 
 # compute 2.5% and 97.5% quantile approximation using samples
 thq <- quantile(th,c(0.025,0.975))
@@ -30,15 +31,15 @@ phi <- (1-th)/th
 # 2.5% and 97.5% quantile approximation for phi
 phiq <- quantile(phi,c(0.025,0.975))
 
-# merge these into one data frame for plotting
-q=gather(data.frame(th=thq,phi=phiq))
+# merge quantiles into one data frame for plotting
+q=gather(data.frame(phi=phiq,th=thq))
 
-# merge also the data into one data frame for plotting
-dd <- data.frame(th=th,phi=phi)
+# merge the data into one data frame for plotting
+dd <- data.frame(phi=phi,th=th)
 
 # Histogram plots with 30 bins for theta and phi
 gather(dd) %>%
-ggplot(aes(x=value)) + geom_histogram(bins = 30,fill="darkblue") +
-  facet_wrap(~key,ncol=1,scales="free_x")  +
+  ggplot(aes(x=value)) + geom_histogram(bins = 30,fill="darkblue") +
+  facet_wrap(~key,ncol=1,scales="free_x")  + ylab("") +
   geom_vline(aes(xintercept = value),data=q,linetype="dotted") +
-  ylab("") + scale_y_continuous(expand = c(0,0),breaks=NULL)
+  scale_y_continuous(breaks=NULL)

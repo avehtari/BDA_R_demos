@@ -47,11 +47,13 @@ for(i in 1:3){
 Reduce(rbind,dfs) %>%
   # collapse variables into key-value pairs and change their names
   gather(group,p,pu,pr,po) %>%
-  within(levels(group)<-c("Post with unif prior","Informative prior","Posterior")) %>%
-  ggplot(aes(x=x,y=p,color=group)) +
-  labs(colour = "") +
-  geom_line(show.legend=T) + facet_wrap(~figtitle,ncol=1) + ylab("") +
-  scale_y_continuous(expand = c(0,0),breaks=NULL) +
-  theme(legend.position="bottom",strip.background = element_blank()) +
+  within(group<-factor(group, labels=c("Posterior",
+                                       "Prior",
+                                       "Post with unif prior"))) %>%
+  # plot distributions
+  ggplot(aes(x=x,y=p,color=group)) + facet_wrap(~figtitle,ncol=1) +
+  geom_line(show.legend=T) + ylab("") + xlab("") +
+  scale_y_continuous(breaks=NULL) +
+  theme(legend.position="bottom",legend.title=element_blank()) +
   geom_vline(xintercept = 0.485,linetype="dotted")
 
