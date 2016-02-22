@@ -2,16 +2,16 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
-#ggplot2 is used for plotting
-if(!require(ggplot2)) install.packages("ggplot2")
-require(ggplot2)
-#tidyr is used for manipulating data frames
-if(!require(tidyr)) install.packages("tidyr")
-require(tidyr)
-
 # Illustrate the effect of prior.
 # Comparison of posterior distributions with different
 # parameter values for the beta prior distribution.
+
+#ggplot2 is used for plotting
+if(!require(ggplot2)) install.packages('ggplot2')
+require(ggplot2)
+#tidyr is used for manipulating data frames
+if(!require(tidyr)) install.packages('tidyr')
+require(tidyr)
 
 # Prior, posterior and data:
 # observed data, 437 girls and 543 boys
@@ -33,7 +33,7 @@ bpr <- (1-0.485)*c(2,20,200)
 apo <- a + apr
 bpo <- b + bpr
 
-figtitles <- paste("alpha/(alpha+beta)=0.485, alpha+beta=",c(2,20,200),sep="")
+figtitles <- paste('alpha/(alpha+beta)=0.485, alpha+beta=',c(2,20,200),sep='')
 dfs <- list()
 for(i in 1:3){
   # dataframes for each choice of prior for plotting
@@ -47,13 +47,13 @@ for(i in 1:3){
 Reduce(rbind,dfs) %>%
   # collapse variables into key-value pairs and change their names
   gather(group,p,pu,pr,po) %>%
-  within(group<-factor(group, labels=c("Posterior",
-                                       "Prior",
-                                       "Post with unif prior"))) %>%
+  within(group<-factor(group, labels=c('Posterior',
+                                       'Prior',
+                                       'Post with unif prior'))) %>%
   # plot distributions
   ggplot(aes(x=x,y=p,color=group)) + facet_wrap(~figtitle,ncol=1) +
-  geom_line(show.legend=T) + ylab("") + xlab("") +
+  geom_line(show.legend=T) + ylab('') + xlab('') +
   scale_y_continuous(breaks=NULL) +
-  theme(legend.position="bottom",legend.title=element_blank()) +
-  geom_vline(xintercept = 0.485,linetype="dotted")
+  theme(legend.position='bottom',legend.title=element_blank()) +
+  geom_vline(xintercept = 0.485,linetype='dotted')
 

@@ -2,15 +2,15 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
+# Simulate samples from Beta(438,544), draw a histogram with
+# quantiles, and do the same for a transformed variable.
+
 # ggplot2 is used for plotting
 if(!require(ggplot2)) install.packages("ggplot2")
 require(ggplot2)
 # tidyr is for manipulating the data frames
 if(!require(tidyr)) install.packages("tidyr")
 require(tidyr)
-
-# Simulate samples from Beta(438,544), draw a histogram with
-# quantiles, and do the same for a transformed variable.
 
 # Sample from posterior Beta(438,544)
 # Get all samples at once and store them in vector 'th'

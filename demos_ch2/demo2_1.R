@@ -2,13 +2,13 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
-#ggplot2 is used for plotting
-if(!require(ggplot2)) install.packages("ggplot2")
-require(ggplot2)
-
 # 437 girls and 543 boys have been observed. Calculate and plot the
 # posterior distribution of the proportion of girls theta, using
 # uniform prior on theta
+
+#ggplot2 is used for plotting
+if(!require(ggplot2)) install.packages('ggplot2')
+require(ggplot2)
 
 # posterior is Beta(348,544)
 df1 <- data.frame(x=seq(0.375,0.525,0.001))
@@ -27,11 +27,11 @@ df2$p <- dbeta(df2$x,a,b)
 df <- rbind(df1,df2)
 
 # Plot posterior (Beta(438,544))
-qplot(x,p,data=df1,geom="line") +
-  labs(title="Uniform prior -> Posterior is Beta(438,544)",y="") +
+qplot(x,p,data=df1,geom='line') +
+  labs(title='Uniform prior -> Posterior is Beta(438,544)',y='') +
   scale_y_continuous(expand = c(0,0.1),breaks=NULL) +
   # Add a layer of colorized 95% posterior interval
-  geom_area(aes(x,p),data=df2,fill="darkblue",show.legend=T) +
+  geom_area(aes(x,p),data=df2,fill='darkblue',show.legend=T) +
   # Add the proportion of girl babies in general population
-  geom_vline(xintercept = 0.485,linetype="dotted")
+  geom_vline(xintercept = 0.485,linetype='dotted')
 
