@@ -8,59 +8,54 @@
 # non-standard posterior distribution using inverse cdf using the
 # discrete grid.
 
-# ggplot2 is used for plotting
-if(!require(ggplot2)) install.packages('ggplot2')
-require(ggplot2)
-# gridExtra is for showing multiple plots side by side
-if(!require(gridExtra)) install.packages('gridExtra')
-require(gridExtra)
-# tidyr is for manipulating the data frames
-if(!require(tidyr)) install.packages('tidyr')
-require(tidyr)
+# ggplot2 is used for plotting, gridExtra for showing multiple
+# plots side by side and tidyr for manipulating data frames
+if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
+if(!require(gridExtra)) install.packages('gridExtra'); require(gridExtra)
+if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
 
 # Posterior with uniform prior (Beta(1,1))
 # data (437,543)
 a <- 437
 b <- 543
-x <- seq(0.1,1,0.001)
-con <- dbeta(x,a,b)
+df1 <- data.frame(x = seq(0.1, 1, 0.001))
+df1 <- within(df1, con <- dbeta(x, a, b))
 
 # Compute the density of non-conjugate prior in discrete points, i.e. in a grid
 # this non-conjugate prior is the same as in figure 2.4 in the book
-pp <- rep(1,length(x))
-pi1 <- which(x==0.385)
-pi2 <- which(x==0.485)
-pi3 <- which(x==0.585)
+pp <- rep(1, length(df1$x))
+pi <- sapply(c(0.385, 0.485, 0.585), function(pi) which(df1$x == pi))
 pm <- 11
-pp[pi1:pi2] <- seq(1, pm, length.out = length(pi1:pi2))
-pp[pi3:pi2] <- seq(1, pm, length.out = length(pi3:pi2))
-nc_p <- pp/sum(pp)
+pp[pi[1]:pi[2]] <- seq(1, pm, length.out = length(pi[1]:pi[2]))
+pp[pi[3]:pi[2]] <- seq(1, pm, length.out = length(pi[3]:pi[2]))
+df1$nc_p <- pp / sum(pp)
 
 # compute the un-normalized non-conjugate posterior in a grid
-po <- dbeta(x,a,b)*pp
+po <- dbeta(df1$x, a, b) * pp
 
 # normalize the posterior
-nc_po <- po/sum(po)
+df1$nc_po <- po / sum(po)
 
-# add variables to data frame
-d <- data.frame(x,con,nc_p,nc_po)
+# gather the data frame into key-value pairs
+# and change variable names for plotting
+df2 <- gather(df1, grp, p, -x) %>%
+ within(grp <- factor(grp, labels = c('Posterior with uniform prior',
+                                      'Non-conjugate prior',
+                                      'Non-conjugate posterior')))
 
 # plot posterior with uniform prior, non-conjugate
 # prior and the corresponding non-conjugate posterior
-gather(d,group,p,con,nc_p,nc_po) %>%
-  within(group<-factor(group, labels=c('Posterior with uniform prior',
-                                       'Non-conjugate prior',
-                                       'Non-conjugate posterior'))) %>%
-  ggplot(aes(x=x,y=p)) + geom_line() +
-  facet_wrap(~group,ncol=1,scales='free_y') +
-  coord_cartesian(xlim=c(0.35,0.6)) +
-  ylab('') + scale_y_continuous(breaks=NULL)
-
+ggplot(data = df2) +
+  geom_line(aes(x, p)) +
+  facet_wrap(~grp, ncol = 1, scales = 'free_y') +
+  coord_cartesian(xlim = c(0.35,0.6)) +
+  scale_y_continuous(breaks=NULL) +
+  labs(x = '', y = '')
 
 # next demonstrate inverse cdf sampling
 
 # compute the cumulative density in a grid
-pc <- cumsum(nc_po)
+pc <- cumsum(df1$nc_po)
 qc <- c(0,pc)
 
 # runif(k) returns k uniform random numbers from interval [0,1]
@@ -68,29 +63,30 @@ qc <- c(0,pc)
 set.seed(2601)
 r <- runif(10000)
 
-# invcdf returns the values of x at points for cdf(r0)<=x
-# ie. invcdf(0.5) returns the x-value of the median
-invcdf <- function(r0){x[sum(qc<r0)]}
+# sapply(r0,fun) applies function fun to each element of r0, in this case
+# the inverse cdf. ie. elements of s are now draws from the distribution
+s <- sapply(r, function(r0) df1$x[sum(qc < r0)])
 
-# sapply(x,fun) applies function fun to each element of x
-# ie. elements of s are now draws from the distribution
-s <- sapply(r,invcdf)
-
-# construct plots: p1 is the posterior, p2 is the cdf of the posterior
+# create three plots: p1 is the posterior, p2 is the cdf of the posterior
 # and p3 is the histogram of posterior samples (drawn using inv. cdf)
-p1 <- qplot(x,nc_po,geom='line',main='Non-conjugate posterior')
-p2 <- qplot(x,pc,geom='line',main='Posterior-cdf')
-p3 <- qplot(s,geom='histogram',ylab='',bins=30,main='Histogram of posterior samples')
-l <- list(p1,p2,p3)
+p1 <- ggplot(data = df1) +
+  geom_line(aes(x, nc_po)) +
+  coord_cartesian(xlim = c(0.35, 0.6)) +
+  labs(title = 'Non-conjugate posterior', x = '', y = '') +
+  scale_y_continuous(breaks = NULL)
 
-#write a helper function that adds options to figures
-opts <- function(arg){arg + xlab('') +  coord_cartesian(xlim=c(0.35,0.6)) +
-    scale_y_continuous(breaks=NULL) + ylab('')}
+p2 <- ggplot(data = df1) +
+  geom_line(aes(x, pc)) +
+  coord_cartesian(xlim = c(0.35, 0.6)) +
+  labs(title = 'Posterior-cdf', x = '', y = '') +
+  scale_y_continuous(breaks = NULL)
 
-#apply helper function to each figure
-ll <- lapply(l,opts)
+p3 <- ggplot() +
+  geom_histogram(aes(s), bins = 30) +
+  coord_cartesian(xlim = c(0.35, 0.6)) +
+  labs(title = 'Histogram of posterior samples', x = '', y = '') +
+  scale_y_continuous(breaks = NULL)
 
-# do.call(fun,list) evaluates fun with the elements of list as arguments
-# ie. do.call(grid.arrange,list(p1,p2,p3)) => grid.arrange(p1,p2,p3)
-# grid.arrange() plots its arguments in one figure
-do.call(grid.arrange,ll)
+# combine the plots
+grid.arrange(p1, p2, p3)
+
