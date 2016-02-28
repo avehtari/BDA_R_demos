@@ -40,7 +40,7 @@ dfq <- subset(df1 , grp == "q")
 # labels for the following plot
 labs1 <- c('Mg(theta)','q(theta|y)')
 
-# Visualize one accepted and one receted draw:
+# Visualize one accepted and one rejected draw:
 ggplot() +
   geom_line(data = df1, aes(x, p, fill = grp, color = grp, linetype = grp)) +
   geom_area(data = dfq, aes(x, p), fill = 'lightblue', alpha = 0.3) +
@@ -67,7 +67,7 @@ acc <- ifelse(r2s < q[zis], 'a', 'r')
 df2 <- data.frame(r1s, r2s, acc)
 
 #
-labs2 <- c('Accepted','Rejected','Mg(theta)','q(theta|y)')
+labs2 <- c('Accepted', 'Rejected', 'Mg(theta)', 'q(theta|y)')
 
 # Visualize 200 draws, only some of which are accepted
 ggplot() +
