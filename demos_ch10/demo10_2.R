@@ -2,11 +2,10 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
-# ggplot2 is used for plotting, gridExtra for showing multiple
-# plots side by side and tidyr for manipulating data frames
-if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
-if(!require(gridExtra)) install.packages('gridExtra'); require(gridExtra)
-if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
+
 
 # fake interesting distribution
 x <- seq(-3, 3, length.out = 200)

@@ -4,16 +4,15 @@
 
 # Rejection sampling example
 
-# ggplot2 is used for plotting, tidyr for manipulating data frames
-if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
-if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
+library(ggplot2)
+library(tidyr)
 
 # fake interesting distribution
 x <- seq(-3, 3, length.out = 200)
 r <- c(1.1, 1.3, -0.1, -0.7, 0.2, -0.4, 0.06, -1.7,
       1.7, 0.3, 0.7, 1.6, -2.06, -0.74, 0.2, 0.5)
-# Estimate the density (named q, to emphesize that it does not need to be
-# normalized). Parameter bw=0.5 is used to mimic the outcome of the
+# estimate the density (named q, to emphesize that it does not need to be
+# normalized). Parameter bw = 0.5 is used to mimic the outcome of the
 # kernelp function in Matlab.
 q <- density(r, bw = 0.5, n = 200, from = -3, to = 3)$y
 
@@ -21,6 +20,7 @@ q <- density(r, bw = 0.5, n = 200, from = -3, to = 3)$y
 g_mean <- 0
 g_sd <- 1.1
 g <- dnorm(x, g_mean, g_sd)
+
 # M is computed by discrete approximation
 M <- max(q/g)
 # prescale
@@ -40,7 +40,7 @@ dfq <- subset(df1 , grp == "q")
 # labels for the following plot
 labs1 <- c('Mg(theta)','q(theta|y)')
 
-# Visualize one accepted and one rejected draw:
+# visualize one accepted and one rejected draw:
 ggplot() +
   geom_line(data = df1, aes(x, p, fill = grp, color = grp, linetype = grp)) +
   geom_area(data = dfq, aes(x, p), fill = 'lightblue', alpha = 0.3) +
@@ -69,7 +69,7 @@ df2 <- data.frame(r1s, r2s, acc)
 #
 labs2 <- c('Accepted', 'Rejected', 'Mg(theta)', 'q(theta|y)')
 
-# Visualize 200 draws, only some of which are accepted
+# visualize 200 draws, only some of which are accepted
 ggplot() +
   geom_line(data = df1, aes(x, p, fill = grp, color = grp, linetype = grp)) +
   geom_area(data = dfq, aes(x, p), fill = 'lightblue', alpha = 0.3) +
@@ -99,7 +99,7 @@ ga <- ga*M
 
 df3 <- data.frame(x, q, g = ga) %>% gather(grp, p, -x)
 
-# Visualize alternate proposal distribution
+# visualize alternate proposal distribution
 ggplot() +
   geom_line(data = df3, aes(x, p, fill = grp, color = grp, linetype = grp)) +
   geom_area(data = dfq, aes(x, p), fill = 'lightblue', alpha = 0.3) +

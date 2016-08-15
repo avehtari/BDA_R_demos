@@ -4,16 +4,12 @@
 
 # Metropolis algorithm + PSRF demonstration
 
-# ggplot2 is used for plotting, gridExtra for showing multiple
-# plots side by side and tidyr for manipulating data frames
-# additionally, gganimate-package is downloaded from github for
-# animations and MASS is used for creating an ellipse
-if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
-if(!require(gridExtra)) install.packages('gridExtra'); require(gridExtra)
-if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
-if(!require(devtools)) install.packages('devtools')
-if(!require(gganimate)) devtools::install_github("dgrtwo/gganimate"); require(gganimate)
-if(!require(MASS)) install.packages('MASS'); require(MASS)
+library(ggplot2)
+library(tidyr)
+library(devtools)
+#install_github("dgrtwo/gganimate")
+library(gganimate)
+library(MASS)
 
 # Parameters of a Normal distribution used as a toy target distribution
 y1 <- 0
@@ -59,7 +55,7 @@ dfs1[sind, c('th1l','th2l')] <- dfs1[sind, c('th1','th2')]
 inds2 <- 501:10000
 dfs2 <- data.frame(iteration = inds2, tts[inds2, 1, ]) %>%
   gather(chain, theta1, -iteration) %>%
-  within({theta2 <- c(tts[inds2, 2, ])}) %>%
+  within(theta2 <- c(tts[inds2, 2, ])) %>%
   gather(var, val, -iteration, -chain)
 
 # third data frame with PSRF values

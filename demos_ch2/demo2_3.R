@@ -5,9 +5,8 @@
 # Simulate samples from Beta(438,544), draw a histogram with
 # quantiles, and do the same for a transformed variable.
 
-# ggplot2 is used for plotting, tidyr for manipulating the data frames
-if(!require(ggplot2)) install.packages("ggplot2"); require(ggplot2)
-if(!require(tidyr)) install.packages("tidyr"); require(tidyr)
+library(ggplot2)
+library(tidyr)
 
 # Sample from posterior Beta(438,544)
 # Get all samples at once and store them in vector 'th'
@@ -17,13 +16,15 @@ b <- 544
 th <- rbeta(10000, a, b)
 # phi = (1-theta)/theta
 phi <- (1 - th) / th
+
 # merge the data into one data frame for plotting
 df1 <- data.frame(phi,th) %>% gather()
 
 # compute 2.5% and 97.5% quantile approximation using samples
-thq <- quantile(th, c(0.025, 0.975))
-# 2.5% and 97.5% quantile approximation for phi
-phiq <- quantile(phi, c(0.025, 0.975))
+quantiles <- c(0.025, 0.975)
+thq <- quantile(th, quantiles)
+phiq <- quantile(phi, quantiles)
+
 # merge quantiles into one data frame for plotting
 df2 <- data.frame(phi = phiq, th = thq) %>% gather()
 

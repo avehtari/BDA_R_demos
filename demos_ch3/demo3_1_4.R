@@ -5,11 +5,10 @@
 # R versions of demos 3_1-3_4 combined into one demo
 # like iPython notebook versions
 
-# ggplot2 is used for plotting, gridExtra for showing multiple
-# plots side by side and tidyr for manipulating data frames
-if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
-if(!require(gridExtra)) install.packages('gridExtra'); require(gridExtra); require(grid)
-if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(tidyr)
 
 # data
 y <- c(93, 112, 122, 135, 122, 150, 118, 90, 124, 114)
@@ -83,7 +82,7 @@ dfj <- data.frame(t1 = rep(t1, each = length(t2)),
 # evaluate the joint density in a grid
 # note that the following is not normalized, but for plotting
 # contours it does not matter
-dfj <- within(dfj, z <- dsinvchisq(t2^2, n-1, s2) * 2*t2 * dnorm(t1, my, t2/sqrt(n)))
+dfj$z <- dsinvchisq(dfj$t2^2, n-1, s2) * 2*dfj$t2 * dnorm(dfj$t1, my, dfj$t2/sqrt(n))
 # breaks for plotting the contours
 cl <- seq(1e-5, max(dfj$z), length.out = 6)
 
@@ -101,7 +100,7 @@ margmu <- ggplot(dfm) +
         legend.position = c(0.75, 0.8),
         legend.title = element_blank())
 
-dfs <- data.frame(t2,Exact=ps,Empirical=psk) %>% gather(grp, p, -t2)
+dfs <- data.frame(t2, Exact = ps, Empirical = psk) %>% gather(grp, p, -t2)
 # create a plot of the marginal density of sigma
 margsig <- ggplot(dfs) +
   geom_line(aes(t2, p, color = grp)) +
@@ -159,7 +158,7 @@ joint2 <- ggplot() +
   guides(color = guide_legend(nrow  = 2, override.aes = list(
     shape = c(NA, 16, NA, NA), linetype = c(1, 0, 1, 1)))) +
   theme(legend.background = element_blank(),
-        legend.position = c(0.5, 0.9),
+        legend.position = c(0.5, 0.85),
         legend.title = element_blank())
 
 # create another plot of the marginal density of sigma

@@ -2,18 +2,18 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
-# ggplot2 is used for plotting, gridExtra for showing multiple
-# plots side by side and tidyr for manipulating data frames
-if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
-if(!require(gridExtra)) install.packages('gridExtra'); require(gridExtra)
-if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
 
 # Illustrate the posterior inference for Bioassay data (BDA3 p. 74-)
 
 # data
-df1 <- data.frame(x = c(-0.86, -0.30, -0.05, 0.73),
-                  n = c(5, 5, 5, 5),
-                  y = c(0, 1, 3, 5))
+df1 <- data.frame(
+  x = c(-0.86, -0.30, -0.05, 0.73),
+  n = c(5, 5, 5, 5),
+  y = c(0, 1, 3, 5)
+)
 
 # compute the posterior density in grid
 #  - usually should be computed in logarithms!
@@ -27,21 +27,23 @@ B = seq(-10, 40, length.out = 50)
 cA <- rep(A, each = length(B))
 cB <- rep(B, length(A))
 
-# make a helper function to calculate log likelihood
-# for the likelihood see BDA p. 75
-logl <- function(a, b, x, n, y) y*(a + b*x) - n*log1p(exp(a + b*x))
+# make a helper function to calculate the log likelihood
+# given a dataframe with x, y, and n and evaluation
+# points a and b. for the likelihood see BDA p. 75
+logl <- function(df, a, b)
+  df['y']*(a + b*df['x']) - df['n']*log1p(exp(a + b*df['x']))
 
 # calculate likelihoods: apply logl function for each observation
 # ie. each row of data frame of x, n and y
-p <- apply(df1, 1, function(d) logl(cA, cB, d[1], d[2], d[3])) %>%
+p <- apply(df1, 1, logl, cA, cB) %>%
   # sum the log likelihoods of observations
   # and exponentiate to get the joint likelihood
   rowSums() %>% exp()
 
 # sample from the grid (with replacement)
 nsamp <- 1000
-samp_indices <- sample.int(n = length(p), size = nsamp,
-                           replace = T, prob = p/sum(p))
+samp_indices <- sample(length(p), size = nsamp,
+                       replace = T, prob = p/sum(p))
 
 samp_A <- cA[samp_indices[1:nsamp]]
 samp_B <- cB[samp_indices[1:nsamp]]
@@ -58,21 +60,23 @@ xl <- c(-2, 8)
 yl <- c(-2, 40)
 
 # create a plot of the posterior density
-pos <- ggplot(data = data.frame(cA ,cB, p)) +
-  geom_raster(aes(cA, cB, fill = p), interpolate = T) +
+pos <- ggplot(data = data.frame(cA ,cB, p), aes(cA, cB)) +
+  geom_raster(aes(fill = p, alpha = p), interpolate = T) +
+  geom_contour(aes(z = p), colour = 'black', size = 0.2) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta') +
-  guides(fill=FALSE)
+  scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
+  scale_alpha(range = c(0, 1), guide = F)
 
-# plot the samples
+# plot of the samples
 sam <- ggplot(data = data.frame(samp_A, samp_B)) +
   geom_point(aes(samp_A, samp_B), color = 'blue') +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta')
 
-# plot the histogram of LD50
+# plot of the histogram of LD50
 his <- ggplot() +
-  geom_histogram(aes(samp_ld50), bins = 42,
+  geom_histogram(aes(samp_ld50), binwidth = 0.02,
                  fill = 'steelblue', color = 'black') +
   coord_cartesian(xlim = c(-0.5, 0.5)) +
   labs(x = 'LD50 = -alpha/beta')

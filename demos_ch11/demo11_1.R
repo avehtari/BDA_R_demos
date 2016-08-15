@@ -4,14 +4,14 @@
 
 # Gibbs sampling
 
-# ggplot2 is used for plotting and tidyr for manipulating data frames
-# additionally, gganimate-package is downloaded from github for
-# animations and MASS is used for creating an ellipse
-if(!require(ggplot2)) install.packages('ggplot2'); require(ggplot2)
-if(!require(tidyr)) install.packages('tidyr'); require(tidyr)
-if(!require(devtools)) install.packages('devtools')
-if(!require(gganimate)) devtools::install_github("dgrtwo/gganimate"); require(gganimate)
-if(!require(MASS)) install.packages('MASS'); require(MASS)
+# gganimate-package (for animations) is downloaded
+# from github using the devtools package
+library(ggplot2)
+library(tidyr)
+library(devtools)
+#install_github("dgrtwo/gganimate")
+library(gganimate)
+library(MASS)
 
 # Parameters of a Normal distribution used as a toy target distribution
 y1 <- 0
@@ -24,7 +24,7 @@ S[2, 1] <- r
 # draw samples from the toy distribution to visualize 90% HPD
 # interval with ggplot's stat_ellipse()
 dft <- data.frame(mvrnorm(100000, c(0, 0), S))
-# see BDA3 p. 85, for how to compute HPD for multivariate normal
+# see BDA3 p. 85 for how to compute HPD for multivariate normal
 # in 2d-case contour for 90% HPD is an ellipse, whose semimajor
 # axes can be computed from the eigenvalues of the covariance
 # matrix scaled by a value selected to get ellipse match the
@@ -56,7 +56,6 @@ data_path <- 'path/to/demo11_1.RData'
 load(data_path)
 
 # The rest is just for illustration
-
 
 # Take the first 50 samples
 # to illustrate how the sampler works
