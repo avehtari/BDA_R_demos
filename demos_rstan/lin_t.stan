@@ -18,3 +18,8 @@ model {
   nu ~ gamma(2, 0.1); // Juárez and Steel(2010)
   y ~ student_t(nu, mu, sigma);
 }
+generated quantities {
+  vector[N] log_lik;
+  for (i in 1:N)
+    log_lik[i] = student_t_lpdf(y[i] | nu, mu[i], sigma);
+}
