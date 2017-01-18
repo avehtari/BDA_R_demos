@@ -9,7 +9,8 @@
 library(ggplot2)
 library(tidyr)
 library(devtools)
-#install_github("dgrtwo/gganimate")
+# install_github("dgrtwo/gganimate",
+#                ref = '26ec501b78e0853134a3fe50a04364aef13d5f6c')
 library(gganimate)
 library(MASS)
 
