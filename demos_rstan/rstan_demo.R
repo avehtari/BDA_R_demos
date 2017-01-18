@@ -6,6 +6,8 @@
 
 library(tidyr) #
 library(rstan) # version >= 2.11
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
 library(loo)
 library(ggplot2)
 library(gridExtra)
@@ -45,19 +47,25 @@ stan_hist(fit_bin, pars = 'theta', bins = 50)
 # Comparison of two groups with Binomial
 d_bin2 <- list(N1 = 674, y1 = 39, N2 = 680, y2 = 22)
 (fit_bin2 <- stan(file = 'binom2.stan', data = d_bin2))
-stan_hist(fit_bin2, pars = 'oddsratio', bins = 50)
+stan_hist(fit_bin2, pars = 'oddsratio', bins = 50)+geom_vline(xintercept = 1)
 
-
-# Linear model
+# Linear model example with Kilpisjärvi data
 d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
-d_lin <-list(N = 3*nrow(d_kilpis),
-             x = rep(d_kilpis$year, each = 3),
+d_lin <-list(N = nrow(d_kilpis),
+             x = d_kilpis$year,
              xpred = 2016,
-             y = c(t(d_kilpis[,2:4])))
+             y = d_kilpis[,5])
+
+# Plot the data
+ggplot() +
+  geom_point(aes(x, y), data = data.frame(d_lin), size = 0.5) +
+  labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
+  guides(linetype = F) +
+  theme_bw()
 
 # create another list with data and priors
 d_lin_priors <- c(list(
-    pmualpha = mean(unlist(d_kilpis[,2:4])), # centered
+    pmualpha = mean(unlist(d_kilpis[,5])), # centered
     psalpha = (14-4)/6, # avg temp between 4-14
     pmubeta = 0, # a priori incr. and decr. as likely
     psbeta = (.1--.1)/6), # avg temp prob does does not incr. more than a degree per 10 years
@@ -69,25 +77,25 @@ fit_lin <- stan(file = 'lin.stan', data = d_lin_priors)
 
 # with standardized data
 # this is alternative to above
-fit_lin <- stan(file = 'lin_std.stan', data = d_lin)
+#fit_lin <- stan(file = 'lin_std.stan', data = d_lin)
 
 # Linear student-t model
-fit_lin <- stan(file = 'lin_t.stan', data = d_lin)
+fit_lin_t <- stan(file = 'lin_t.stan', data = d_lin)
 
-samples_lin <- extract(fit_lin, permuted = T)
-mean(samples_lin$beta>0) # probability that beta > 0
-mu <- apply(samples_lin$mu, 2, quantile, c(0.05, 0.5, 0.95)) %>%
+samples_lin_t <- extract(fit_lin_t, permuted = T)
+mean(samples_lin_t$beta>0) # probability that beta > 0
+mu <- apply(samples_lin_t$mu, 2, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = d_lin$x, .)  %>% gather(pct, y, -x)
 
 pfit <- ggplot() +
   geom_point(aes(x, y), data = data.frame(d_lin), size = 0.5) +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
-  labs(y = 'Summer temp. @Kilpisjärvi') +
+  labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
   guides(linetype = F) +
   theme_bw()
 pars <- intersect(names(samples_lin), c('beta','sigma','nu','ypred'))
-phist <- stan_hist(fit_lin, pars = pars, bins = 50)
+phist <- stan_hist(fit_lin_t, pars = pars, bins = 50)
 grid.arrange(pfit, phist, nrow = 2)
 
 # psis-loo
@@ -96,7 +104,9 @@ grid.arrange(pfit, phist, nrow = 2)
 if('log_lik' %in% samples_lin) {
   log_lik <- extract_log_lik(fit_lin, parameter_name = 'log_lik')
   loo_lin <- loo(log_lik)
-  loo_lin
+  log_lik_t <- extract_log_lik(fit_lin_t, parameter_name = 'log_lik')
+  loo_lin_t <- loo(log_lik_t)
+  compare(loo_lin,loo_lin_t)
 }
 
 
