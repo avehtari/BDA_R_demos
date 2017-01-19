@@ -117,7 +117,6 @@ d_grp <-list(N = 3*nrow(d_kilpis),
 
 # common variance (ANOVA)
 fit_grp <- stan(file = 'grp_aov.stan', data = d_grp)
-fit_grp2 <- stan(file = 'grp_aov2.stan', data = d_grp)
 
 # common variance and hierarchical prior for mean
 # results do not differ much from the previous, because there is only
