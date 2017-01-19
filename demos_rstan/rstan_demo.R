@@ -101,7 +101,7 @@ grid.arrange(pfit, phist, nrow = 2)
 # psis-loo
 # For the following three lines to execute, the log-likelihood
 # needs to be evaluated in the stan code. For an example, see lin.stan
-if('log_lik' %in% samples_lin) {
+if('log_lik' %in% samples_lin_t) {
   log_lik <- extract_log_lik(fit_lin, parameter_name = 'log_lik')
   loo_lin <- loo(log_lik)
   log_lik_t <- extract_log_lik(fit_lin_t, parameter_name = 'log_lik')
