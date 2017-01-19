@@ -130,7 +130,7 @@ fit_grp <- stan(file = 'grp_prior_mean_var.stan', data = d_grp)
 samples_grp <- extract(fit_grp, permuted = T)
 
 temps <- data.frame(samples_grp$mu) %>% setNames(6:8) %>% gather(month, temp)
-qplot(month, temp, data = temps, geom = 'boxplot')
+qplot(month, temp, data = temps, geom = 'violin')
 
 # probabilities that june is hotter than july, june is hotter than august
 # and july is hotter than august:
