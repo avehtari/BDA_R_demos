@@ -82,7 +82,7 @@ fit_lin <- stan(file = 'lin.stan', data = d_lin_priors)
 # Linear student-t model
 fit_lin_t <- stan(file = 'lin_t.stan', data = d_lin)
 
-samples_lin_t <- extract(fit_lin_t, permuted = T)
+samples_lin_t <- rstan::extract(fit_lin_t, permuted = T)
 mean(samples_lin_t$beta>0) # probability that beta > 0
 mu <- apply(samples_lin_t$mu, 2, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = d_lin$x, .)  %>% gather(pct, y, -x)
@@ -94,7 +94,7 @@ pfit <- ggplot() +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
   guides(linetype = F) +
   theme_bw()
-pars <- intersect(names(samples_lin), c('beta','sigma','nu','ypred'))
+pars <- intersect(names(samples_lin_t), c('beta','sigma','nu','ypred'))
 phist <- stan_hist(fit_lin_t, pars = pars, bins = 50)
 grid.arrange(pfit, phist, nrow = 2)
 
