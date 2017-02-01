@@ -2,6 +2,7 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
+# Probability of a girl birth given placenta previa (BDA3 p. 37).
 # Simulate samples from Beta(438,544), draw a histogram with
 # quantiles, and do the same for a transformed variable.
 

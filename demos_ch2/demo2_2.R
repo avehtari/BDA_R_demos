@@ -2,6 +2,7 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
+# Probability of a girl birth given placenta previa (BDA3 p. 37).
 # Illustrate the effect of prior.
 # Comparison of posterior distributions with different
 # parameter values for the beta prior distribution.

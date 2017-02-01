@@ -2,6 +2,7 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
+# Estimating the speed of light using normal model BDA3 p. 66
 library(ggplot2)
 library(gridExtra)
 library(tidyr)

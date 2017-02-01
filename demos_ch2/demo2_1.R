@@ -2,6 +2,7 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
+# Probability of a girl birth given placenta previa (BDA3 p. 37).
 # 437 girls and 543 boys have been observed. Calculate and plot the
 # posterior distribution of the proportion of girls theta, using
 # uniform prior on theta

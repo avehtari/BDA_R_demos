@@ -2,6 +2,10 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
+# Examples and illustrations for a normal model with unknown mean and
+# variance (BDA3 section 3.2 on p. 64).
+# Multivariate joint distribution, conditional distribution, marginal
+# distribution, marginalization and posterior predictive distribution
 # R versions of demos 3_1-3_4 combined into one demo
 # like iPython notebook versions
 
