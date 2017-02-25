@@ -93,21 +93,14 @@ ggplot() + geom_histogram(aes(oddsratio), bins = 50, fill = 'darkblue', color = 
 
 # Linear model
 d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
-d_lin <-list(year = rep(d_kilpis$year, each = 3),
-             temp = c(t(d_kilpis[,2:4])))
-
-# centered, avg temp between 4-14
-prior_alpha <- normal(mean(d_lin$temp), (14-4)/6)
-# a priori incr. and decr. as likely,
-# avg temp pro.b does does not incr. more than a degree per 10 years
-prior_beta <- normal(0, (.1--.1)/6)
+d_lin <-list(year = d_kilpis$year,
+             temp = d_kilpis[,5])
 
 # y ~ x means y depends on the intercept and x
-fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian(),
-                    prior_intercept = prior_alpha, prior = prior_beta)
+fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian())
 
 #launch_shinystan(fit_lin)
-samples_lin <- extract(fit_lin$stanfit, permuted = T)
+samples_lin <- rstan::extract(fit_lin$stanfit, permuted = T)
 mean(samples_lin$beta>0) # probability that beta > 0
 mu_samples <- tcrossprod(cbind(1, d_lin$year), cbind(samples_lin$alpha,samples_lin$beta))
 
@@ -136,16 +129,7 @@ ggplot(data = data.frame(ypred = post_samples)) +
   labs(y = '', x = 'avg-temperature prediction for the summer 2016') +
   scale_y_continuous(breaks = NULL)
 
-# Gaussian linear model with standardized data
-# this is alternative to above, but all plots/
-# summaries need to be scaled as in lin_std.stan
-d_lin_std <- list(temp = scale(d_lin$temp), year = scale(d_lin$year))
-fit_lin_std <- stan_glm(temp ~ year, data = d_lin_std, family = gaussian(),
-                        prior_intercept = normal(0,1), prior = normal(0,1))
-#launch_shinystan(fit_lin_std)
-
 # Currently, rstanarm does not support student-t likelihood
-
 
 # comparison of k groups
 

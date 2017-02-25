@@ -66,7 +66,7 @@ ggplot() +
 # create another list with data and priors
 d_lin_priors <- c(list(
     pmualpha = mean(unlist(d_kilpis[,5])), # centered
-    psalpha = (14-4)/6, # avg temp between 4-14
+    psalpha = 100, # weakly informative
     pmubeta = 0, # a priori incr. and decr. as likely
     psbeta = (.1--.1)/6), # avg temp prob does does not incr. more than a degree per 10 years
   d_lin)
