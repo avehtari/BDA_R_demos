@@ -19,7 +19,7 @@ library(gridExtra)
 
 
 # Bernoulli model
-d_bern <- list(y = c(0, 1, 0, 0, 1, 1, 1, 0, 1, 0))
+d_bern <- data.frame(y = c(0, 1, 0, 0, 1, 1, 1, 0, 1, 0))
 
 # With a uniform prior (beta(1,1)).
 # This is achieved by setting the prior to NULL,
@@ -58,7 +58,7 @@ prior_intercept <- normal(location = prior_mean, scale = prior_sd)
 prior_samples <- plogis(rnorm(20000, prior_mean, prior_sd))
 ggplot() + geom_histogram(aes(prior_samples), bins = 25, fill = 'darkblue', color = 'black')
 
-d_bin <- list(N = c(5,5), y = c(4,3))
+d_bin <- data.frame(N = c(5,5), y = c(4,3))
 fit_bin <- stan_glm(y/N ~ 1, family = binomial(), data = d_bin,
                      prior_intercept = prior_intercept, weights = N)
 #launch_shinystan(fit_bern)
@@ -68,7 +68,7 @@ ggplot() + geom_histogram(aes(x = plogis(extract(fit_bin$stanfit)$alpha)),
   labs(x = 'probability of success', y = '') + scale_y_continuous(breaks = NULL)
 
 # Re-run the model with a new data dataset.
-d_bin <- list(N = c(5,5), y = c(4,5))
+d_bin <- data.frame(N = c(5,5), y = c(4,5))
 fit_bin <- update(fit_bin, data = d_bin)
 #launch_shinystan(fit_bern)
 plogis(coef(fit_bin))
@@ -80,7 +80,7 @@ ggplot() + geom_histogram(aes(x = plogis(extract(fit_bin$stanfit)$alpha)),
 # grp2 is a dummy variable that captures the
 # differece of the intercepts in the first and
 # the second group
-d_bin2 <- list(N = c(674, 680), y = c(39,22), grp2 = c(0,1))
+d_bin2 <- data.frame(N = c(674, 680), y = c(39,22), grp2 = c(0,1))
 fit_bin2 <- stan_glm(y/N ~ grp2, family = binomial(), data = d_bin2,
                      prior_intercept = NULL, prior = NULL, weights = N)
 samples_bin2 <- extract(fit_bin2$stanfit)
@@ -93,7 +93,7 @@ ggplot() + geom_histogram(aes(oddsratio), bins = 50, fill = 'darkblue', color = 
 
 # Linear model
 d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
-d_lin <-list(year = d_kilpis$year,
+d_lin <-data.frame(year = d_kilpis$year,
              temp = d_kilpis[,5])
 
 # y ~ x means y depends on the intercept and x
@@ -120,7 +120,7 @@ grid.arrange(pfit, phist)
 loo1 <- loo(fit_lin)
 
 # prediction for a new data point
-predict(fit_lin, newdata = data.frame(year = 2016), se.fit = T)
+ypred<-predict(fit_lin, newdata = data.frame(year = 2016), se.fit = T)
 # or sample from the posterior predictive distribution and
 # plot the histogram
 post_samples <- posterior_predict(fit_lin, newdata = data.frame(year = 2016))
@@ -134,7 +134,7 @@ ggplot(data = data.frame(ypred = post_samples)) +
 # comparison of k groups
 
 d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
-d_grp <- list(month = rep(6:8, nrow(d_kilpis)),
+d_grp <- data.frame(month = rep(6:8, nrow(d_kilpis)),
               temp = c(t(d_kilpis[,2:4])))
 
 # weakly informative prior for the common mean
@@ -155,7 +155,7 @@ stan_hist(fit_grp, bins = 50)
 # can be obtained as follows:
 temps <- (as.matrix(fit_grp)[,1] + as.matrix(fit_grp)[, 2:4]) %>%
   as.data.frame() %>% setNames(6:8) %>% gather(month, temp)
-qplot(month, temp, data = temps, geom = 'boxplot')
+qplot(month, temp, data = temps, geom = 'violin')
 # or a  similar plot:
 # stan_plot(fit_grp)
 
