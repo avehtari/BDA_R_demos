@@ -18,18 +18,19 @@ library(gridExtra)
 
 The Stan models are stored in separate .stan-files.
 
-Bernoulli model
-With a beta(1,1) (uniform) prior
+# Bernoulli model
+
+Bernoulli model with a beta(1,1) (uniform) prior
 ```{r}
 writeLines(readLines("bern.stan"))
 ```
 
-Data
+Data:
 ```{r}
 d_bern <- list(N = 10, y = c(0, 1, 0, 0, 1, 1, 1, 0, 1, 0))
 ```
 
-Sample form the posterior
+Sample form the posterior and show the summary
 ```{r}
 (fit_bern <- stan(file = 'bern.stan', data = d_bern))
 ```
@@ -41,8 +42,9 @@ stan_hist(fit_bern, bins = 50)
 # hist(samples_bern$theta)
 ```
 
-Binomial model with a roughly uniform prior for
-the probability of success.
+# Binomial model
+
+Binomial model with a roughly uniform prior for the probability of success.
 ```{r}
 writeLines(readLines("binom.stan"))
 ```
@@ -70,7 +72,8 @@ d_bin <- list(N = 10, y = 9)
 stan_hist(fit_bin, pars = 'theta', bins = 50)
 ```
 
-Comparison of two groups with Binomial
+# Comparison of two groups with Binomial
+
 ```{r}
 writeLines(readLines("binom2.stan"))
 ```
@@ -82,7 +85,7 @@ d_bin2 <- list(N1 = 674, y1 = 39, N2 = 680, y2 = 22)
 stan_hist(fit_bin2, pars = 'oddsratio', bins = 50)+geom_vline(xintercept = 1)
 ```
 
-Linear Gaussian model example...
+# Linear Gaussian model
 ```{r}
 writeLines(readLines("lin.stan"))
 ```
@@ -115,7 +118,7 @@ d_lin_priors <- c(list(
   d_lin)
 ```
 
-Gaussian linear model with adjustable priors
+# Gaussian linear model with adjustable priors
 ```{r}
 fit_lin <- stan(file = 'lin.stan', data = d_lin_priors)
 
@@ -124,7 +127,8 @@ fit_lin <- stan(file = 'lin.stan', data = d_lin_priors)
 #fit_lin <- stan(file = 'lin_std.stan', data = d_lin)
 ```
 
-Linear student-t model.
+# Linear Student's t model.
+
 ```{r}
 writeLines(readLines("lin_t.stan"))
 ```
@@ -156,10 +160,9 @@ phist <- stan_hist(fit_lin_t, pars = pars, bins = 50)
 grid.arrange(pfit, phist, nrow = 2)
 ```
 
-Pareto-smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO)
+# Pareto-smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO)
 
-For the following three lines to execute, the log-likelihood
-needs to be evaluated in the stan code. For an example, see lin.stan
+For the following three lines to execute, the log-likelihood needs to be evaluated in the stan code. For an example, see lin.stan
 ```{r}
 log_lik <- extract_log_lik(fit_lin, parameter_name = 'log_lik')
 loo_lin <- loo(log_lik)
@@ -168,9 +171,9 @@ loo_lin_t <- loo(log_lik_t)
 compare(loo_lin,loo_lin_t)
 ```
 
-Comparison of k groups: let's compare the temperatures in three summer
-months.
+# Comparison of k groups (ANOVA)
 
+Let's compare the temperatures in three summer months.
 ```{r}
 d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
 d_grp <-list(N = 3*nrow(d_kilpis),
@@ -189,7 +192,8 @@ Fit the model
 fit_grp <- stan(file = 'grp_aov.stan', data = d_grp)
 ```
 
-Common variance and hierarchical prior for mean.
+# Common variance and hierarchical prior for mean.
+
 Results do not differ much from the previous, because there is only
 few groups and quite much data per group, but this works as an example anyway
 ```{r}
@@ -201,7 +205,8 @@ Fit the model
 fit_grp <- stan(file = 'grp_prior_mean.stan', data = d_grp)
 ```
 
-Unequal variance and hierarchical prior for mean and variance
+# Unequal variance and hierarchical prior for mean and variance
+
 ```{r}
 writeLines(readLines("grp_prior_mean_var.stan"))
 ```

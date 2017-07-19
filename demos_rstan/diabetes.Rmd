@@ -321,3 +321,37 @@ We compute LOO also for the model with Horseshoe prior. Expected log predictive 
 ```{r}
 compare(loo1,loo2)
 ```
+
+Looking at the pairwise posteriors we can see that, for example, posteriors for age and pregnancies effects are correlating and thus we can't relay on infering variable relevance by looking at the marginal distributions.
+```{r}
+mcmc_pairs(as.matrix(post2),pars = c("pregnancies","age"))
+```
+
+
+If projpred package is installed, we can do variable selection.
+```{r}
+library(projpred)
+varsel2 <- cv_varsel(post2, method='forward')
+varsel2$varsel$vind
+```
+
+We can now look at the estimated predictive performance of smaller models compared to the full model.
+```{r}
+varsel_plot(varsel2, statistics = c('mlpd', 'pctcorr'), deltas=T)
+```
+
+And we get a LOO based recommendation for the model size to choose
+```{r}
+varsel2$varsel$ssize
+```
+Next we form the projected posterior for the chosen model.
+```{r}
+proj2 <- project(varsel2, nv = varsel2$varsel$ssize, ns = 4000)
+round(colMeans(as.matrix(proj2)),1)
+round(posterior_interval(as.matrix(proj2)),1)
+```
+```{r}
+mcmc_areas(as.matrix(proj2), , prob = 0.95, prob_outer = 1,
+           pars = c('(Intercept)', names(varsel2$varsel$vind[1:varsel2$varsel$ssize])))
+```
+The projected posterior can be made predictions in the future (with no need to measure the left out variables).

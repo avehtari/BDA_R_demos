@@ -19,12 +19,12 @@ library(gridExtra)
 
 The following models do not equal the models at rstan_demo.Rmd exactly, but rather serve as examples of how to implement similar models with rstanarm.
 
-Bernoulli data
+# Bernoulli model
 ```{r}
 d_bern <- data.frame(y = c(0, 1, 0, 0, 1, 1, 1, 0, 1, 0))
 ```
 
-With a uniform prior (beta(1,1)).  This is achieved by setting the prior to NULL, which is not recommended in general. 
+Uniform prior (beta(1,1)) is achieved by setting the prior to NULL, which is not recommended in general. 
 y ~ 1 means y depends only on the intercept term
 ```{r}
 fit_bern <- stan_glm(y ~ 1, family = binomial(),
@@ -54,6 +54,8 @@ theta <- plogis(extract(fit_bern$stanfit)$alpha)
 ggplot() + geom_histogram(aes(theta), bins = 50, fill = 'darkblue', color = 'black')
 ```
 
+# Binomial model
+
 Binomial model with a roughly uniform prior for the probability of success. The prior is specified in the 'latent space'. The actual probability of success, theta = plogis(alpha), where plogis is the inverse of the logistic function.
 
 Visualize the prior by drawing samples from it
@@ -70,8 +72,9 @@ Binomial model
 d_bin <- data.frame(N = c(5,5), y = c(4,3))
 fit_bin <- stan_glm(y/N ~ 1, family = binomial(), data = d_bin,
                      prior_intercept = prior_intercept, weights = N)
-```
 #launch_shinystan(fit_bern)
+```
+
 ```{r}
 plogis(coef(fit_bin))
 ```
@@ -99,7 +102,9 @@ ggplot() + geom_histogram(aes(x = plogis(extract(fit_bin$stanfit)$alpha)),
   labs(x = 'probability of success', y = '') + scale_y_continuous(breaks = NULL)
 ```
 
-Comparison of two groups with Binomial grp2 is a dummy variable that captures the differece of the intercepts in the first and the second group
+# Comparison of two groups with Binomial 
+
+grp2 is a dummy variable that captures the differece of the intercepts in the first and the second group
 ```{r}
 d_bin2 <- data.frame(N = c(674, 680), y = c(39,22), grp2 = c(0,1))
 fit_bin2 <- stan_glm(y/N ~ grp2, family = binomial(), data = d_bin2,
@@ -115,6 +120,8 @@ ggplot() + geom_histogram(aes(oddsratio), bins = 50, fill = 'darkblue', color = 
   labs(y = '') + scale_y_continuous(breaks = NULL)
 ```
 
+# Gaussian linear model
+
 Kilpisjärvi summer temperature data
 ```{r}
 d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
@@ -125,9 +132,8 @@ d_lin <-data.frame(year = d_kilpis$year,
 y ~ x means y depends on the intercept and x
 ```{r}
 fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian())
-```
-
 #launch_shinystan(fit_lin)
+```
 
 Plot data and the fit
 ```{r}
@@ -148,11 +154,6 @@ phist <- stan_hist(fit_lin, pars = c('beta','sigma'), bins = 50) + ggtitle('para
 grid.arrange(pfit, phist)
 ```
 
-Compute PSIS-LOO
-```{r}
-(loo1 <- loo(fit_lin))
-```
-
 Prediction for a new data point
 ```{r}
 predict(fit_lin, newdata = data.frame(year = 2016), se.fit = T)
@@ -164,11 +165,36 @@ ggplot(data = data.frame(ypred = ypred)) +
   labs(y = '', x = 'avg-temperature prediction for the summer 2016') +
   scale_y_continuous(breaks = NULL)
 ```
-Currently, rstanarm does not yet support Student's t likelihood.
 
+# Linear Student's t model with brms
 
-Comparison of k groups: let's compare the temperatures in three summer months.
+Currently, rstanarm does not yet support Student's t likelihood. Below we use brms package, which supports similar model formulas as rstanarm with more options, but doesn't have pre-compiled models (be aware also that the default priors are not necessary sensible).
 
+```{r}
+library(brms)
+fit_lin_t <- brm(temp ~ year, data = d_lin, family = student())
+```
+
+brms package generates Stan code which we can extract as follows. By saving this code to a file you can extend the model, beyond the models supported by brms.
+```{r}
+stancode(fit_lin_t)
+```
+
+# Pareto-smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO)
+
+Let's use LOO to compare whether Student's t model has better predictive performance.
+```{r}
+loo1 <- loo(fit_lin)
+loo2 <- loo(fit_lin_t)
+loo::compare(loo1,loo2)
+```
+There is no practical difference between Gaussian and Student's t models.
+
+---
+
+# Comparison of k groups (ANOVA)
+
+Let's compare the temperatures in three summer months.
 ```{r}
 d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
 d_grp <- data.frame(month = rep(6:8, nrow(d_kilpis)),
@@ -185,8 +211,8 @@ y ~ 1 + (1 | x) means y depends on common intercept and group speficific interce
 ```{r}
 fit_grp <- stan_lmer(temp ~ 1 + (1 | month), data = d_grp,
                      prior_intercept = prior_intercept)
+# launch_shinystan(fit_grp)
 ```
-#launch_shinystan(fit_grp)
 
 Average temperature and monthly deviations from the mean
 ```{r}

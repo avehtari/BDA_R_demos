@@ -3,7 +3,7 @@ title: "Sleep"
 output: html_notebook
 ---
 
-Does brain mass predict how much mammals sleep in a day?
+# Does brain mass predict how much mammals sleep in a day?
 
 Original notebook by Tristan Mahr https://tjmahr.github.io/visualizing-uncertainty-rstanarm/.
 Tristan's model had the problem that it would predict sleep times over 24h per day. 
