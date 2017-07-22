@@ -3,6 +3,7 @@ data {
   int<lower=0> N; // number of data points
   vector[N] x; //
   vector[N] y; //
+  real xpred; // input location for prediction
 }
 parameters {
   real alpha;
@@ -19,7 +20,9 @@ model {
   y ~ student_t(nu, mu, sigma);
 }
 generated quantities {
+  real ypred;
   vector[N] log_lik;
+  ypred = normal_rng(alpha + beta*xpred, sigma);
   for (i in 1:N)
     log_lik[i] = student_t_lpdf(y[i] | nu, mu[i], sigma);
 }
