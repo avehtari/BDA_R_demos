@@ -53,7 +53,7 @@ tt[1,] <- c(t1, t2)    # Save starting point
 # For demonstration load pre-computed values
 # Replace this with your algorithm!
 # tt is a M x 2 array, with M samples of both theta_1 and theta_2
-data_path <- 'path/to/demo11_1.RData'
+data_path <- 'demo11_1.RData'
 load(data_path)
 
 # The rest is just for illustration
@@ -92,7 +92,7 @@ p1 <- ggplot() +
 # of the steps of the sampler (might take 1-10 seconds).
 # Note how only every other step generates a valid draw
 # as the sampler can only update one parameter at a time
-gg_animate(p1, interval = 0.2)
+gganimate(p1, interval = 0.2)
 
 # show only the result as a static figure
 p1

@@ -36,7 +36,7 @@ dft <- data.frame(mvrnorm(100000, c(0, 0), S))
 # t1 and t2 using 10% warm-up, PSRF-values have been computed for
 # each time-step.
 
-data_path <- 'path/to/demo11_4.RData'
+data_path <- 'demo11_4.RData'
 load(data_path)
 
 # transform the first s1 rows of the
@@ -83,7 +83,7 @@ chains1 <- ggplot(data = dfs1) +
 # a moment. What really happens at that point is that
 # they draw possibly a few points that are rejected
 # (rejected points not shown) and thus the chain is not moving
-gg_animate(chains1, interval = 0.2)
+gganimate(chains1, interval = 0.2)
 
 # Plot the result, no convergence yet
 chains1 + labs(title = 'No convergence')
