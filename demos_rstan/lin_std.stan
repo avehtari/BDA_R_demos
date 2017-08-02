@@ -3,6 +3,7 @@ data {
   int<lower=0> N; // number of data points
   vector[N] x; //
   vector[N] y; //
+  real xpred; // input location for prediction
 }
 transformed data {
   vector[N] x_std;
@@ -27,6 +28,11 @@ model {
 generated quantities {
   vector[N] mu;
   real<lower=0> sigma;
-  mu = mean(y) + mu_std*sd(y);
+  real ypred;
+  vector[N] log_lik;
+  mu = mu_std*sd(y) + mean(y);
   sigma = sigma_std*sd(y);
+  ypred = normal_rng((alpha + beta*xpred)*sd(y)+mean(y), sigma*sd(y));
+  for (i in 1:N)
+    log_lik[i] = normal_lpdf(y[i] | mu[i], sigma);
 }

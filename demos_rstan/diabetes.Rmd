@@ -259,7 +259,7 @@ psis=psislw(-log_lik)
 #plot(psis$pareto_k)
 #plot(psis$lw_smooth[,1],linpred[,1])
 # LOO predictive probabilities
-ploo=colSums(preds*exp(psis$lw_smooth))
+ploo=E_loo(preds,psis$lw_smooth)
 # LOO classification accuracy
 round(mean(xor(ploo>0.5,as.integer(y))),3)
 # LOO balanced classification accuracy
