@@ -1,6 +1,8 @@
 ---
 title: "Sleep"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
 # Does brain mass predict how much mammals sleep in a day?
