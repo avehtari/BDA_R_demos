@@ -1,0 +1,128 @@
+---
+title: "Bayesian version of Andrew Tyre's Does model averaging make sense?"
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+Bayesian version of Andrew Tyre's "Does model averaging make sense?"
+https://atyre2.github.io/2017/06/16/rebutting_cade.html
+
+Tyre discusses problems in current statistical practices in ecology, focusing in multi-colinearity, model averaging and measuring the relative importance of variables. Tyre's post is commenting a paper http://onlinelibrary.wiley.com/doi/10.1890/14-1639.1/full. In his blog post he uses maximum likelihood and AIC_c. Here we provide a Bayesian approach for handling multicolinearity, model averaging and measuring relative importance of variables using packages rstanarm, bayesplot, loo and projpred. 
+
+Other packages are available in CRAN, but projpred package needs to be installed from github (it will be available in CRAN later).
+```{r}
+if (!require(devtools)) {
+	install.packages("devtools")
+	library(devtools)
+}
+devtools::install_github('stan-dev/projpred', build_vignettes = TRUE)
+library(projpred)
+```
+
+We generate the data used previously to illustrate multi-colinearity problems.
+```{r}
+# all this data generation is from Cade 2015
+library(tidyverse)
+library(GGally)
+# doesn't matter what this is -- if you use a different number your results will be different from mine.
+set.seed(87)
+df <- data_frame(
+  pos.tot = runif(200,min=0.8,max=1.0),
+  urban.tot = pmin(runif(200,min=0.0,max=0.02),1.0 - pos.tot),
+  neg.tot = (1.0 - pmin(pos.tot + urban.tot,1)),
+  x1= pmax(pos.tot - runif(200,min=0.05,max=0.30),0),
+  x3= pmax(neg.tot - runif(200,min=0.0,max=0.10),0),
+  x2= pmax(pos.tot - x1 - x3/2,0),
+  x4= pmax(1 - x1 - x2 - x3 - urban.tot,0))
+# true model and 200 Poisson observations
+mean.y <- exp(-5.8 + 6.3*df$x1 + 15.2*df$x2)
+df$y <- rpois(200,mean.y)
+
+ggpairs(df)
+```
+
+Tyre: "So there is a near perfect negative correlation between the things sage grouse like and the things they don’t like, although it gets less bad when considering the individual covariates."
+
+From this point onwards we switch to Bayesian approach. The rstanarm package provides stan_glm which accepts same arguments as glm, but makes full Bayesian inference using Stan (Hamiltonian Monte Carlo No-U-Turn-sampling). By default a weakly informative Gaussian prior is used for weights.
+```{r}
+library(rstanarm)
+options(mc.cores = 4)
+fitg <- stan_glm(y ~ x1 + x2 + x3 + x4, data = df, na.action = na.fail, family=poisson(), seed=1)
+```
+Let's look at the summary and plot:
+```{r}
+summary(fitg)
+```
+
+We didn't get divergences, Rhat's are less than 1.1 and n_eff's are useful (see, e.g., http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html). However, when we know that covariats are correlating we can get even better performance by using QR decomposition (see, e.g. http://mc-stan.org/users/documentation/case-studies/qr_regression.html).
+
+```{r}
+library(rstanarm)
+options(mc.cores = 4)
+fitg <- stan_glm(y ~ x1 + x2 + x3 + x4, data = df, na.action = na.fail, family=poisson(), QR=TRUE, seed=1)
+```
+Let's look at the summary and plot:
+```{r}
+summary(fitg)
+```
+
+Use of QR decomposition greatly improved sampling efficiency and we continue with this model.
+
+```{r}
+library(bayesplot)
+mcmc_areas(as.matrix(fitg),prob_outer = .99)
+```
+
+All 95% posterior intervals are overlapping 0 and it seems we have the same colinearity problem as with maximum likelihood estimates.
+
+Looking at the pairwise posteriors we can see high correlations
+```{r}
+mcmc_pairs(as.matrix(fitg),pars = c("x1","x2","x3","x4"))
+```
+If look more carefully on of the subplots, we see that although marginal posterior intervals overlap 0, the joint posterior is not overlapping 0.
+```{r}
+mcmc_scatter(as.matrix(fitg), pars = c("x1", "x2"))+geom_vline(xintercept=0)+geom_hline(yintercept=0)
+```
+
+Based on the joint distributions all the variables would be relevant. To make predictions we don't need to make variable selection, we just integrate over the uncertainty (kind of continuous model averaging). 
+
+We might want to choose some variables 1) because we don't want to observe all the variables in the future (e.g. due to the measurement cost), or 2) we want to most relevant variables which we define here as a minimal set of variables which can provide similar predictions to the full model.
+
+Tyre used AIC_c to estimate the model performance. In Bayesian setting we could use Bayesian alternatives Bayesian cross-validation or WAIC, but we don't recommend them for variable selection as discussed in http://link.springer.com/article/10.1007/s11222-016-9649-y . The reason for not using Bayesian CV or WAIC is that the selection process uses the data twice, and in case of large number variable combinations the selection process overfits and can produce really bad models. Using the usual posterior inference given the selected variables ignores that the selected variables are conditonal on the selection process and simply setting some variables to 0 ignores the uncertainty related to their relevance.
+
+The paper http://link.springer.com/article/10.1007/s11222-016-9649-y also shows that a projection predictive approach can be used to make a model reduction, that is, choosing a smaller model with some coefficients set to 0. The projection predictive approach solves the problem how to do inference after the selection. The solution is to project the full model posterior to the restricted subspace. See more in http://link.springer.com/article/10.1007/s11222-016-9649-y
+
+We make the projective predictive variable selection using the previous full model. A fast leave-one-out cross-validation approach http://link.springer.com/article/10.1007/s11222-016-9696-4 is used to choose the model size.
+```{r}
+fitg_cv <- cv_varsel(fitg, method='forward', cv_method='LOO')
+fitg_cv$varsel$vind
+```
+We can now look at the estimated predictive performance of smaller models compared to the full model.
+```{r}
+varsel_plot(fitg_cv, statistics = c('mlpd', 'mse'), deltas=T)
+```
+
+And we get a loo-cv based recommendation for the model size to choose
+```{r}
+fitg_cv$varsel$ssize
+```
+We see that 2 variables is enough to get the same as with all 4 variables.
+
+Next we form the projected posterior for the chosen model.
+```{r}
+projg <- project(fitg_cv, nv = 2, ns = 4000)
+round(colMeans(as.matrix(projg)),1)
+round(posterior_interval(as.matrix(projg)),1)
+```
+```{r}
+mcmc_areas(as.matrix(projg), 
+           pars = c('(Intercept)', names(fitg_cv$varsel$vind[1:2])))
+```
+
+Even if we started with a model which had due to a co-linearity difficult to interpret posterior, the projected posterior is able to match closely the true values. The necessary information was in the full model and with the projection we were able to form the projected posterior which we should use if x3 and x4 are seto 0.
+
+Back to the Tyre's question "Does model averaging make sense?". If we are interested just in good predictions we can do continuous model averaging by using suitable priors and by integrating over the posterior. If we are intersted in predcitions, then we don't first average weights (ie posterior mean), but use all weight values to compute predictions and do the averaging of the predictions. All this is automatic in Bayesian framework. 
+
+Tyre also commented on the problems of measuring variable importance. The projection predictive approach above is derived using decision theory and is very helpful for measuring relevancy and choosing relevant variables. Tyre did not comment about the inference after selection although it is also known problem in variable selection. The projection predictive approach above solves that problem, too.
+
