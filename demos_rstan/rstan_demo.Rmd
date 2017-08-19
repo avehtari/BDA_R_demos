@@ -34,7 +34,7 @@ Toy data with sequence of failures (0) and successes (1). We would like to learn
 d_bern <- list(N = 10, y = c(1, 1, 1, 0, 1, 1, 1, 0, 1, 0))
 ```
 
-Bernoulli model with a beta(1,1) (uniform) prior
+Bernoulli model with a Beta(1,1) (uniform) prior
 ```{r}
 writeLines(readLines("bern.stan"))
 ```
@@ -143,7 +143,7 @@ ggplot() +
   theme_bw()
 ```
 
-To analyse has there been change in the average summer month temperature we use a linear model with Gaussian model for the unexplained variation. 
+To analyse whether the average summer month temperature is rising, we use a linear model with Gaussian model for the unexplained variation. 
 
 ### Gaussian linear model with adjustable priors
 
@@ -286,7 +286,7 @@ Fit the model
 ## Common variance and hierarchical prior for mean.
 
 Results do not differ much from the previous, because there is only
-few groups and quite much data per group, but this works as an example anyway
+few groups and quite much data per group, but this works as an example of a hierarchical model.
 ```{r}
 writeLines(readLines("grp_prior_mean.stan"))
 ```

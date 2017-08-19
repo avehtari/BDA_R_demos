@@ -21,7 +21,7 @@ library(projpred)
 ```
 
 We generate the data used previously to illustrate multi-colinearity problems.
-```{r}
+```{r warning=FALSE,message=FALSE,echo=FALSE}
 # all this data generation is from Cade 2015
 library(tidyverse)
 library(GGally)
@@ -39,7 +39,7 @@ df <- data_frame(
 mean.y <- exp(-5.8 + 6.3*df$x1 + 15.2*df$x2)
 df$y <- rpois(200,mean.y)
 
-ggpairs(df)
+ggpairs(df,diag=list(continuous="barDiag"))
 ```
 
 Tyre: "So there is a near perfect negative correlation between the things sage grouse like and the things they don’t like, although it gets less bad when considering the individual covariates."
@@ -50,7 +50,7 @@ library(rstanarm)
 options(mc.cores = 4)
 fitg <- stan_glm(y ~ x1 + x2 + x3 + x4, data = df, na.action = na.fail, family=poisson(), seed=1)
 ```
-Let's look at the summary and plot:
+Let's look at the summary:
 ```{r}
 summary(fitg)
 ```
