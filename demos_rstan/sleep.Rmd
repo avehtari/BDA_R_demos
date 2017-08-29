@@ -160,4 +160,5 @@ ggplot(msleep) +
   scale_x_continuous(labels = function(x) 10 ^ x) +
       labs(x = lab_lines$brain_log, y = lab_lines$sleep_raw)
 ```
+
 Here the distribution of the sleep times is restricted to be between 0 and 24 hours.
