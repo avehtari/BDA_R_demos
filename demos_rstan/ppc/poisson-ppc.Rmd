@@ -1,8 +1,10 @@
 ---
 title: "Detecting model misfit with posterior predictive checks"
 author: "Jonah Gabry, Aki Vehtari"
-date: ""
-output: html_notebook
+date: ''
+output:
+  html_document: default
+  html_notebook: default
 ---
 
 ```{r setup, include=FALSE}
@@ -193,5 +195,4 @@ compare(loo1,loo2)
 ```
 
 Model 2 is a clear winner in the predictive performance.
-
 

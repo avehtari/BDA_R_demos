@@ -2,17 +2,20 @@
 # Aki Vehtari <Aki.Vehtari@aalto.fi>
 # Markus Paasiniemi <Markus.Paasiniemi@aalto.fi>
 
+# R versions of demos 3_1-3_4 combined into one demo
+# like iPython notebook versions
+
 # Examples and illustrations for a normal model with unknown mean and
 # variance (BDA3 section 3.2 on p. 64).
 # Multivariate joint distribution, conditional distribution, marginal
 # distribution, marginalization and posterior predictive distribution
-# R versions of demos 3_1-3_4 combined into one demo
-# like iPython notebook versions
 
 library(ggplot2)
 library(grid)
 library(gridExtra)
 library(tidyr)
+
+## Generic part common for Demos 3.1-3.4
 
 # data
 y <- c(93, 112, 122, 135, 122, 150, 118, 90, 124, 114)
@@ -90,6 +93,7 @@ dfj$z <- dsinvchisq(dfj$t2^2, n-1, s2) * 2*dfj$t2 * dnorm(dfj$t1, my, dfj$t2/sqr
 # breaks for plotting the contours
 cl <- seq(1e-5, max(dfj$z), length.out = 6)
 
+## Demo 3.1
 ## Visualise the joint density and marginal densities of the posterior
 ## of normal distribution with unknown mean and variance.
 
@@ -138,6 +142,7 @@ bp <- grid.rect(gp = gpar(col = 'white'))
 # combine the plots
 grid.arrange(joint1, margsig, margmu, bp, nrow = 2)
 
+## Demo 3.2
 ## Visualise factored sampling and the corresponding
 ## marginal and conditional densities.
 
@@ -176,6 +181,7 @@ margsig2 <- ggplot(data = data.frame(t2, ps)) +
 # combine the plots
 grid.arrange(joint2, margsig2, ncol = 2)
 
+## Demo 3.3
 ## Visualise the marginal distribution of mu as a mixture of normals.
 
 # calculate conditional pdfs for each sample
@@ -209,6 +215,7 @@ meanmu <- ggplot(data = dfsam) +
 # combine the plots
 grid.arrange(condmu, meanmu, ncol = 1)
 
+## Demo 3.4
 ## Visualise sampling from the posterior predictive distribution.
 
 # calculate each predictive pdf with given mu and sigma
@@ -272,4 +279,3 @@ pred2 <- ggplot() +
 
 # combine the plots
 grid.arrange(joint3, pred1, bp, pred2, nrow = 2)
-

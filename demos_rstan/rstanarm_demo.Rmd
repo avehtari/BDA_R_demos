@@ -1,7 +1,9 @@
 ---
 title: "Bayesian data analysis - rstanarm demos"
 author: "Aki Vehtari, Markus Paasiniemi"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
 License: CC-BY
@@ -152,7 +154,7 @@ d_lin <-data.frame(year = d_kilpis$year,
 Plot the data
 ```{r}
 ggplot() +
-  geom_point(aes(x, y), data = data.frame(d_lin), size = 0.5) +
+  geom_point(aes(year, temp), data = data.frame(d_lin), size = 0.5) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
   guides(linetype = F) +
   theme_bw()
@@ -163,6 +165,13 @@ To analyse has there been change in the average summer month temperature we use 
 y ~ x means y depends on the intercept and x
 ```{r}
 fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian())
+```
+
+You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the divergences, treedepth exceedences, n_eff, Rhats, and joint posterior of alpha and beta. In the corresponding rstan_demo notebook we observed some treedepth exceedences leading to slightly less efficient sampling, but rstanarm has slightly different model and performs better.
+
+Instead of interactive ShinyStan, we can also check the diagnostics as follows
+```{r}
+summary(fit_lin)
 ```
 
 Plot data and the fit

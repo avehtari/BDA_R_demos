@@ -1,6 +1,8 @@
 ---
 title: "Sleep"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
 # Does brain mass predict how much mammals sleep in a day?
@@ -134,7 +136,7 @@ ggplot(msleep) +
               alpha = alpha_level) + 
   geom_point() + 
   scale_x_continuous(labels = function(x) 10 ^ x) +
-  labs(x = lab_lines$brain_log, y = lab_lines$sleep_log)
+  labs(x = lab_lines$brain_log, y = lab_lines$sleep_raw)
 ```
 
 Predict distribution of sleep times at new x values:
@@ -156,6 +158,7 @@ ggplot(msleep) +
   geom_line(aes(y = median), data = pq, colour = "#3366FF", size = 1) + 
   geom_point(aes(y = sleep_total)) + 
   scale_x_continuous(labels = function(x) 10 ^ x) +
-      labs(x = lab_lines$brain_log, y = lab_lines$sleep_log)
+      labs(x = lab_lines$brain_log, y = lab_lines$sleep_raw)
 ```
+
 Here the distribution of the sleep times is restricted to be between 0 and 24 hours.
