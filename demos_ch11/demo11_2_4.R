@@ -12,6 +12,8 @@ library(devtools)
 #                ref = '26ec501b78e0853134a3fe50a04364aef13d5f6c')
 library(gganimate)
 library(MASS)
+library(plyr)
+library(coda)
 
 # Parameters of a Normal distribution used as a toy target distribution
 y1 <- 0
@@ -36,7 +38,7 @@ dft <- data.frame(mvrnorm(100000, c(0, 0), S))
 # t1 and t2 using 10% warm-up, PSRF-values have been computed for
 # each time-step.
 
-data_path <- 'path/to/demo11_4.RData'
+data_path <- 'demos_ch11/demo11_4.RData'
 load(data_path)
 
 # transform the first s1 rows of the
@@ -120,3 +122,10 @@ ggplot(data = dfp) +
   scale_color_discrete(labels = c('PSRF(n/2:n)','PSRF(n/10:n)')) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
+# Demonstrate how to compute PSRF using coda
+# We need to form an object supported by coda package
+ttsm <- mcmc.list(alply(tts,3,mcmc))
+# PSRF per iteration
+gelman.plot(ttsm)
+# total PSRF
+gelman.diag(ttsm)
