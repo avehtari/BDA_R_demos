@@ -122,7 +122,8 @@ ggplot(data = dfp) +
   scale_color_discrete(labels = c('PSRF(n/2:n)','PSRF(n/10:n)')) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
-# Demonstrate how to compute PSRF using coda
+# Demonstrate how to compute PSRF/Rhat using coda
+# Note that coda is using the older version of PSRF
 # We need to form an object supported by coda package
 ttsm <- mcmc.list(alply(tts,3,mcmc))
 # PSRF per iteration
