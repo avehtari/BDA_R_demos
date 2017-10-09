@@ -46,8 +46,8 @@ samp_indices <- sample(length(p), size = nsamp,
 samp_A <- cA[samp_indices[1:nsamp]]
 samp_B <- cB[samp_indices[1:nsamp]]
 # add random jitter, see BDA3 p. 76
-samp_A <- samp_A + runif(nsamp, A[1] - A[2], A[2] - A[1])
-samp_B <- samp_B + runif(nsamp, B[1] - B[2], B[2] - B[1])
+samp_A <- samp_A + runif(nsamp, (A[1] - A[2])/2, (A[2] - A[1])/2)
+samp_B <- samp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
 
 # samples of LD50
 samp_ld50 <- -samp_A/samp_B
@@ -153,8 +153,8 @@ samp_indices <- sample(length(pis), size = nsamp,
 rissamp_A <- samp_norm[samp_indices,1]
 rissamp_B <- samp_norm[samp_indices,2]
 # add random jitter, see BDA3 p. 76
-rissamp_A <- rissamp_A + runif(nsamp, A[1] - A[2], A[2] - A[1])
-rissamp_B <- rissamp_B + runif(nsamp, B[1] - B[2], B[2] - B[1])
+rissamp_A <- rissamp_A + runif(nsamp, (A[1] - A[2])/2, (A[2] - A[1])/2)
+rissamp_B <- rissamp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
 
 # samples of LD50 
 rissamp_ld50 <- -rissamp_A/rissamp_B
