@@ -130,3 +130,5 @@ ttsm <- mcmc.list(alply(tts,3,mcmc))
 gelman.plot(ttsm)
 # total PSRF
 gelman.diag(ttsm)
+# effective sample size
+effectiveSize(ttsm)
