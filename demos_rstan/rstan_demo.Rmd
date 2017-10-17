@@ -2,11 +2,10 @@
 title: "Bayesian data analysis - rstan demos"
 author: "Aki Vehtari, Markus Paasiniemi"
 output:
-  html_document: default
+  html_document:
+    keep_md: yes
   html_notebook: default
 ---
-
-License: CC-BY
 
 Examples how to use Stan in R with rstan. This notebook assumes basic knowledge of Bayesian inference and MCMC. The Stan models are stored in separate .stan-files.
 
@@ -356,3 +355,10 @@ combn(unique(temps$month), 2, function(months, data) {
   mean(subset(data, month == months[1])$temp > subset(data, month == months[2])$temp)
 }, data = temps) %>% setNames(c('6>7', '6>8', '7>8'))
 ```
+
+<br />
+
+### Appendix: Licenses
+
+* Code &copy; 2017, Aki Vehtari, Markus Paasiniemi, licensed under BSD-3.
+* Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.

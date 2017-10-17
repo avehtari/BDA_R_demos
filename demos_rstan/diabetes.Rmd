@@ -1,7 +1,8 @@
 ---
 title: "Bayesian Logistic Regression with rstanarm"
 output:
-  html_document: default
+  html_document:
+    keep_md: yes
   html_notebook: default
 ---
 
@@ -359,3 +360,20 @@ mcmc_areas(as.matrix(proj2), , prob = 0.95, prob_outer = 1,
 ```
 
 The projected posterior can be made predictions in the future (with no need to measure the left out variables).
+
+<br />
+
+### Appendix: Session information
+
+```{r}
+sessionInfo()
+```
+
+<br />
+
+
+### Appendix: Licenses
+
+* Code &copy; 2017, Aki Vehtari, licensed under BSD-3.
+* Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.
+* Introduction Text &copy; 2017, Jonah Gabry and Ben Goodrich [source](https://cran.r-project.org/web/packages/rstanarm/vignettes/binomial.html), licensed under GPL 3>

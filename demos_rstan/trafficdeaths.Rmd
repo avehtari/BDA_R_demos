@@ -137,3 +137,19 @@ compare(loo_lin,loo_gp)
 ```
 
 There are no practical differences in predictive performance, which is partially due to small number of observations. Based on the posterior predictive distributions there are clear differences in the future predictions.
+
+<br />
+
+### Appendix: Session information
+
+```{r}
+sessionInfo()
+```
+
+<br />
+
+
+### Appendix: Licenses
+
+* Code &copy; 2017, Aki Vehtari, licensed under BSD-3.
+* Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.

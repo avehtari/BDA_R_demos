@@ -1,7 +1,8 @@
 ---
 title: "Bayesian version of Andrew Tyre's Does model averaging make sense?"
 output:
-  html_document: default
+  html_document:
+    keep_md: yes
   html_notebook: default
   pdf_document: default
 ---
@@ -16,8 +17,10 @@ if (!require(devtools)) {
 	install.packages("devtools")
 	library(devtools)
 }
-devtools::install_github('stan-dev/projpred', build_vignettes = TRUE)
-library(projpred)
+if (!require(projpred)) {
+  devtools::install_github('stan-dev/projpred', build_vignettes = TRUE)
+  library(projpred)
+}
 ```
 
 We generate the data used previously to illustrate multi-colinearity problems.
@@ -126,3 +129,20 @@ Back to the Tyre's question "Does model averaging make sense?". If we are intere
 
 Tyre also commented on the problems of measuring variable importance. The projection predictive approach above is derived using decision theory and is very helpful for measuring relevancy and choosing relevant variables. Tyre did not comment about the inference after selection although it is also known problem in variable selection. The projection predictive approach above solves that problem, too.
 
+<br />
+
+
+### Appendix: Session information
+
+```{r}
+sessionInfo()
+```
+
+<br />
+
+
+### Appendix: Licenses
+
+* Code &copy; 2017, Aki Vehtari, licensed under BSD-3.
+* Code for generating the data by [Andrew Tyre](https://atyre2.github.io/2017/06/16/rebutting_cade.html)
+* Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.

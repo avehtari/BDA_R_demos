@@ -540,3 +540,65 @@ compare(loo_lin,loo_gp)
 ```
 
 There are no practical differences in predictive performance, which is partially due to small number of observations. Based on the posterior predictive distributions there are clear differences in the future predictions.
+
+<br />
+
+### Appendix: Session information
+
+
+```r
+sessionInfo()
+```
+
+```
+## R version 3.2.3 (2015-12-10)
+## Platform: x86_64-pc-linux-gnu (64-bit)
+## Running under: Ubuntu 16.04.3 LTS
+## 
+## locale:
+##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+##  [3] LC_TIME=en_US.utf8         LC_COLLATE=en_US.UTF-8    
+##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+##  [7] LC_PAPER=fi_FI.utf8        LC_NAME=C                 
+##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] loo_1.1.0            bayesplot_1.2.0      rstan_2.15.1        
+## [4] StanHeaders_2.15.0-1 rstanarm_2.15.3      Rcpp_0.12.13        
+## [7] gridExtra_2.2.1      tidyr_0.6.1          ggplot2_2.2.1       
+## 
+## loaded via a namespace (and not attached):
+##  [1] lattice_0.20-34    zoo_1.7-14         gtools_3.5.0      
+##  [4] assertthat_0.1     rprojroot_1.2      digest_0.6.12     
+##  [7] mime_0.5           R6_2.2.2           plyr_1.8.4        
+## [10] backports_1.0.5    stats4_3.2.3       evaluate_0.10     
+## [13] colourpicker_0.3   lazyeval_0.2.0     minqa_1.2.4       
+## [16] miniUI_0.1.1       nloptr_1.0.4       Matrix_1.2-8      
+## [19] DT_0.2             rmarkdown_1.6      shinythemes_1.1.1 
+## [22] labeling_0.3       splines_3.2.3      shinyjs_0.8       
+## [25] lme4_1.1-13        stringr_1.2.0      htmlwidgets_0.8   
+## [28] munsell_0.4.3      shiny_1.0.1        httpuv_1.3.3      
+## [31] base64enc_0.1-3    mgcv_1.8-17        rstantools_1.2.0  
+## [34] htmltools_0.3.6    tibble_1.2         threejs_0.2.2     
+## [37] codetools_0.2-15   matrixStats_0.52.2 dplyr_0.5.0       
+## [40] MASS_7.3-45        grid_3.2.3         nlme_3.1-131      
+## [43] jsonlite_1.5       xtable_1.8-2       gtable_0.2.0      
+## [46] DBI_0.6            magrittr_1.5       scales_0.5.0      
+## [49] stringi_1.1.2      reshape2_1.4.2     dygraphs_1.1.1.3  
+## [52] xts_0.9-7          tools_3.2.3        shinystan_2.3.0   
+## [55] markdown_0.8       rsconnect_0.7      parallel_3.2.3    
+## [58] yaml_2.1.14        inline_0.3.14      colorspace_1.3-2  
+## [61] knitr_1.16
+```
+
+<br />
+
+
+### Appendix: Licenses
+
+* Code &copy; 2017, Aki Vehtari, licensed under BSD-3.
+* Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.
