@@ -1,3 +1,7 @@
+# Copyright: Michael Betancourt <https://betanalpha.github.io/writing/>
+# License: BSD (3 clause)
+# See also http://mc-stan.org/users/documentation/case-studies/pystan_workflow.html
+
 #' Check transitions that ended with a divergence
 check_div <- function(fit) {
   sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
