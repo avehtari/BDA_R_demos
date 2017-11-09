@@ -2,11 +2,12 @@
 Aki Vehtari  
 `r format(Sys.Date())`  
 
-This notebook demonstrates how to implement user defined probability functions in Stan language. As a an example I use  generalized Pareto distribution (GPD) and geomagnetic storm data by World Data Center for Geomagnetism. 
+This notebook demonstrates how to implement user defined probability functions in Stan language. As a an example I use  generalized Pareto distribution (GPD) and geomagnetic storm data by World Data Center for Geomagnetism.
 
 Load some libraries:
 
 ```r
+library(extraDistr)
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -52,8 +53,11 @@ Plot just the data and empirical ccdf
 ```r
 ggplot() + 
   geom_point(aes(dst, ccdf), data = d, size = 1, colour = "blue") +
-  coord_trans(x="log10", y="log10") +
+  coord_trans(x="log10", y="log10", limx=c(100,1000), limy=c(1e-4,1)) +
+  scale_y_continuous(breaks=c(1e-5,1e-4,1e-3,1e-2,1e-1,1), limits=c(1e-4,1)) +
+  scale_x_continuous(breaks=c(100,200,300,400,500,600,700,850,1000), limits=c(100,1000)) +
   labs(y = "Probability earth's field weakens at least this much", x= "Absolute dst") +
+  geom_text(aes(x = d$dst[n], y = d$ccdf[n]), label = "Quebec blackout", vjust="top", nudge_y=-0.0005) +
   guides(linetype = F) + 
   theme_bw()
 ```
@@ -104,47 +108,50 @@ writeLines(readLines("gpareto.stan"))
 ## functions {
 ##   real gpareto_lpdf(vector y, real ymin, real k, real sigma) {
 ##     // generalised Pareto log pdf 
-##     int N;
-##     N = dims(y)[1];
-##     if (k<0 && max(y-ymin)/sigma > -1/k)
+##     int N = rows(y);
+##     real inv_k = inv(k);
+##     if (k<0 && max(y-ymin)/sigma > -inv_k)
 ##       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
 ##     if (sigma<=0)
 ##       reject("sigma<=0; found sigma =", sigma)
 ##     if (fabs(k) > 1e-15)
-##       return -(1+1/k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
+##       return -(1+inv_k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
 ##     else
 ##       return -sum(y-ymin)/sigma -N*log(sigma); // limit k->0
 ##   }
 ##   real gpareto_cdf(vector y, real ymin, real k, real sigma) {
 ##     // generalised Pareto cdf
-##     if (k<0 && max(y-ymin)/sigma > -1/k)
+##     real inv_k = inv(k);
+##     if (k<0 && max(y-ymin)/sigma > -inv_k)
 ##       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
 ##     if (sigma<=0)
 ##       reject("sigma<=0; found sigma =", sigma)
 ##     if (fabs(k) > 1e-15)
-##       return exp(sum(log1m_exp((-1/k)*(log1p((y-ymin) * (k/sigma))))));
+##       return exp(sum(log1m_exp((-inv_k)*(log1p((y-ymin) * (k/sigma))))));
 ##     else
 ##       return exp(sum(log1m_exp(-(y-ymin)/sigma))); // limit k->0
 ##   }
 ##   real gpareto_lcdf(vector y, real ymin, real k, real sigma) {
 ##     // generalised Pareto log cdf
-##     if (k<0 && max(y-ymin)/sigma > -1/k)
+##     real inv_k = inv(k);
+##     if (k<0 && max(y-ymin)/sigma > -inv_k)
 ##       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
 ##     if (sigma<=0)
 ##       reject("sigma<=0; found sigma =", sigma)
 ##     if (fabs(k) > 1e-15)
-##       return sum(log1m_exp((-1/k)*(log1p((y-ymin) * (k/sigma)))));
+##       return sum(log1m_exp((-inv_k)*(log1p((y-ymin) * (k/sigma)))));
 ##     else
 ##       return sum(log1m_exp(-(y-ymin)/sigma)); // limit k->0
 ##   }
 ##   real gpareto_lccdf(vector y, real ymin, real k, real sigma) {
 ##     // generalised Pareto log ccdf
-##     if (k<0 && max(y-ymin)/sigma > -1/k)
+##     real inv_k = inv(k);
+##     if (k<0 && max(y-ymin)/sigma > -inv_k)
 ##       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
 ##     if (sigma<=0)
 ##       reject("sigma<=0; found sigma =", sigma)
 ##     if (fabs(k) > 1e-15)
-##       return (-1/k)*sum(log1p((y-ymin) * (k/sigma)));
+##       return (-inv_k)*sum(log1p((y-ymin) * (k/sigma)));
 ##     else
 ##       return -sum(y-ymin)/sigma; // limit k->0
 ##   }
@@ -191,7 +198,7 @@ writeLines(readLines("gpareto.stan"))
 
 For each function we do basic argument checking. In addition of invalid values due to user errors, due to the limited accuracy of the floating point presentation of the values, sometimes we may get invalid parameters, for example. sigma equal to zero, even if we have declared it as `real<lower=0> sigma;`. For these latter cases, it is useful to use `reject` statement, and the corresponding MCMC proposal will be rejected and the sampling can continue.
 ```
-    if (k<0 && max(y-ymin)/sigma > -1/k)
+    if (k<0 && max(y-ymin)/sigma > -inv_k)
       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
     if (sigma<=0)
       reject("sigma<=0; found sigma =", sigma)
@@ -200,7 +207,7 @@ For each function we do basic argument checking. In addition of invalid values d
 Stan documentation warns about use of `fabs` and conditional evaluation as they may lead to discontinuous energy or gradient. In GPD we need to handle a special case of k->0. The following will cause discontinuity, but the magnitude of the discontinuity is the same order as the accuracy of the floating point presentation, and thus we are not 
 ```
     if (fabs(k) > 1e-15)
-      return -(1+1/k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
+      return -(1+inv_k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
     else
       return -sum(y-ymin)/sigma -N*log(sigma); // limit k->0
 ```
@@ -249,8 +256,93 @@ Finally we compute predictive probabilities for observing events with certain ma
     predccdf[nt] = exp(gpareto_lccdf(rep_vector(yt[nt],1) | ymin, k, sigma));
 ```
 
-Next we use the defined Stan model to analyse the distribution of the largest geomagnetic storms.
+Before running the Stan model, it's a good idea to check that we have not made mistakes in the implementation of the user defined functions. RStan makes it easy to call the user defined functions in R, and thus easy to make some checks.
 
+Expose the user defined functions to R
+
+```r
+expose_stan_functions("gpareto.stan")
+# check that integral of exp(gpareto_lpdf) (from ymin to ymax) matches with gpareto_cdf
+gpareto_pdf <- function(y, ymin, k, sigma) {
+  exp(sapply(y, FUN = gpareto_lpdf, ymin = ymin, k = k, sigma = sigma))
+}
+```
+
+Run some tests for the user defined functions
+
+```r
+# generate random parameter values for the test
+# by repeating the tests with different parameter values is a good thing to do
+ymin <- rexp(1)
+k <- rexp(1,5)
+sigma <- rexp(1)
+# check that exp(gpareto_lpdf)) integrates to 1
+integrate(gpareto_pdf, lower = ymin, upper = Inf,  ymin = ymin, k = k, sigma = sigma)
+```
+
+```
+## 1 with absolute error < 1.9e-06
+```
+
+```r
+# check that integral of exp(gpareto_lpdf)) from ymin to yr matches gpareto_cdf
+yr <- gpareto_rng(ymin, k, sigma)
+all.equal(integrate(gpareto_pdf, lower = ymin, upper = yr,  ymin = ymin, k = k, sigma = sigma)$value,
+          gpareto_cdf(yr, ymin, k, sigma))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+# check that exp(gpareto_lcdf) and gpareto_cdf return the same value
+all.equal(exp(gpareto_lcdf(yr, ymin, k, sigma)),gpareto_cdf(yr, ymin, k, sigma))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+# check that exp(gpareto_lcdf) and 1-exp(gpareto_lccdf) return the same value
+all.equal(exp(gpareto_lcdf(yr, ymin, k, sigma)),1-exp(gpareto_lccdf(yr, ymin, k, sigma)))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+# check that gparetp_lpdf matches dgpd() in extraDistr
+all.equal(gpareto_lpdf(yr, ymin, k, sigma),dgpd(yr, mu = ymin, sigma = sigma, xi = k, log = TRUE))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+# check that gparetp_cdf matches pgpd() in extraDistr
+all.equal(gpareto_cdf(yr, ymin, k, sigma),pgpd(yr, mu = ymin, sigma = sigma, xi = k, log = FALSE))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+# test that values generated by gpareto_rng have approximately correct moments
+yrs <- replicate(1e6, gpareto_rng(ymin, k, sigma))
+th <- loo::gpdfit(yrs-ymin)
+sprintf('True sigma=%.2f, k=%.2f, estimated sigmahat=%.2f, khat=%.2f', sigma, k, th$sigma, th$k)
+```
+
+```
+## [1] "True sigma=0.05, k=0.09, estimated sigmahat=0.05, khat=0.09"
+```
+
+Next we use the defined Stan model to analyse the distribution of the largest geomagnetic storms.
 
 Fit the Stan model
 
@@ -259,10 +351,6 @@ yt<-append(10^seq(2,3,.01),850)
 ds<-list(ymin=100, N=n, y=d$dst, Nt=length(yt), yt=yt)
 fit_gpd <- stan(file='gpareto.stan', data=ds, refresh=0,
                      chains=4, seed=100) #850
-```
-
-```
-## trying deprecated constructor; please alert package maintainer
 ```
 
 Run the usual diagnostics
@@ -294,18 +382,20 @@ mu <- apply(t(gpd_params$predccdf), 1, quantile, c(0.05, 0.5, 0.95)) %>%
 clrs <- color_scheme_get("brightblue")
 ggplot() + 
   geom_point(aes(dst, ccdf), data = d, size = 1, color = clrs[[5]]) +
-  geom_line(aes(x=c(850,850),y=c(1e-5,1)),linetype="dashed",color="red") +
+  geom_line(aes(x=c(850,850),y=c(1e-4,1)),linetype="dashed",color="red") +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
-  coord_trans(x="log10", y="log10", limx=c(100,1000), limy=c(1e-5,1)) +
-  scale_y_continuous(breaks=c(1e-5,1e-4,1e-3,1e-2,1e-1,1), limits=c(1e-5,1)) +
+  coord_trans(x="log10", y="log10", limx=c(100,1000), limy=c(1e-4,1)) +
+  scale_y_continuous(breaks=c(1e-5,1e-4,1e-3,1e-2,1e-1,1), limits=c(1e-4,1)) +
   scale_x_continuous(breaks=c(100,200,300,400,500,600,700,850,1000), limits=c(100,1000)) +
+  geom_text(aes(x = d$dst[n], y = d$ccdf[n]), label = "Quebec blackout", vjust="top", nudge_y=-0.0005) +
+  geom_text(aes(x = 820, y = 0.02), label = "Carrington event", angle=90) +
   labs(y = "Probability earth's field weakens at least this much", x= "Absolute dst") +
   guides(linetype = F) + 
   theme_bw()
 ```
 
-![](geomagnetic_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](geomagnetic_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 For additional model checking plot 1) kernel density estimate of log(dst) and posterior predictive replicates, 2) max log magnitude (Quebec event) and histogram of maximums of posterior predictive replicates, 3) leave-one-out cross-validation probability-integral-transformation, and 4) khat values from the PSIS-LOO. None of these diagnostics can find problems in the model fit.
 
@@ -324,7 +414,7 @@ grid.arrange(ppc1,ppc2,ppc3,pkhats,ncol=2)
 ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 ```
 
-![](geomagnetic_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](geomagnetic_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 We compute also PSIS-LOO estimate, although this is not much useful without alternative model to compare.
 
@@ -337,8 +427,8 @@ We compute also PSIS-LOO estimate, although this is not much useful without alte
 ## 
 ##          Estimate   SE
 ## elpd_loo  -1874.7 23.7
-## p_loo         1.8  0.2
-## looic      3749.4 47.3
+## p_loo         1.7  0.2
+## looic      3749.3 47.3
 ## 
 ## All Pareto k estimates are good (k < 0.5)
 ## See help('pareto-k-diagnostic') for details.
@@ -375,35 +465,38 @@ sessionInfo()
 ##  [1] bindrcpp_0.2         loo_1.1.0            bayesplot_1.4.0     
 ##  [4] rstan_2.16.2         StanHeaders_2.16.0-1 rstanarm_2.15.3     
 ##  [7] Rcpp_0.12.13         gridExtra_2.3        dplyr_0.7.4         
-## [10] tidyr_0.7.2          ggplot2_2.2.1       
+## [10] tidyr_0.7.2          ggplot2_2.2.1        extraDistr_1.8.7    
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] lattice_0.20-35    zoo_1.8-0          gtools_3.5.0      
-##  [4] assertthat_0.2.0   rprojroot_1.2      digest_0.6.12     
-##  [7] mime_0.5           R6_2.2.2           plyr_1.8.4        
-## [10] backports_1.1.1    stats4_3.2.3       evaluate_0.10.1   
-## [13] colourpicker_1.0   rlang_0.1.4        lazyeval_0.2.1    
-## [16] minqa_1.2.4        miniUI_0.1.1       nloptr_1.0.4      
-## [19] Matrix_1.2-11      DT_0.2             rmarkdown_1.6     
-## [22] labeling_0.3       shinythemes_1.1.1  shinyjs_0.9.1     
-## [25] splines_3.2.3      lme4_1.1-14        stringr_1.2.0     
-## [28] htmlwidgets_0.9    igraph_1.1.0       munsell_0.4.3     
-## [31] shiny_1.0.5        httpuv_1.3.5       pkgconfig_2.0.1   
-## [34] base64enc_0.1-3    rstantools_1.3.0   htmltools_0.3.6   
-## [37] tidyselect_0.2.2   tibble_1.3.4       codetools_0.2-15  
-## [40] threejs_0.3.1      matrixStats_0.52.2 MASS_7.3-47       
-## [43] grid_3.2.3         nlme_3.1-131       xtable_1.8-2      
-## [46] gtable_0.2.0       magrittr_1.5       scales_0.5.0      
-## [49] stringi_1.1.5      reshape2_1.4.2     dygraphs_1.1.1.4  
-## [52] xts_0.10-0         tools_3.2.3        glue_1.2.0        
-## [55] markdown_0.8       shinystan_2.4.0    purrr_0.2.4       
-## [58] crosstalk_1.0.0    rsconnect_0.8.5    parallel_3.2.3    
-## [61] yaml_2.1.14        inline_0.3.14      colorspace_1.3-2  
-## [64] knitr_1.17         bindr_0.1
+##  [1] splines_3.2.3      gtools_3.5.0       threejs_0.3.1     
+##  [4] shiny_1.0.5        assertthat_0.2.0   stats4_3.2.3      
+##  [7] yaml_2.1.14        backports_1.1.1    lattice_0.20-35   
+## [10] glue_1.2.0         digest_0.6.12      minqa_1.2.4       
+## [13] colorspace_1.3-2   htmltools_0.3.6    httpuv_1.3.5      
+## [16] Matrix_1.2-11      plyr_1.8.4         dygraphs_1.1.1.4  
+## [19] pkgconfig_2.0.1    purrr_0.2.4        xtable_1.8-2      
+## [22] scales_0.5.0       lme4_1.1-14        tibble_1.3.4      
+## [25] DT_0.2             shinyjs_0.9.1      lazyeval_0.2.1    
+## [28] magrittr_1.5       mime_0.5           evaluate_0.10.1   
+## [31] nlme_3.1-131       MASS_7.3-47        xts_0.10-0        
+## [34] colourpicker_1.0   rsconnect_0.8.5    tools_3.2.3       
+## [37] matrixStats_0.52.2 stringr_1.2.0      munsell_0.4.3     
+## [40] rlang_0.1.4        grid_3.2.3         nloptr_1.0.4      
+## [43] htmlwidgets_0.9    crosstalk_1.0.0    igraph_1.1.0      
+## [46] miniUI_0.1.1       base64enc_0.1-3    labeling_0.3      
+## [49] rmarkdown_1.6      gtable_0.2.0       codetools_0.2-15  
+## [52] inline_0.3.14      markdown_0.8       reshape2_1.4.2    
+## [55] R6_2.2.2           rstantools_1.3.0   zoo_1.8-0         
+## [58] knitr_1.17         bindr_0.1          shinystan_2.4.0   
+## [61] shinythemes_1.1.1  rprojroot_1.2      stringi_1.1.5     
+## [64] parallel_3.2.3     tidyselect_0.2.2
 ```
 
 <br />
 
+### Appendix: Acknowledgments
+
+I thank Ben Goodrich for useful comments on the draft of this notebook.
 
 ### Appendix: Licenses
 

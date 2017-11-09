@@ -1,47 +1,50 @@
 functions {
   real gpareto_lpdf(vector y, real ymin, real k, real sigma) {
     // generalised Pareto log pdf 
-    int N;
-    N = dims(y)[1];
-    if (k<0 && max(y-ymin)/sigma > -1/k)
+    int N = rows(y);
+    real inv_k = inv(k);
+    if (k<0 && max(y-ymin)/sigma > -inv_k)
       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
     if (sigma<=0)
       reject("sigma<=0; found sigma =", sigma)
     if (fabs(k) > 1e-15)
-      return -(1+1/k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
+      return -(1+inv_k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
     else
       return -sum(y-ymin)/sigma -N*log(sigma); // limit k->0
   }
   real gpareto_cdf(vector y, real ymin, real k, real sigma) {
     // generalised Pareto cdf
-    if (k<0 && max(y-ymin)/sigma > -1/k)
+    real inv_k = inv(k);
+    if (k<0 && max(y-ymin)/sigma > -inv_k)
       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
     if (sigma<=0)
       reject("sigma<=0; found sigma =", sigma)
     if (fabs(k) > 1e-15)
-      return exp(sum(log1m_exp((-1/k)*(log1p((y-ymin) * (k/sigma))))));
+      return exp(sum(log1m_exp((-inv_k)*(log1p((y-ymin) * (k/sigma))))));
     else
       return exp(sum(log1m_exp(-(y-ymin)/sigma))); // limit k->0
   }
   real gpareto_lcdf(vector y, real ymin, real k, real sigma) {
     // generalised Pareto log cdf
-    if (k<0 && max(y-ymin)/sigma > -1/k)
+    real inv_k = inv(k);
+    if (k<0 && max(y-ymin)/sigma > -inv_k)
       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
     if (sigma<=0)
       reject("sigma<=0; found sigma =", sigma)
     if (fabs(k) > 1e-15)
-      return sum(log1m_exp((-1/k)*(log1p((y-ymin) * (k/sigma)))));
+      return sum(log1m_exp((-inv_k)*(log1p((y-ymin) * (k/sigma)))));
     else
       return sum(log1m_exp(-(y-ymin)/sigma)); // limit k->0
   }
   real gpareto_lccdf(vector y, real ymin, real k, real sigma) {
     // generalised Pareto log ccdf
-    if (k<0 && max(y-ymin)/sigma > -1/k)
+    real inv_k = inv(k);
+    if (k<0 && max(y-ymin)/sigma > -inv_k)
       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
     if (sigma<=0)
       reject("sigma<=0; found sigma =", sigma)
     if (fabs(k) > 1e-15)
-      return (-1/k)*sum(log1p((y-ymin) * (k/sigma)));
+      return (-inv_k)*sum(log1p((y-ymin) * (k/sigma)));
     else
       return -sum(y-ymin)/sigma; // limit k->0
   }

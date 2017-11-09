@@ -1,9 +1,9 @@
 ---
 title: "Bayesian Logistic Regression with rstanarm"
 output:
+  html_notebook: default
   html_document:
     keep_md: yes
-  html_notebook: default
 ---
 
 # Bayesian Logistic Regression with rstanarm 
