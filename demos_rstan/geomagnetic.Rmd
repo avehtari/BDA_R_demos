@@ -9,7 +9,7 @@ output:
   html_notebook: default
 ---
 
-This notebook demonstrates how to implement user defined probability functions in Stan language. As a an example I use  generalized Pareto distribution (GPD) and geomagnetic storm data by World Data Center for Geomagnetism.
+This notebook demonstrates how to implement user defined probability functions in Stan language. As an example I use the generalized Pareto distribution (GPD) to model geomagnetic storm data from the World Data Center for Geomagnetism.
 
 Load some libraries:
 ```{r, comment=NA, results='hide', message=FALSE, warning=FALSE}
@@ -31,18 +31,19 @@ Read the data. This file has magnitudes of 373 geomagnetic storms which lasted l
 ```{r}
 # file preview shows a header row
 d <- read.csv("geomagnetic_tail_data.csv", header = FALSE)
+# dst are the absolute magnitudes
 colnames(d) <- "dst"
 d <- d %>% mutate(dst = abs(dst)) %>% arrange(dst)
 ```
 
-Compute empirical complementary cumulative distribution function.
+Compute the empirical complementary cumulative distribution function
 ```{r}
 n <- dim(d)[1]
 d$ccdf <- seq(n,1,-1)/n
 head(d)
 ```
 
-Plot just the data and empirical ccdf
+Plot just empirical ccdf against the measured magnitudes
 ```{r}
 ggplot() + 
   geom_point(aes(dst, ccdf), data = d, size = 1, colour = "blue") +
@@ -55,9 +56,9 @@ ggplot() +
   theme_bw()
 ```
 
-The largest event in the data is the March 1989 geomagnetic storm also known as Quebec blackout event (https://en.wikipedia.org/wiki/March_1989_geomagnetic_storm). Now we are interested in estimating the probability of observing a same magnitude event in the future which would be helpful, for example, for insurance companies (for a short term geomagnetic storm predictions there are very elaborate models using observations closer to sun, too). Extreme value theory says that many distributions have a tail which is well modelled with generalized Pareto distribution given the cutoff point is far enough in the tail. For a more detailed model we could also take into account that geomagnetic storms are temporally correlated and tend to appear in bursts.
+The largest event in the data is the March 1989 geomagnetic storm, also known as Quebec blackout event (https://en.wikipedia.org/wiki/March_1989_geomagnetic_storm). Now we are interested in estimating the probability of observing a same magnitude event in the future which would be helpful, for example, for insurance companies (for a short term geomagnetic storm predictions there are very elaborate models using observations closer to sun, too). Extreme value theory says that many distributions have a tail which is well modelled with generalized Pareto distribution given the cutoff point is far enough in the tail. For a more detailed model we could also take into account that geomagnetic storms are temporally correlated and tend to appear in bursts.
 
-Generalized Pareto distribution is defined as
+The Generalized Pareto distribution is defined as
 $$ 
   p(y|u,\sigma,k)=
   \begin{cases}
@@ -65,10 +66,9 @@ $$
     \frac{1}{\sigma}\exp\left(\frac{y-u}{\sigma}\right), & k = 0,
   \end{cases}
 $$
-where $u$ is a lower bound parameter, $y$ is restricted to the range
-$(u,\infty)$, $\sigma$ is a scale parameter, and $k$ is a shape parameter (see, e.g., https://en.wikipedia.org/wiki/Generalized_Pareto_distribution for cdf and random number generation).
+where $u$ is a lower bound parameter, $\sigma$ is a scale parameter, $k$ is a shape parameter, and $y$ is the data restricted to the range $(u, \inf)$ (see, e.g., https://en.wikipedia.org/wiki/Generalized_Pareto_distribution for cdf and random number generation).
 
-For probability distributions implemented in Stan math library there are functions
+For probability distributions implemented in the Stan math library there are functions
 
 * _lpdf (or _lpmf): log probability density (mass) function
 * _cdf: cumulative distribution function
@@ -76,9 +76,9 @@ For probability distributions implemented in Stan math library there are functio
 * _lccdf: log complementary cumulative distribution function
 * _rng: generate random variables from the distribution
 
-The user defined functions can have only one function signature unlike the functions implemented in C++ in Stan math library. In the example I have chosen the function signatures so that the behavior is as close as possible to most usual ways to call these functions. The main feature is that all these function return a scalar real value (except _rng would return scalar integer for a discrete integer valued distribution).
+Unlike the functions implemented in the C++ Stan math library, the user defined functions can have only signature. In the example I have chosen the function signatures so that the behavior is as close as possible to most usual ways to call these functions. The main feature is that all these function return a scalar real value (except _rng would return scalar integer for a discrete integer valued distribution).
 
-For generalized Pareto distribution we implement
+For the Generalized Pareto distribution we implement
 
 * real **gpareto_lpdf**(vector *y* | real *ymin*, real *k*, real *sigma*)
 * real **gpareto_cdf**(vector *y* | real *ymin*, real *k*, real *sigma*)
@@ -90,11 +90,11 @@ As we can define only one function signature for user defined functions, I have 
 
 The whole code for functions, the basic model and generated quantities for posterior predictive checking (ppc), leave-one-out cross-validation (loo), and prediction of rare events is shown below. I will next go through some practical details.
 
-```{r}
+```{r, comment=NA}
 writeLines(readLines("gpareto.stan"))
 ```
 
-For each function we do basic argument checking. In addition of invalid values due to user errors, due to the limited accuracy of the floating point presentation of the values, sometimes we may get invalid parameters, for example. sigma equal to zero, even if we have declared it as `real<lower=0> sigma;`. For these latter cases, it is useful to use `reject` statement, and the corresponding MCMC proposal will be rejected and the sampling can continue.
+For each function we do basic argument checking. In addition of invalid values due to user errors, due to the limited accuracy of the floating point presentation of the values, sometimes we may get invalid parameters, for example. sigma equal to zero, even if we have declared it as `real<lower=0> sigma;`. For these latter cases, it is useful to use `reject` statement so the corresponding MCMC proposal will be rejected and the sampling can continue.
 ```
     if (k<0 && max(y-ymin)/sigma > -inv_k)
       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
@@ -102,7 +102,7 @@ For each function we do basic argument checking. In addition of invalid values d
       reject("sigma<=0; found sigma =", sigma)
 ```
 
-Stan documentation warns about use of `fabs` and conditional evaluation as they may lead to discontinuous energy or gradient. In GPD we need to handle a special case of k->0. The following will cause discontinuity, but the magnitude of the discontinuity is the same order as the accuracy of the floating point presentation, and thus we are not 
+Stan documentation warns about use of `fabs` and conditional evaluation as they may lead to discontinuous energy or gradient. In GPD we need to handle a special case of k->0. The following will cause discontinuity, but the magnitude of the discontinuity is the same order as the accuracy of the floating point presentation, and thus we are not [[[[[I think something is missing here]]]]]
 ```
     if (fabs(k) > 1e-15)
       return -(1+inv_k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
@@ -208,9 +208,9 @@ check_treedepth(fit_gpd)
 check_energy(fit_gpd)
 check_div(fit_gpd)
 ```
-Diagnostics do not find anything alarming.
+The diagnostics do not reveal anything alarming.
 
-Plot the model fit with 90% posterior interval. The largest observed magnitude in the data corresponds to Quebec blackout in 1989 (https://en.wikipedia.org/wiki/March_1989_geomagnetic_storm). The vertical dashed line at 850 shows the estimated magnitude of Carrington event in 1859 (https://en.wikipedia.org/wiki/Solar_storm_of_1859).
+Plot the model fit with 90% posterior interval. The largest observed magnitude in the data corresponds to Quebec blackout in 1989 (https://en.wikipedia.org/wiki/March_1989_geomagnetic_storm). The vertical dashed line at 850 shows the estimated magnitude of the Carrington event in 1859 (https://en.wikipedia.org/wiki/Solar_storm_of_1859).
 ```{r}
 gpd_params <- rstan::extract(fit_gpd)
 mu <- apply(t(gpd_params$predccdf), 1, quantile, c(0.05, 0.5, 0.95)) %>%
@@ -231,7 +231,7 @@ ggplot() +
   theme_bw()
 ```
 
-For additional model checking plot 1) kernel density estimate of log(dst) and posterior predictive replicates, 2) max log magnitude (Quebec event) and histogram of maximums of posterior predictive replicates, 3) leave-one-out cross-validation probability-integral-transformation, and 4) khat values from the PSIS-LOO. None of these diagnostics can find problems in the model fit.
+For additional model checking plot 1) kernel density estimate of log(dst) and posterior predictive replicates, 2) max log magnitude (Quebec event) and histogram of maximums of posterior predictive replicates, 3) leave-one-out cross-validation probability-integral-transformation, and 4) khat values from the PSIS-LOO. None of these diagnostics reveal problems in the model fit.
 ```{r}
 ppc1 <- ppc_dens_overlay(log(d$dst),log(gpd_params$yrep[1:50,])) + labs(x="log(absolute dst)")
 ppc2 <- ppc_stat(log(d$dst), log(gpd_params$yrep), stat = "max") + labs(x="max(log(absolute dst))")
@@ -243,12 +243,14 @@ ppc3 <- ppc_loo_pit(log(d$dst), log(gpd_params$yrep), lw=psis$lw_smooth)
 grid.arrange(ppc1,ppc2,ppc3,pkhats,ncol=2)
 ```
 
-We compute also PSIS-LOO estimate, although this is not much useful without alternative model to compare.
+We compute also PSIS-LOO estimate, although this is not much use without an alternative model to compare against.
 ```{r}
 (loo_gpd<-loo(gpd_params$log_lik))
 ```
 
-Here the analysis was simplified by assuming the geomagnetic storm events to be independent in time although they appear in bursts. Generalized Pareto distribution is valid fit also for correlated data, but for predicting the probability of Quebec blackout magnitude event in the future we should take into account also the correlation. Based on the simplified assumption the probability that we would observe Quebec blackout magnitude event in the next 57 years is 80% and the probability of observing Carrington level event in the next 57 years is 40%. Now go read the effects of these geomagnetic storms.
+Here the analysis was simplified by assuming the geomagnetic storm events to be independent in time although they appear in bursts. The Generalized Pareto distribution can fit correlated data, but we should really take the correlation into account for predicting the probability of Quebec blackout magnitude event in the future. Based on the simplified assumption though, the probability that we would observe Quebec blackout magnitude event in the next 57 years is 80% and the probability of observing Carrington level event in the next 57 years is 40% (these probabilities can be computed from the `yrep` generated quantities).
+
+Now go read about the effects of these geomagnetic storms!
 
 <br />
 
