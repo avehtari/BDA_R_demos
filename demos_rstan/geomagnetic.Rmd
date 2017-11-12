@@ -3,13 +3,13 @@ title: "Extreme value analysis and user defined probability functions in Stan"
 author: "Aki Vehtari"
 date: "`r format(Sys.Date())`"
 output:
+  pdf_document: default
   html_document:
     keep_md: yes
-  pdf_document: default
   html_notebook: default
 ---
 
-This notebook demonstrates how to implement user defined probability functions in Stan language. As a an example I use  generalized Pareto distribution (GPD) and geomagnetic storm data by World Data Center for Geomagnetism.
+This notebook demonstrates how to implement user defined probability functions in Stan language. As a an example I use  generalized Pareto distribution (GPD) and geomagnetic storm data by World Data Center for Geomagnetism. 
 
 Load some libraries:
 ```{r, comment=NA, results='hide', message=FALSE, warning=FALSE}
@@ -18,7 +18,6 @@ library(ggplot2)
 library(tidyr)
 library(dplyr)
 library(gridExtra)
-library(rstanarm)
 library(rstan)
 library(bayesplot)
 library(loo)
@@ -50,7 +49,8 @@ ggplot() +
   scale_y_continuous(breaks=c(1e-5,1e-4,1e-3,1e-2,1e-1,1), limits=c(1e-4,1)) +
   scale_x_continuous(breaks=c(100,200,300,400,500,600,700,850,1000), limits=c(100,1000)) +
   labs(y = "Probability earth's field weakens at least this much", x= "Absolute dst") +
-  geom_text(aes(x = d$dst[n], y = d$ccdf[n]), label = "Quebec blackout", vjust="top", nudge_y=-0.0005) +
+  geom_text(aes(x = d$dst[n], y = d$ccdf[n]), 
+            label = "Quebec blackout", vjust="top", nudge_y=-0.0005) +
   guides(linetype = F) + 
   theme_bw()
 ```
@@ -76,7 +76,7 @@ For probability distributions implemented in Stan math library there are functio
 * _lccdf: log complementary cumulative distribution function
 * _rng: generate random variables from the distribution
 
-The user defined functions can have only one function signature unlike the functions implemented in C++ in Stan math library. In the example I have chosen the function signatures so that the behavior is as close as possible to most usual ways to call these functions. The main feature is that all these function return a scalar real value (except _rng would return scalar integer for a discrete integer valued distribution).
+The user defined functions can have only one function signature unlike the functions implemented in C++ in Stan math library. In this example, I have chosen the function signatures so that the behavior is as close as possible to most usual ways to call these functions. The main feature is that all these function return a scalar real value (except _rng would return scalar integer for a discrete integer valued distribution).
 
 For generalized Pareto distribution we implement
 
@@ -86,15 +86,15 @@ For generalized Pareto distribution we implement
 * real **gpareto_lccdf**(vector *y* | real *ymin*, real *k*, real *sigma*)
 * real **gpareto_rng**(real *ymin*, real *k*, real *sigma*)
 
-As we can define only one function signature for user defined functions, I have now chosen to have vector type for *y* and real types for the parameters, while builtin functions can handle vectors, arrays and scalars (denoted by generic type `reals`).  For vector valued *y* _lpdf, _lcdf, and _lccdf return sum of log values computed with each element of *y*. For vector valued *y* _cdf returns product of values computed with each element of *y*. _rng returns a single random number generated from the generalized Pareto distribution.
+As we can define only one function signature for user defined functions, I have chosen to have vector type for *y* and real types for the parameters, while builtin functions can handle vectors, arrays and scalars (denoted by generic type `reals`).  For vector valued *y*, _lpdf, _lcdf, and _lccdf return sum of log values computed with each element of *y*. For vector valued *y*, _cdf returns product of values computed with each element of *y*. _rng returns a single random number generated from the generalized Pareto distribution.
 
-The whole code for functions, the basic model and generated quantities for posterior predictive checking (ppc), leave-one-out cross-validation (loo), and prediction of rare events is shown below. I will next go through some practical details.
+The whole code for functions, the basic model and the generated quantities for posterior predictive checking (ppc), leave-one-out cross-validation (loo), and prediction of rare events is shown below. I will next go through some practical details.
 
 ```{r}
 writeLines(readLines("gpareto.stan"))
 ```
 
-For each function we do basic argument checking. In addition of invalid values due to user errors, due to the limited accuracy of the floating point presentation of the values, sometimes we may get invalid parameters, for example. sigma equal to zero, even if we have declared it as `real<lower=0> sigma;`. For these latter cases, it is useful to use `reject` statement, and the corresponding MCMC proposal will be rejected and the sampling can continue.
+For each function we do basic argument checking. In addition of invalid values due to user errors, due to the limited accuracy of the floating point presentation of the values, sometimes we may get invalid parameters. For example, due to the underflow, we may get sigma equal to 0, even if we have declared it as `real<lower=0> sigma;`. For these cases, it is useful to use `reject` statement, and the corresponding MCMC proposal will be rejected and the sampling can continue.
 ```
     if (k<0 && max(y-ymin)/sigma > -inv_k)
       reject("k<0 and max(y-ymin)/sigma > -1/k; found k, sigma =", k, sigma)
@@ -102,7 +102,7 @@ For each function we do basic argument checking. In addition of invalid values d
       reject("sigma<=0; found sigma =", sigma)
 ```
 
-Stan documentation warns about use of `fabs` and conditional evaluation as they may lead to discontinuous energy or gradient. In GPD we need to handle a special case of k->0. The following will cause discontinuity, but the magnitude of the discontinuity is the same order as the accuracy of the floating point presentation, and thus we are not 
+Stan documentation warns about the use of `fabs` and conditional evaluation as they may lead to discontinuous energy or gradient. In GPD we need to handle the special case of $k \rightarrow 0$. The following will cause discontinuity, but the magnitude of the discontinuity is the same order as the accuracy of the floating point presentation, and thus we are not 
 ```
     if (fabs(k) > 1e-15)
       return -(1+inv_k)*sum(log1p((y-ymin) * (k/sigma))) -N*log(sigma);
@@ -186,8 +186,9 @@ all.equal(exp(gpareto_lcdf(yr, ymin, k, sigma)),1-exp(gpareto_lccdf(yr, ymin, k,
 all.equal(gpareto_lpdf(yr, ymin, k, sigma),dgpd(yr, mu = ymin, sigma = sigma, xi = k, log = TRUE))
 # check that gparetp_cdf matches pgpd() in extraDistr
 all.equal(gpareto_cdf(yr, ymin, k, sigma),pgpd(yr, mu = ymin, sigma = sigma, xi = k, log = FALSE))
-# test that values generated by gpareto_rng have approximately correct moments
+# test that values generated by gpareto_rng have approximately correct sigma and k
 yrs <- replicate(1e6, gpareto_rng(ymin, k, sigma))
+# estimate sigma and k using method by Zhang & Stephens (2009)
 th <- loo::gpdfit(yrs-ymin)
 sprintf('True sigma=%.2f, k=%.2f, estimated sigmahat=%.2f, khat=%.2f', sigma, k, th$sigma, th$k)
 ```
@@ -202,7 +203,7 @@ fit_gpd <- stan(file='gpareto.stan', data=ds, refresh=0,
                      chains=4, seed=100) #850
 ```
 
-Run the usual diagnostics
+Run the usual diagnostics (see [Robust Statistical Workflow with RStan](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html))
 ```{r}
 check_treedepth(fit_gpd)
 check_energy(fit_gpd)
@@ -248,7 +249,12 @@ We compute also PSIS-LOO estimate, although this is not much useful without alte
 (loo_gpd<-loo(gpd_params$log_lik))
 ```
 
-Here the analysis was simplified by assuming the geomagnetic storm events to be independent in time although they appear in bursts. Generalized Pareto distribution is valid fit also for correlated data, but for predicting the probability of Quebec blackout magnitude event in the future we should take into account also the correlation. Based on the simplified assumption the probability that we would observe Quebec blackout magnitude event in the next 57 years is 80% and the probability of observing Carrington level event in the next 57 years is 40%. Now go read the effects of these geomagnetic storms.
+Here the analysis was simplified by assuming the geomagnetic storm events to be independent in time although they appear in bursts. Generalized Pareto distribution is valid fit also for correlated data, but for predicting the probability of Quebec blackout magnitude event in the future we should take into account also the correlation. Using the simplified independence assumption and assuming same number of events larger than 100 in the next 57 years, we can compute
+```{r}
+round(mean(1-(1-gpd_params$predccdf[,78])^(373)),2)
+round(mean(1-(1-gpd_params$predccdf[,102])^(373)),2)
+```
+That is, the probability that we would observe Quebec blackout magnitude event in the next 57 years is 80% and the probability of observing Carrington level event in the next 57 years is 40%. Now go read the effects of these geomagnetic storms.
 
 <br />
 
