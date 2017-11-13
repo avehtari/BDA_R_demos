@@ -4,6 +4,8 @@ Aki Vehtari
 
 This notebook demonstrates how to implement user defined probability functions in Stan language. As an example I use the generalized Pareto distribution (GPD) to model geomagnetic storm data from the World Data Center for Geomagnetism.
 
+## Setting up the environment
+
 Load some libraries:
 
 ```r
@@ -19,6 +21,8 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 source("stan_utility.R")
 ```
+
+## Data
 
 Read the data. This file has magnitudes of 373 geomagnetic storms which lasted longer than 48h with absolute magnitude larger than 100 in 1957-2014.
 
@@ -67,6 +71,8 @@ ggplot() +
 
 The largest event in the data is the March 1989 geomagnetic storm, also known as Quebec blackout event (https://en.wikipedia.org/wiki/March_1989_geomagnetic_storm). Now we are interested in estimating the probability of observing a same magnitude event in the future which would be helpful, for example, for insurance companies (for a short term geomagnetic storm predictions there are very elaborate models using observations closer to sun, too). Extreme value theory says that many distributions have a tail which is well modelled with generalized Pareto distribution given the cutoff point is far enough in the tail. For a more detailed model we could also take into account that geomagnetic storms are temporally correlated and tend to appear in bursts.
 
+## Generalized Pareto distribution
+
 The Generalized Pareto distribution is defined as
 $$ 
   p(y|u,\sigma,k)=
@@ -96,6 +102,8 @@ For the Generalized Pareto distribution we implement
 * real **gpareto_rng**(real *ymin*, real *k*, real *sigma*)
 
 As we can define only one function signature for user defined functions, I have chosen to have vector type for *y* and real types for the parameters, while builtin functions can handle vectors, arrays and scalars (denoted by generic type `reals`).  For vector valued *y*, _lpdf, _lcdf, and _lccdf return sum of log values computed with each element of *y*. For vector valued *y*, _cdf returns product of values computed with each element of *y*. _rng returns a single random number generated from the generalized Pareto distribution.
+
+## Stan code with user defined functions
 
 The whole code for functions, the basic model and the generated quantities for posterior predictive checking (ppc), leave-one-out cross-validation (loo), and prediction of rare events is shown below. I will next go through some practical details.
 
@@ -268,6 +276,8 @@ gpareto_pdf <- function(y, ymin, k, sigma) {
 }
 ```
 
+## Testing the user defined functions
+
 Run some tests for the user defined functions
 
 ```r
@@ -281,7 +291,7 @@ integrate(gpareto_pdf, lower = ymin, upper = Inf,  ymin = ymin, k = k, sigma = s
 ```
 
 ```
-## 1 with absolute error < 4e-10
+## 1 with absolute error < 8.8e-05
 ```
 
 ```r
@@ -340,8 +350,10 @@ sprintf('True sigma=%.2f, k=%.2f, estimated sigmahat=%.2f, khat=%.2f', sigma, k,
 ```
 
 ```
-## [1] "True sigma=0.09, k=0.07, estimated sigmahat=0.09, khat=0.07"
+## [1] "True sigma=1.02, k=0.00, estimated sigmahat=1.02, khat=0.00"
 ```
+
+## Run Stan
 
 Next we use the defined Stan model to analyse the distribution of the largest geomagnetic storms.
 
@@ -353,6 +365,8 @@ ds<-list(ymin=100, N=n, y=d$dst, Nt=length(yt), yt=yt)
 fit_gpd <- stan(file='gpareto.stan', data=ds, refresh=0,
                      chains=4, seed=100)
 ```
+
+## MCMC diagnostics
 
 Run the usual diagnostics (see [Robust Statistical Workflow with RStan](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html))
 
@@ -373,6 +387,8 @@ check_div(fit_gpd)
 ## [1] "0 of 4000 iterations ended with a divergence (0%)"
 ```
 The diagnostics do not reveal anything alarming.
+
+## Predictions
 
 Plot the model fit with 90% posterior interval. The largest observed magnitude in the data corresponds to Quebec blackout in 1989 (https://en.wikipedia.org/wiki/March_1989_geomagnetic_storm). The vertical dashed line at 850 shows the estimated magnitude of the Carrington event in 1859 (https://en.wikipedia.org/wiki/Solar_storm_of_1859).
 
@@ -397,6 +413,8 @@ ggplot() +
 ```
 
 ![](geomagnetic_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
+## Posterior and LOO predictive checking
 
 For additional model checking plot 1) kernel density estimate of log(dst) and posterior predictive replicates, 2) max log magnitude (Quebec event) and histogram of maximums of posterior predictive replicates, 3) leave-one-out cross-validation probability-integral-transformation, and 4) khat values from the PSIS-LOO. None of these diagnostics reveal problems in the model fit.
 
@@ -434,6 +452,8 @@ We compute also PSIS-LOO estimate, although this is not much use without an alte
 ## All Pareto k estimates are good (k < 0.5)
 ## See help('pareto-k-diagnostic') for details.
 ```
+
+## Conclusion on the data analysis
 
 Here the analysis was simplified by assuming the geomagnetic storm events to be independent in time although they appear in bursts. The Generalized Pareto distribution can be used for correlated data, but we should really take the correlation into account for predicting the magnitude of storms in the future . Based on the simplified independence assumption though, and assuming same number of events larger than 100 in the next 57 years, we can compute
 
