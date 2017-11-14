@@ -1,6 +1,6 @@
 ---
 title: "Extreme value analysis and user defined probability functions in Stan"
-author: "Aki Vehtari"
+author: "[Aki Vehtari](https://users.aalto.fi/~ave/)"
 date: "`r format(Sys.Date())`"
 output:
   html_document:
