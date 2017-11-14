@@ -1,8 +1,7 @@
 ---
 title: "Sleep"
 output:
-  html_document:
-    keep_md: yes
+  html_document: default
   html_notebook: default
 ---
 

@@ -3,8 +3,7 @@ title: "Bayesian data analysis - traffic deaths in Finland"
 author: "Aki Vehtari"
 date: '`r format(Sys.Date())`'
 output:
-  html_document:
-    keep_md: yes
+  html_document: default
   html_notebook: default
 ---
 
