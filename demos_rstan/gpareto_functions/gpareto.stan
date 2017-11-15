@@ -53,9 +53,9 @@ functions {
     if (sigma<=0)
       reject("sigma<=0; found sigma =", sigma)
     if (fabs(k) > 1e-15)
-      return (ymin + (pow(uniform_rng(0,1),-k)-1)*sigma/k);
+      return ymin + (uniform_rng(0,1)^-k -1) * sigma / k;
     else
-      return (ymin - sigma*log(1/uniform_rng(0,1)-1)); // limit k->0
+      return ymin - sigma*log(uniform_rng(0,1)); // limit k->0
   }
 }
 data {
@@ -66,8 +66,7 @@ data {
   vector<lower=ymin>[Nt] yt;
 }
 transformed data {
-  real ymax;
-  ymax = max(y);
+  real ymax = max(y);
 }
 parameters {
   real<lower=0> sigma; 
