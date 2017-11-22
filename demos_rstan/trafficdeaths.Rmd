@@ -3,8 +3,7 @@ title: "Bayesian data analysis - traffic deaths in Finland"
 author: "Aki Vehtari"
 date: '`r format(Sys.Date())`'
 output:
-  html_document:
-    keep_md: yes
+  html_document: default
   html_notebook: default
 ---
 
@@ -137,3 +136,19 @@ compare(loo_lin,loo_gp)
 ```
 
 There are no practical differences in predictive performance, which is partially due to small number of observations. Based on the posterior predictive distributions there are clear differences in the future predictions.
+
+<br />
+
+### Appendix: Session information
+
+```{r}
+sessionInfo()
+```
+
+<br />
+
+
+### Appendix: Licenses
+
+* Code &copy; 2017, Aki Vehtari, licensed under BSD-3.
+* Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.

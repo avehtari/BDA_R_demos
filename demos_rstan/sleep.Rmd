@@ -162,3 +162,18 @@ ggplot(msleep) +
 ```
 
 Here the distribution of the sleep times is restricted to be between 0 and 24 hours.
+
+
+<br />
+
+### Appendix: Session information
+
+```{r}
+sessionInfo()
+```
+
+<br />
+
+### Appendix: Licenses
+
+* Code & Text &copy; 2016, Tristan Mahr, Aki Vehtari, licensed under MIT
