@@ -4,6 +4,7 @@
 
 library(ggplot2)
 library(gridExtra)
+library(grid)
 library(tidyr)
 library(MASS)
 
@@ -45,12 +46,11 @@ samp_indices <- sample(length(p), size = nsamp,
 samp_A <- cA[samp_indices[1:nsamp]]
 samp_B <- cB[samp_indices[1:nsamp]]
 # add random jitter, see BDA3 p. 76
-samp_A <- samp_A + runif(nsamp, A[1] - A[2], A[2] - A[1])
-samp_B <- samp_B + runif(nsamp, B[1] - B[2], B[2] - B[1])
+samp_A <- samp_A + runif(nsamp, (A[1] - A[2])/2, (A[2] - A[1])/2)
+samp_B <- samp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
 
-# samples of LD50 conditional beta > 0
-bpi <- samp_B > 0
-samp_ld50 <- -samp_A[bpi]/samp_B[bpi]
+# samples of LD50
+samp_ld50 <- -samp_A/samp_B
 
 # limits for the plots
 xl <- c(-2, 8)
@@ -73,7 +73,7 @@ sam <- ggplot(data = data.frame(samp_A, samp_B)) +
 
 # plot of the histogram of LD50
 his <- ggplot() +
-  geom_histogram(aes(samp_ld50), binwidth = 0.04,
+  geom_histogram(aes(samp_ld50), binwidth = 0.1,
                  fill = 'steelblue', color = 'black') +
   coord_cartesian(xlim = c(-0.8, 0.8)) +
   labs(x = 'LD50 = -alpha/beta')
@@ -100,15 +100,15 @@ dmvnorm <- function(x, mu, sig)
 p <- apply(cbind(cA, cB), 1, dmvnorm, w, S)
 
 # sample from the multivariate normal 
-normsamp <- mvrnorm(nsamp, w, S)
+samp_norm <- mvrnorm(nsamp, w, S)
 
 # samples of LD50 conditional beta > 0
 # Normal approximation does not take into account that the posterior
 # is not symmetric and that there is very low density for negative
 # beta values. Based on the draws from the normal approximation
 # is is estimated that there is about 5% probability that beta is negative!
-bpi <- normsamp[,2] > 0
-normsamp_ld50 <- -normsamp[bpi,1]/normsamp[bpi,2]
+bpi <- samp_norm[,2] > 0
+samp_norm_ld50 <- -samp_norm[bpi,1]/samp_norm[bpi,2]
 
 # create a plot of the posterior density
 pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
@@ -120,17 +120,59 @@ pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   scale_alpha(range = c(0, 1), guide = F)
 
 # plot of the samples
-sam_norm <- ggplot(data = data.frame(samp_A=normsamp[,1], samp_B=normsamp[,2])) +
+sam_norm <- ggplot(data = data.frame(samp_A=samp_norm[,1], samp_B=samp_norm[,2])) +
   geom_point(aes(samp_A, samp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta')
 
 # plot of the histogram of LD50
 his_norm <- ggplot() +
-  geom_histogram(aes(normsamp_ld50), binwidth = 0.04,
+  geom_histogram(aes(samp_norm_ld50), binwidth = 0.1,
                  fill = 'steelblue', color = 'black') +
   coord_cartesian(xlim = c(-0.8, 0.8)) +
   labs(x = 'LD50 = -alpha/beta, beta > 0')
 
+# importance sampling
+# multivariate normal log probability density function
+ldmvnorm <- function(x, mu, sig)
+  (-0.5*(length(x)*log(2*pi) + log(det(sig)) + (x-mu)%*%solve(sig, x-mu)))
+lg <- apply(samp_norm, 1, ldmvnorm, w, S)
+lp <- apply(df1, 1, logl, samp_norm[,1], samp_norm[,2]) %>% rowSums()
+lw <- lp-lg
+library(loo)
+psis <- psislw(lw)
+pis <- exp(psis$lw_smooth)
+# Pareto diagnostics
+print(psis$pareto_k)
+
+# Importance sampling weights could be used to weight different expectations directly, but 
+# for visualisation and easy computation of LD50 histogram, we use resampling importance sampling.
+samp_indices <- sample(length(pis), size = nsamp,
+                       replace = T, prob = pis)
+
+rissamp_A <- samp_norm[samp_indices,1]
+rissamp_B <- samp_norm[samp_indices,2]
+# add random jitter, see BDA3 p. 76
+rissamp_A <- rissamp_A + runif(nsamp, (A[1] - A[2])/2, (A[2] - A[1])/2)
+rissamp_B <- rissamp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
+
+# samples of LD50 
+rissamp_ld50 <- -rissamp_A/rissamp_B
+
+# plot of the samples
+sam_ris <- ggplot(data = data.frame(rissamp_A, rissamp_B)) +
+  geom_point(aes(rissamp_A, rissamp_B), color = 'blue', size = 0.3) +
+  coord_cartesian(xlim = xl, ylim = yl) +
+  labs(x = 'alpha', y = 'beta')
+
+# plot of the histogram of LD50
+his_ris <- ggplot() +
+  geom_histogram(aes(rissamp_ld50), binwidth = 0.1,
+                 fill = 'steelblue', color = 'black') +
+  coord_cartesian(xlim = c(-0.8, 0.8)) +
+  labs(x = 'LD50 = -alpha/beta')
+
+
 # combine the plots
-grid.arrange(pos, sam, his, pos_norm, sam_norm, his_norm, ncol = 3)
+blank <- grid.rect(gp=gpar(col="white"))
+grid.arrange(pos, sam, his, pos_norm, sam_norm, his_norm, blank, sam_ris, his_ris, ncol=3)

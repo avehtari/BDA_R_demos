@@ -48,8 +48,8 @@ samp_indices <- sample(length(p), size = nsamp,
 samp_A <- cA[samp_indices[1:nsamp]]
 samp_B <- cB[samp_indices[1:nsamp]]
 # add random jitter, see BDA3 p. 76
-samp_A <- samp_A + runif(nsamp, A[1] - A[2], A[2] - A[1])
-samp_B <- samp_B + runif(nsamp, B[1] - B[2], B[2] - B[1])
+samp_A <- samp_A + runif(nsamp, (A[1] - A[2])/2, (A[2] - A[1])/2)
+samp_B <- samp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
 
 # samples of LD50 conditional beta > 0
 bpi <- samp_B > 0
