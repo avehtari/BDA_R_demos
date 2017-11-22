@@ -58,8 +58,8 @@ cA <- rep(A, each = length(B))
 cB <- rep(B, length(A))
 
 # Use logarithms for numerical accuracy!
-lpfun <- function(a, b, y, n) log(a+b)*(-5/2) +
-  sum(lgamma(a+b)-lgamma(a)-lgamma(b)+lgamma(a+y)+lgamma(b+n-y)-lgamma(a+b+n))
+lpfun <- function(a, b, y, n) {log(a+b)*(-5/2) +
+  sum(lgamma(a+b)-lgamma(a)-lgamma(b)+lgamma(a+y)+lgamma(b+n-y)-lgamma(a+b+n))}
 
 lp <- mapply(lpfun, cA, cB, MoreArgs = list(y, n))
 df_marg <- data.frame(x = cA, y = cB, p = exp(lp - max(lp)))
@@ -145,4 +145,3 @@ plot_hier7 <- ggplot(data = subset(df_hier, indtonum(ind)%%7==0)) +
   theme(legend.background = element_blank(), legend.position = c(0.8,0.9))
 
 grid.arrange(plot_sep7, plot_hier7)
-
