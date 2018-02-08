@@ -17,14 +17,14 @@ library(tidyr)
 library(MASS)
 library(loo)
 
-#' ### Grid sampling for Bioassay model.
-
 #' Bioassay data, (BDA3 page 86)
 df1 <- data.frame(
   x = c(-0.86, -0.30, -0.05, 0.73),
   n = c(5, 5, 5, 5),
   y = c(0, 1, 3, 5)
 )
+
+#' ### Grid sampling for Bioassay model.
 
 #' Compute the posterior density in a grid
 #' 
