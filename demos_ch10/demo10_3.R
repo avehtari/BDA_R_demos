@@ -1,13 +1,13 @@
 #' ---
 #' title: "Bayesian data analysis demo 10.3"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
-#' ## Importance sampling with Normal distribution as a proposal for
-#' Bioassay model.
+#' ## Importance sampling with Normal distribution as a proposal for Bioassay model.
 #'
 
-#' ggplot2, grid, aand gridExtra are used for plotting, tidyr for
+#' ggplot2, grid, and gridExtra are used for plotting, tidyr for
 #' manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)

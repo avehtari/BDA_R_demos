@@ -1,6 +1,7 @@
 #' ---
 #' title: "Bayesian data analysis demos 3.1, 3.2, 3.3, 3.4"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
 #' ## Normal model with unknown mean and variance (BDA3 section 3.2 on p. 64).

@@ -1,20 +1,22 @@
 #' ---
 #' title: "Bayesian data analysis demo 3.5"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
 #' ## Estimating the speed of light using normal model BDA3 p. 66
 #'
 
-#' ggplot2, and gridExtra are used for plotting, tidyr for manipulating data frames
+#' ggplot2, and gridExtra are used for plotting, tidyr for
+#' manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
 library(gridExtra)
 library(tidyr)
+library(here)
 
 #' Data
-data_path <- 'light.txt'
-y <- read.table(data_path)$V1
+y <- read.table(here("demos_ch3","light.txt"))$V1
 #' Sufficient statistics
 n <- length(y)
 s2 <- var(y)

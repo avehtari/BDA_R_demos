@@ -1,9 +1,11 @@
 #' ---
 #' title: "Bayesian data analysis demo 10.2"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
 #' ## Importance sampling example
+#' 
 
 #' ggplot2 and gridExtra are used for plotting, tidyr for manipulating
 #' data frames

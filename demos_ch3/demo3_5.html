@@ -11,6 +11,7 @@
 
 <meta name="author" content="Aki Vehtari, Markus Paasiniemi" />
 
+<meta name="date" content="2018-02-08" />
 
 <title>Bayesian data analysis demo 3.5</title>
 
@@ -120,7 +121,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Bayesian data analysis demo 3.5</h1>
 <h4 class="author"><em>Aki Vehtari, Markus Paasiniemi</em></h4>
-<h4 class="date"><em>Thu Feb 8 11:28:39 2018</em></h4>
+<h4 class="date"><em>2018-02-08</em></h4>
 
 </div>
 
@@ -130,10 +131,10 @@ $(document).ready(function () {
 <p>ggplot2, and gridExtra are used for plotting, tidyr for manipulating data frames</p>
 <pre class="r"><code>library(ggplot2)
 library(gridExtra)
-library(tidyr)</code></pre>
+library(tidyr)
+library(here)</code></pre>
 <p>Data</p>
-<pre class="r"><code>data_path &lt;- 'light.txt'
-y &lt;- read.table(data_path)$V1</code></pre>
+<pre class="r"><code>y &lt;- read.table(here(&quot;demos_ch3&quot;,&quot;light.txt&quot;))$V1</code></pre>
 <p>Sufficient statistics</p>
 <pre class="r"><code>n &lt;- length(y)
 s2 &lt;- var(y)

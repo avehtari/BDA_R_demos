@@ -1,9 +1,11 @@
 #' ---
 #' title: "Bayesian data analysis demo 2.1"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
 #' ## Probability of a girl birth given placenta previa (BDA3 p. 37).
+#' 
 #' 437 girls and 543 boys have been observed. Calculate and plot the
 #' posterior distribution of the proportion of girls $\theta$, using
 #' uniform prior on $\theta$.

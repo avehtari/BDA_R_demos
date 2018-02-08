@@ -1,6 +1,7 @@
 #' ---
 #' title: "Bayesian data analysis demo 2.3"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
 #' ## Probability of a girl birth given placenta previa (BDA3 p. 37).

@@ -1,6 +1,7 @@
 #' ---
 #' title: "Bayesian data analysis demo 3.6"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
 #' ## Illustrate the posterior inference for Bioassay data (BDA3 p. 74-)

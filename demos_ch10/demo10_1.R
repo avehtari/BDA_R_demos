@@ -1,9 +1,11 @@
 #' ---
 #' title: "Bayesian data analysis demo 10.1"
 #' author: "Aki Vehtari, Markus Paasiniemi"
+#' date: "`r format(Sys.Date())`"
 #' ---
 
 #' ## Rejection sampling example
+#' 
 
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
