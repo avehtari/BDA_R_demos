@@ -10,8 +10,8 @@ Currently there are demos for BDA3 Chapters 2, 3, 4, 5, 6, 10 and
 
 The initial demos were originally written for Matlab by [Aki
 Vehtari](http://users.aalto.fi/~ave/) and translated to R by [Markus
-Paasiniemi](https://github.com/paasim). Recebtly more demos have been
-added for RStan and RStanARM.
+Paasiniemi](https://github.com/paasim). Recently more demos have been
+added for [RStan and RStanARM](demos_rstan).
 
 The corresponding [Matlab/Octave demos](https://github.com/avehtari/BDA_m_demos)
 and the corresponding [Python demos](https://github.com/avehtari/BDA_py_demos).
