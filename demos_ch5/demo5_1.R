@@ -5,6 +5,7 @@
 #' ---
 
 #' ## Hierarchical model for Rats experiment (BDA3, p. 102)
+#' 
 
 #' ggplot2, grid, and gridExtra are used for plotting, tidyr for
 #' manipulating data frames

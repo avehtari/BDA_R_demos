@@ -4,7 +4,7 @@
 #' date: "`r format(Sys.Date())`"
 #' ---
 
-#' ## Illustrate the posterior inference for Bioassay data (BDA3 p. 74-)
+#' ## Binomial regression and grid sampling for Bioassay data (BDA3 p. 74-)
 #' 
 
 #' ggplot2, and gridExtra are used for plotting, tidyr for manipulating data frames

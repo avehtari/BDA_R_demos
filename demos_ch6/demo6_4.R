@@ -6,7 +6,10 @@
 
 #' ## Marginal posterior predictive checking
 #' 
-#' Light speed example
+#' Tail area probabilities of marginal predictive distributions,
+#' aka probability integral transformation (PIT).
+#' 
+#' Normal model for light speed data.
 #' 
 
 #' ggplot2 is used for plotting, tidyr for manipulating data frames

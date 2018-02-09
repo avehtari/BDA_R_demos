@@ -4,7 +4,7 @@
 #' date: "`r format(Sys.Date())`"
 #' ---
 
-#' ## Posterior predictive checking demo
+#' ## Posterior predictive checking of normal model for light data
 #' 
 
 #' ggplot2 is used for plotting, tidyr for manipulating data frames

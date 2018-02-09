@@ -5,6 +5,7 @@
 #' ---
 
 #' ## Hierarchical model for SAT-example data (BDA3, p. 102)
+#' 
 
 #' ggplot2, grid, and gridExtra are used for plotting, tidyr for
 #' manipulating data frames

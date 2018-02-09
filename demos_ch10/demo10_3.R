@@ -4,7 +4,7 @@
 #' date: "`r format(Sys.Date())`"
 #' ---
 
-#' ## Importance sampling with Normal distribution as a proposal for Bioassay model.
+#' ## Importance sampling with Normal distribution as a proposal for Bioassay model
 #'
 
 #' ggplot2, grid, and gridExtra are used for plotting, tidyr for
