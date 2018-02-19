@@ -15,23 +15,24 @@ library(gridExtra)
 library(tidyr)
 
 #' Fake interesting distribution
-x <- seq(-3, 3, length.out = 200)
+x <- seq(-4, 4, length.out = 200)
 r <- c(1.1, 1.3, -0.1, -0.7, 0.2, -0.4, 0.06, -1.7,
        1.7, 0.3, 0.7, 1.6, -2.06, -0.74, 0.2, 0.5)
 
 #' Compute unnormalized target density (named q, to emphasize that it
 #' does not need to be normalized).
-q <- density(r, bw = 0.5, n = 200, from = -3, to = 3)$y
+q <- density(r, bw = 0.5, n = 200, from = -4, to = 4)$y
 
 #' Gaussian proposal distribution
 g <- dnorm(x)
 w <- q/g
 rs <- rnorm(100)
-rs <- rs[abs(rs) < 3] # remove samples out of the grid
 # find nearest point for which the kernel has been evaluated for each sample
 rsi <- sapply(rs, function(arg) which.min(abs(arg - x)))
-# importance weights
+#' Self-normalized importance weights and the expectation wrt q
 wr <- q[rsi]/dnorm(x[rsi])
+wrn <- wr/sum(wr)
+(Ex <- sum(wrn*x[rsi]))
 
 #' Create a plot of the target and proposal distributions
 df1 <- data.frame(x, q, g) %>% gather(grp, p, -x)
