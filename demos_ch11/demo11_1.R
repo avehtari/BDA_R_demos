@@ -147,7 +147,7 @@ ggplot(data = dfch) +
 ggplot(data = dfa) +
   geom_line(aes(iter, value, color = grp)) +
   geom_hline(aes(yintercept = 0)) +
-  labs(title = 'Cumulative averages') +
+  labs(title = 'Autocorrelation function') +
   scale_color_discrete(labels = c('theta1', 'theta2')) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
