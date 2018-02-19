@@ -5,28 +5,30 @@ output:
   html_notebook: default
   pdf_document: default
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=FALSE, comment=NA, out.width='95%')
+```
+
 Bayesian version of Andrew Tyre's "Does model averaging make sense?"
 https://atyre2.github.io/2017/06/16/rebutting_cade.html
 
 Tyre discusses problems in current statistical practices in ecology, focusing in multi-colinearity, model averaging and measuring the relative importance of variables. Tyre's post is commenting a paper http://onlinelibrary.wiley.com/doi/10.1890/14-1639.1/full. In his blog post he uses maximum likelihood and AIC_c. Here we provide a Bayesian approach for handling multicolinearity, model averaging and measuring relative importance of variables using packages rstanarm, bayesplot, loo and projpred. 
 
-Other packages are available in CRAN, but projpred package needs to be installed from github (it will be available in CRAN later).
+Load libraries. Other packages are available in CRAN, but projpred package needs to be installed from github (it will be available in CRAN later).
 ```{r}
-if (!require(devtools)) {
-	install.packages("devtools")
-	library(devtools)
-}
-if (!require(projpred)) {
-  devtools::install_github('stan-dev/projpred', build_vignettes = TRUE)
-  library(projpred)
-}
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+library(loo)
+library(tidyverse)
+library(GGally)
+library(bayesplot)
+library(projpred)
 ```
 
 We generate the data used previously to illustrate multi-colinearity problems.
-```{r warning=FALSE,message=FALSE,echo=FALSE}
+```{r warning=FALSE,message=FALSE}
 # all this data generation is from Cade 2015
-library(tidyverse)
-library(GGally)
 # doesn't matter what this is -- if you use a different number your results will be different from mine.
 set.seed(87)
 df <- data_frame(
@@ -48,7 +50,6 @@ Tyre: "So there is a near perfect negative correlation between the things sage g
 
 From this point onwards we switch to Bayesian approach. The rstanarm package provides stan_glm which accepts same arguments as glm, but makes full Bayesian inference using Stan (Hamiltonian Monte Carlo No-U-Turn-sampling). By default a weakly informative Gaussian prior is used for weights.
 ```{r}
-library(rstanarm)
 options(mc.cores = 4)
 fitg <- stan_glm(y ~ x1 + x2 + x3 + x4, data = df, na.action = na.fail, family=poisson(), seed=1)
 ```
@@ -60,8 +61,6 @@ summary(fitg)
 We didn't get divergences, Rhat's are less than 1.1 and n_eff's are useful (see, e.g., http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html). However, when we know that covariats are correlating we can get even better performance by using QR decomposition (see, e.g. http://mc-stan.org/users/documentation/case-studies/qr_regression.html).
 
 ```{r}
-library(rstanarm)
-options(mc.cores = 4)
 fitg <- stan_glm(y ~ x1 + x2 + x3 + x4, data = df, na.action = na.fail, family=poisson(), QR=TRUE, seed=1)
 ```
 Let's look at the summary and plot:
@@ -72,7 +71,6 @@ summary(fitg)
 Use of QR decomposition greatly improved sampling efficiency and we continue with this model.
 
 ```{r}
-library(bayesplot)
 mcmc_areas(as.matrix(fitg),prob_outer = .99)
 ```
 
@@ -88,6 +86,18 @@ mcmc_scatter(as.matrix(fitg), pars = c("x1", "x2"))+geom_vline(xintercept=0)+geo
 ```
 
 Based on the joint distributions all the variables would be relevant. To make predictions we don't need to make variable selection, we just integrate over the uncertainty (kind of continuous model averaging). 
+
+In case of even more variables with some being relevant and some irrelevant, it will be difficult to analyse joint posterior to see which variables are jointly relevant. We can easily test whether any of the covariates are useful by using cross-validation to compare to a null model,
+```{r}
+fitg0 <- stan_glm(y ~ 1, data = df, na.action = na.fail, family=poisson(), seed=1)
+```
+
+```{r}
+(loog <- loo(fitg))
+(loog0 <- loo(fitg0))
+compare(loog0,loog)
+```
+Based on cross-validation covariates together contain significant information to improve predictions.
 
 We might want to choose some variables 1) because we don't want to observe all the variables in the future (e.g. due to the measurement cost), or 2) we want to most relevant variables which we define here as a minimal set of variables which can provide similar predictions to the full model.
 
@@ -117,6 +127,8 @@ projg <- project(fitg_cv, nv = 2, ns = 4000)
 round(colMeans(as.matrix(projg)),1)
 round(posterior_interval(as.matrix(projg)),1)
 ```
+This looks good as the true values are intercept=-5.8, x2=15.2, x1=6.3.
+
 ```{r}
 mcmc_areas(as.matrix(projg), 
            pars = c('(Intercept)', names(fitg_cv$varsel$vind[1:2])))
@@ -143,5 +155,5 @@ sessionInfo()
 ### Appendix: Licenses
 
 * Code &copy; 2017, Aki Vehtari, licensed under BSD-3.
-* Code for generating the data by [Andrew Tyre](https://atyre2.github.io/2017/06/16/rebutting_cade.html)
 * Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.
+* Code for generating the data by [Andrew Tyre](https://atyre2.github.io/2017/06/16/rebutting_cade.html)
