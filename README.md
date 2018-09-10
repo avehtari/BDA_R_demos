@@ -7,7 +7,6 @@ Currently there are demos for BDA3 Chapters 2, 3, 4, 5, 6, 10 and
 11. Furthermore there are demos for
 [RStan](https://github.com/stan-dev/rstan) and
 [RStanARM](https://github.com/stan-dev/rstanarm).
-There are also [reading instructions and additional notes](chapter_notes) for chapters 1-8, 10-11.
 
 The initial demos were originally written for Matlab by [Aki
 Vehtari](http://users.aalto.fi/~ave/) and translated to R by [Markus
