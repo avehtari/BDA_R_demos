@@ -11,6 +11,7 @@
 #' manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
 library(here)

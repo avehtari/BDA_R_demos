@@ -16,6 +16,7 @@
 #' ggplot2 and gridExtra are used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
 
@@ -31,7 +32,7 @@ df1$con <- dbeta(df1$theta, a, b)
 #' Compute the density of non-conjugate prior in discrete points, i.e. in a grid
 #' this non-conjugate prior is the same as in figure 2.4 in the book
 pp <- rep(1, nrow(df1))
-pi <- sapply(c(0.385, 0.485, 0.585), function(pi) which(df1$theta == pi))
+pi <- sapply(c(0.388, 0.488, 0.588), function(pi) which(df1$theta == pi))
 pm <- 11
 pp[pi[1]:pi[2]] <- seq(1, pm, length.out = length(pi[1]:pi[2]))
 pp[pi[3]:pi[2]] <- seq(1, pm, length.out = length(pi[3]:pi[2]))

@@ -13,6 +13,7 @@
 #' ggplot2, grid, and gridExtra are used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(grid)
 library(gridExtra)
 library(tidyr)

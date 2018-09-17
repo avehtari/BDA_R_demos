@@ -15,8 +15,9 @@
 #' to install new packages, type e.g. install.packages('ggplot2')
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 
-#' Posterior is Beta(348,544)
+#' Posterior is Beta(438,544)
 # seq creates evenly spaced values
 df1 <- data.frame(theta = seq(0.375, 0.525, 0.001)) 
 a <- 438
@@ -33,14 +34,15 @@ df2 <- data.frame(theta = seq(qbeta(0.025, a, b), qbeta(0.975, a, b), length.out
 df2$p <- dbeta(df2$theta, a, b)
 
 #' Plot posterior (Beta(438,544))
+#' and 48.8% line for population average
 ggplot(mapping = aes(theta, p)) +
   geom_line(data = df1) +
   # Add a layer of colorized 95% posterior interval
   geom_area(data = df2, aes(fill='1')) +
   # Add the proportion of girl babies in general population
-  geom_vline(xintercept = 0.485, linetype='dotted') +
+  geom_vline(xintercept = 0.488, linetype='dotted') +
   # Decorate the plot a little
   labs(title='Uniform prior -> Posterior is Beta(438,544)', y = '') +
   scale_y_continuous(expand = c(0, 0.1), breaks = NULL) +
-  scale_fill_manual(values = 'darkblue', labels = '95% posterior interval') +
+  scale_fill_manual(values = 'lightblue', labels = '95% posterior interval') +
   theme(legend.position = 'bottom', legend.title = element_blank())

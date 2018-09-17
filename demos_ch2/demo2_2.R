@@ -13,6 +13,7 @@
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(tidyr)
 
 #' Observed data: 437 girls and 543 boys
@@ -27,11 +28,11 @@ df1$pu <- dbeta(df1$theta, a+1, b+1)
 
 #' 3 different choices for priors
 #'
-#' - Beta(0.485\*2,(1-0.485)\*2)
-#' - Beta(0.485\*20,(1-0.485)\*20)
-#' - Beta(0.485\*200,(1-0.485)\*200)
+#' - Beta(0.488\*2,(1-0.488)\*2)
+#' - Beta(0.488\*20,(1-0.488)\*20)
+#' - Beta(0.488\*200,(1-0.488)\*200)
 n <- c(2, 20, 200) # prior counts
-apr <- 0.485 # prior ratio of success
+apr <- 0.488 # prior ratio of success
 
 # helperf returns for given number of prior observations, prior ratio
 # of successes, number of observed successes and failures and a data
@@ -43,13 +44,13 @@ helperf <- function(n, apr, a, b, df)
 df2 <- lapply(n, helperf, apr, a, b, df1) %>% do.call(rbind, args = .) %>%
   gather(grp, p, -c(theta, n), factor_key = T)
 # add correct labels for plotting
-df2$title <- factor(paste0('alpha/(alpha+beta)=0.485, alpha+beta=',df2$n))
+df2$title <- factor(paste0('alpha/(alpha+beta)=0.488, alpha+beta=',df2$n))
 levels(df2$grp) <- c('Posterior with unif prior', 'Prior', 'Posterior')
 
 #' Plot distributions
 ggplot(data = df2) +
   geom_line(aes(theta, p, color = grp)) +
-  geom_vline(xintercept = 0.485, linetype = 'dotted') +
+  geom_vline(xintercept = 0.488, linetype = 'dotted') +
   facet_wrap(~title, ncol = 1) +
   labs(x = '', y = '') +
   scale_y_continuous(breaks = NULL) +
