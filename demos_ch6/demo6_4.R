@@ -15,11 +15,13 @@
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(tidyr)
-library(here)
+library(rprojroot)
+root<-has_dirname("BDA_R_demos")$make_fix_file()
 
 #' Data
-y <- read.table(here("demos_ch6","light.txt"))$V1
+y <- read.table(root("demos_ch6","light.txt"))$V1
 #' Sufficient statistics
 n <- length(y)
 s <- sd(y)
@@ -33,7 +35,7 @@ Ty <- data.frame(x = pt((y - my)/(sqrt(1+1/n)*s), n-1))
 title1 <- 'Light speed example
 distribution of marginal posterior p-values'
 ggplot(data = Ty) +
-  geom_histogram(aes(x = x), fill = 'darkblue',
+  geom_histogram(aes(x = x), fill = 'steelblue',
                  color = 'black', binwidth = 0.05) +
   coord_cartesian(xlim = c(0, 1)) +
   labs(x = '', y = '', title = title1)
@@ -53,7 +55,7 @@ Ty <- data.frame(x = pt((y - my)/(sqrt(1+1/n)*s), n-1))
 title1 <- 'Light speed example
 distribution of marginal posterior p-values'
 ggplot(data = Ty) +
-  geom_histogram(aes(x = x), fill = 'darkblue',
+  geom_histogram(aes(x = x), fill = 'steelblue',
                  color = 'black', binwidth = 0.05) +
   coord_cartesian(xlim = c(0, 1)) +
   labs(x = '', y = '', title = title1)

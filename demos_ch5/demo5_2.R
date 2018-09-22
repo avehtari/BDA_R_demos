@@ -11,9 +11,11 @@
 #' manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
-library(here)
+library(rprojroot)
+root<-has_dirname("BDA_R_demos")$make_fix_file()
 
 #' Data 
 y <- c(28,8,-3,7,-1,1,18,12)
@@ -45,7 +47,7 @@ plot_pool <- ggplot(data = df_pool) +
 
 #' Load the pre-computed results for the hierarchical model
 #' Replace this with your own code in the related exercise
-load(here("demos_ch5","demo5_2.RData"))
+load(root("demos_ch5","demo5_2.RData"))
 
 #' Create plot for the hierarchical model
 df_hier <- as.data.frame(t(pxm)) %>% setNames(LETTERS[1:8]) %>%

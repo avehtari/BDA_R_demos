@@ -12,11 +12,13 @@
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(tidyr)
-library(here)
+library(rprojroot)
+root<-has_dirname("BDA_R_demos")$make_fix_file()
 
 #' Data
-y <- read.table(here("demos_ch6","light.txt"))$V1
+y <- read.table(root("demos_ch6","light.txt"))$V1
 #' Sufficient statistics
 n <- length(y)
 s <- sd(y)
@@ -36,7 +38,7 @@ sampt_vars <- data.frame(x = sapply(sampt, var))
 title1 <- 'Light speed example with poorly chosen test statistic
 Pr(T(yrep,theta) <= T(y,theta)|y)=0.42'
 ggplot(data = sampt_vars) +
-  geom_histogram(aes(x = x), fill = 'darkblue',
+  geom_histogram(aes(x = x), fill = 'steelblue',
                  color = 'black', binwidth = 6) +
   geom_vline(aes(xintercept = x), data = data.frame(x = s^2),
              color = 'red') +

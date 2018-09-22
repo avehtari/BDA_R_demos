@@ -10,11 +10,13 @@
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(tidyr)
-library(here)
+library(rprojroot)
+root<-has_dirname("BDA_R_demos")$make_fix_file()
 
 #' Data
-y <- read.table(here("demos_ch6","light.txt"))$V1
+y <- read.table(root("demos_ch6","light.txt"))$V1
 #' Sufficient statistics
 n <- length(y)
 s <- sd(y)
@@ -34,7 +36,7 @@ sampt <- replicate(10, rt(n, n-1)*sqrt(1+1/n)*s+my) %>%
 ind <- sample(10, 1)
 sampt_y <- replace(sampt, ind, y) %>% setNames(1:10) %>% gather()
 ggplot(data = sampt_y) +
-  geom_histogram(aes(x = value), fill = 'darkblue',
+  geom_histogram(aes(x = value), fill = 'steelblue',
                  color = 'black', binwidth = 4) +
   facet_wrap(~key, nrow = 4) +
   coord_cartesian(xlim = c(-50, 50)) +
@@ -52,7 +54,7 @@ minvals <- data.frame(x = sapply(sampt1000, min))
 title1 <- 'Smallest observation in the replicated
 data (hist.) vs in the original data (vertical line)'
 ggplot(data = minvals) +
-  geom_histogram(aes(x = x), fill = 'darkblue',
+  geom_histogram(aes(x = x), fill = 'steelblue',
                  color = 'black', binwidth = 4) +
   geom_vline(aes(xintercept = min(x)), data = data.frame(x = y),
              color = 'red') +
