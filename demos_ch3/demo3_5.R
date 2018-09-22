@@ -14,10 +14,11 @@ library(ggplot2)
 theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
-library(here)
+library(rprojroot)
+root<-has_dirname("BDA_R_demos")$make_fix_file()
 
 #' Data
-y <- read.table(here("demos_ch3","light.txt"))$V1
+y <- read.table(root("demos_ch3","light.txt"))$V1
 #' Sufficient statistics
 n <- length(y)
 s2 <- var(y)
@@ -45,25 +46,28 @@ df1$pm_mu_pos = dt((df1$t1 - my_pos) / sqrt(s2_pos/n_pos), n_pos-1) / sqrt(s2_po
 #' Create a histogram of the measurements
 p1 <- ggplot() +
   geom_histogram(aes(y), binwidth = 2, fill = 'steelblue', color = 'black') +
-  coord_cartesian(xlim = c(-40, 40)) +
-  labs(title = 'Newcomb\'s measurements', x = '')
+  coord_cartesian(xlim = c(-42, 42)) +
+  scale_y_continuous(breaks = NULL) +
+  labs(title = 'Newcomb\'s measurements', x = 'y')
 
 #' Create a plot of the normal model
 # gather the data points into key-value pairs
 df2 <- gather(df1, grp, p, -t1)
 # legend labels
-labs2 <- c('Posterior of mu given y > 0', 'Posterior of mu', 'Modern estimate')
+labs2 <- c('Posterior of mu', 'Posterior of mu given y > 0', 'Modern estimate')
 p2 <- ggplot(data = df2) +
   geom_line(aes(t1, p, color = grp)) +
-  geom_vline(aes(xintercept = 33, color = '1'),
+  geom_vline(aes(xintercept = 33, color = 'q'),
              linetype = 'dashed', show.legend = F) +
-  coord_cartesian(xlim = c(-40, 40)) +
+  coord_cartesian(xlim = c(-42, 42)) +
+  scale_y_continuous(breaks = NULL) +
   labs(title = 'Normal model', x = 'mu', y = '') +
-  scale_color_manual(values = c('black', 'blue', 'black'), labels = labs2) +
-  guides(color = guide_legend(override.aes = list(
-    linetype = c(1, 1, 2), labels = labs2))) +
-  theme(legend.position = 'bottom', legend.title = element_blank())
+  scale_color_manual(values = c('blue', 'darkgreen', 'black')) +
+  guides(color=FALSE) +
+  annotate("text", x=24, y=0.26, label=labs2[1], hjust="right", size=5) +
+  annotate("text", x=26, y=0.58, label=labs2[2], hjust="right", size=5) +
+  annotate("text", x=32, y=0.7, label=labs2[3], hjust="right", size=5)
 
 #' Combine the plots
-grid.arrange(p1, p2, heights = c(2, 3))
+grid.arrange(p1, p2)
 
