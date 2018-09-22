@@ -10,6 +10,7 @@
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(tidyr)
 # gganimate-package (for animations) is installed
 # from github using the devtools package
@@ -17,7 +18,8 @@ library(tidyr)
 #install_github("dgrtwo/gganimate")
 library(gganimate)
 library(MASS)
-library(here)
+library(rprojroot)
+root<-has_dirname("BDA_R_demos")$make_fix_file()
 
 #' Parameters of a normal distribution used as a toy target distribution
 y1 <- 0
@@ -56,13 +58,15 @@ tt[1,] <- c(t1, t2)    # Save starting point
 # For demonstration load pre-computed values
 # Replace this with your algorithm!
 # tt is a M x 2 array, with M samples of both theta_1 and theta_2
-load(here("demos_ch11","demo11_1.RData"))
+load(root("demos_ch11","demo11_1.RData"))
 
 #' The rest is for illustration
 
 #' Take the first 50 samples
 #' to illustrate how the sampler works
-df100 <- data.frame(th1 = tt[1:100, 1],
+df100 <- data.frame(id=rep(1,100),
+                    iter=1:100, 
+                    th1 = tt[1:100, 1],
                     th2 = tt[1:100, 2],
                     th1l = c(tt[1, 1], tt[1:(100-1), 1]),
                     th2l = c(tt[1, 2], tt[1:(100-1), 2]))
@@ -76,27 +80,31 @@ warm <- 50
 # labels and frame indices for the plot
 labs1 <- c('Samples', 'Steps of the sampler', '90% HPD')
 ind1 <- (1:50)*2-1
+df100s <- df100
+df100s[ind1+1,3:4]=df100s[ind1,3:4]
 p1 <- ggplot() +
-  geom_point(data = df100[ind1,],
-             aes(th1, th2, color ='1', frame = ind1, cumulative = T)) +
-  geom_segment(data = df100, aes(x = th1, xend = th1l, frame = 1:100, color = '2',
-                                 y = th2, yend = th2l, cumulative = T)) +
+  geom_point(data = df100s,
+             aes(th1, th2, color ='1')) +
+  geom_segment(data = df100, aes(x = th1, xend = th1l, color = '2',
+                                 y = th2, yend = th2l)) +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '3'), level = 0.9) +
   coord_cartesian(xlim = c(-4, 4), ylim = c(-4, 4)) +
   labs(x = 'theta1', y = 'theta2') +
-  scale_color_manual(values = c('blue', 'steelblue','red'), labels = labs1) +
+  scale_color_manual(values = c('red', 'forestgreen','blue'), labels = labs1) +
   guides(color = guide_legend(override.aes = list(
     shape = c(16, NA, NA), linetype = c(0, 1, 1)))) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
-#' The following generates a temporary gif animation
-#' of the steps of the sampler (might take 1-10 seconds).
-#+ Gibbs, fig.show='animate'
-gganimate(p1, interval = 0.1)
-
+#' The following generates a gif animation
+#' of the steps of the sampler (might take 10 seconds).
+#+ Gibbs
+animate(p1 +   
+          transition_reveal(id=id, along=iter) + 
+          shadow_trail(0.01))
+          
 #' Show only the end result as a static figure
 p1
-#' Highlight warm-up period of the 30 first samples with green
+#' Highlight warm-up period of the 30 first samples with purple
 p1 + geom_point(data = df100[ind1[1:30],],
                 aes(th1, th2), color = 'green')
 
@@ -109,7 +117,7 @@ ggplot() +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '2'), level = 0.9) +
   coord_cartesian(xlim = c(-4, 4), ylim = c(-4, 4)) +
   labs(x = 'theta1', y = 'theta2') +
-  scale_color_manual(values = c('steelblue', 'red'), labels = labs2) +
+  scale_color_manual(values = c('steelblue', 'blue'), labels = labs2) +
   guides(color = guide_legend(override.aes = list(
     shape = c(16, NA), linetype = c(0, 1), alpha = c(1, 1)))) +
   theme(legend.position = 'bottom', legend.title = element_blank())
@@ -151,7 +159,7 @@ ggplot(data = dfa) +
   scale_color_discrete(labels = c('theta1', 'theta2')) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
-#' Visualize the estimate of the ACF
+#' Visualize the estimate of the Monte Carlo error estimates
 # labels
 labs3 <- c('theta1', 'theta2',
            '95% interval for MCMC error',
