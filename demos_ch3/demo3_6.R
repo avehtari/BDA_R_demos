@@ -72,9 +72,10 @@ samps <- data_frame(ind = 1:nsamp, alpha = samp_A, beta = samp_B) %>%
 sampsposbeta <- filter(samps, beta > 0)
 
 #' Plot draws of logistic curves
+invlogit <- plogis
 xr <- seq(-1.5, 1.5, length.out = 100)
 dff <- pmap_df(samps[1:100,], ~ data_frame(x = xr, id=..1,
-                                   f = arm::invlogit(..2 + ..3*x)))
+                                   f = invlogit(..2 + ..3*x)))
 ppost <- ggplot(df1, aes(x=x, y=y/n)) +
   geom_line(data=dff, aes(x=x, y=f, group=id), linetype=1, color='blue', alpha=0.2) +
   geom_point(size=2, color='red') +
