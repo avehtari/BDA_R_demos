@@ -11,6 +11,7 @@
 #' manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(gridExtra)
 library(grid)
 library(tidyr)
@@ -36,12 +37,17 @@ B = seq(-5, 35, length.out = 100)
 # make vectors that contain all pairwise combinations of A and B
 cA <- rep(A, each = length(B))
 cB <- rep(B, length(A))
-# a helper function to calculate the log likelihood
+#' Make a helper function to calculate the log likelihood
+#' given a dataframe with x, y, and n and evaluation
+#' points a and b. For the likelihood see BDA3 p. 75
 logl <- function(df, a, b)
   df['y']*(a + b*df['x']) - df['n']*log1p(exp(a + b*df['x']))
 # calculate likelihoods: apply logl function for each observation
 # ie. each row of data frame of x, n and y
-p <- apply(df1, 1, logl, cA, cB) %>% rowSums() %>% exp()
+p <- apply(df1, 1, logl, cA, cB) %>%
+  # sum the log likelihoods of observations
+  # and exponentiate to get the joint likelihood
+  rowSums() %>% exp()
 
 #' Sample from the grid (with replacement)
 nsamp <- 1000
@@ -58,8 +64,8 @@ samp_ld50 <- -samp_A/samp_B
 
 #' Create a plot of the posterior density
 # limits for the plots
-xl <- c(-1.5, 7)
-yl <- c(-5, 35)
+xl <- c(-2, 7)
+yl <- c(-2, 35)
 pos <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   geom_raster(aes(fill = p, alpha = p), interpolate = T) +
   geom_contour(aes(z = p), colour = 'black', size = 0.2) +
@@ -67,19 +73,22 @@ pos <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   labs(x = 'alpha', y = 'beta') +
   scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
   scale_alpha(range = c(0, 1), guide = F)
+pos
 
 #' Plot of the samples
 sam <- ggplot(data = data.frame(samp_A, samp_B)) +
   geom_point(aes(samp_A, samp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta')
+sam
 
 #' Plot of the histogram of LD50
 his <- ggplot() +
-  geom_histogram(aes(samp_ld50), binwidth = 0.1,
+  geom_histogram(aes(samp_ld50), binwidth = 0.05,
                  fill = 'steelblue', color = 'black') +
   coord_cartesian(xlim = c(-0.8, 0.8)) +
   labs(x = 'LD50 = -alpha/beta')
+his
 
 #' ### Normal approximation for Bioassay model.
 
@@ -114,7 +123,7 @@ samp_norm <- mvrnorm(nsamp, w, S)
 bpi <- samp_norm[,2] > 0
 samp_norm_ld50 <- -samp_norm[bpi,1]/samp_norm[bpi,2]
 
-#' Create a plot of the posterior density
+#' Create a plot of the normal distribution approximation
 pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   geom_raster(aes(fill = p, alpha = p), interpolate = T) +
   geom_contour(aes(z = p), colour = 'black', size = 0.2) +
@@ -122,19 +131,22 @@ pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   labs(x = 'alpha', y = 'beta') +
   scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
   scale_alpha(range = c(0, 1), guide = F)
+pos_norm
 
 #' Plot of the samples
 sam_norm <- ggplot(data = data.frame(samp_A=samp_norm[,1], samp_B=samp_norm[,2])) +
   geom_point(aes(samp_A, samp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta')
+sam_norm
 
 #' Plot of the histogram of LD50
 his_norm <- ggplot() +
-  geom_histogram(aes(samp_norm_ld50), binwidth = 0.1,
+  geom_histogram(aes(samp_norm_ld50), binwidth = 0.05,
                  fill = 'steelblue', color = 'black') +
   coord_cartesian(xlim = c(-0.8, 0.8)) +
   labs(x = 'LD50 = -alpha/beta, beta > 0')
+his_norm
 
 #' ### Importance sampling for Bioassay model.
  
@@ -147,17 +159,21 @@ lp <- apply(df1, 1, logl, samp_norm[,1], samp_norm[,2]) %>% rowSums()
 lw <- lp-lg
 #' Pareto smoothed importance sampling
 #' [(Vehtari et al, 2017)](https://arxiv.org/abs/1507.02646)
-psis <- psislw(lw)
-pis <- exp(psis$lw_smooth)
+psislw <- psis(lw, r_eff = 1)
 #' Pareto diagnostics. k<0.7 is ok.
 #' [(Vehtari et al, 2017)](https://arxiv.org/abs/1507.02646)
-print(psis$pareto_k)
+print(psislw$diagnostics$pareto_k, digits=2)
+#' Effective sample size estimate
+#' [(Vehtari et al, 2017)](https://arxiv.org/abs/1507.02646)
+print(psislw$diagnostics$n_eff, digits=2)
+#' Pareto smoothed weights
+psisw <- exp(psislw$log_weights)
 
 #' Importance sampling weights could be used to weight different
 #' expectations directly, but for visualisation and easy computation
 #' of LD50 histogram, we use resampling importance sampling.
-samp_indices <- sample(length(pis), size = nsamp,
-                       replace = T, prob = pis)
+samp_indices <- sample(length(psisw), size = nsamp,
+                       replace = T, prob = psisw)
 rissamp_A <- samp_norm[samp_indices,1]
 rissamp_B <- samp_norm[samp_indices,2]
 # add random jitter, see BDA3 p. 76
@@ -171,13 +187,15 @@ sam_ris <- ggplot(data = data.frame(rissamp_A, rissamp_B)) +
   geom_point(aes(rissamp_A, rissamp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta')
+sam_ris
 
 #' Plot of the histogram of LD50
 his_ris <- ggplot() +
-  geom_histogram(aes(rissamp_ld50), binwidth = 0.1,
+  geom_histogram(aes(rissamp_ld50), binwidth = 0.05,
                  fill = 'steelblue', color = 'black') +
   coord_cartesian(xlim = c(-0.8, 0.8)) +
   labs(x = 'LD50 = -alpha/beta')
+his_ris
 
 #' Combine the plots. Top: grid sampling, middle: normal
 #' approximation, bottom: importance sampling.

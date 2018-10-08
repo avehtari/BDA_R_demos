@@ -10,16 +10,17 @@
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(tidyr)
 
 #' Fake interesting distribution
-x <- seq(-3, 3, length.out = 200)
+x <- seq(-4, 4, length.out = 200)
 r <- c(1.1, 1.3, -0.1, -0.7, 0.2, -0.4, 0.06, -1.7,
       1.7, 0.3, 0.7, 1.6, -2.06, -0.74, 0.2, 0.5)
 
 #' Compute unnormalized target density (named q, to emphesize that it
 #' does not need to be normalized).
-q <- density(r, bw = 0.5, n = 200, from = -3, to = 3)$y
+q <- density(r, bw = 0.5, n = 200, from = -4, to = 4)$y
 
 #' Gaussian proposal distribution
 g_mean <- 0
@@ -43,9 +44,9 @@ dfq <- subset(df1 , grp == "q")
 # labels 
 labs1 <- c('Mg(theta)','q(theta|y)')
 ggplot() +
-  geom_line(data = df1, aes(x, p, fill = grp, color = grp, linetype = grp)) +
+  geom_line(data = df1, aes(x, p, color = grp, linetype = grp)) +
   geom_area(data = dfq, aes(x, p), fill = 'lightblue', alpha = 0.3) +
-  geom_point(aes(x[zi], r21), col = 'darkgreen', size = 2) +
+  geom_point(aes(x[zi], r21), col = 'forestgreen', size = 2) +
   geom_point(aes(x[zi], r22), col = 'red', size = 2) +
   geom_segment(aes(x = x[zi], xend = x[zi], y = 0, yend = q[zi])) +
   geom_segment(aes(x = x[zi], xend = x[zi], y = q[zi], yend = g[zi]),
@@ -70,40 +71,42 @@ df2 <- data.frame(r1s, r2s, acc)
 # labels
 labs2 <- c('Accepted', 'Rejected', 'Mg(theta)', 'q(theta|y)')
 ggplot() +
-  geom_line(data = df1, aes(x, p, fill = grp, color = grp, linetype = grp)) +
+  geom_line(data = df1, aes(x, p, color = grp, linetype = grp)) +
   geom_area(data = dfq, aes(x, p), fill = 'lightblue', alpha = 0.3) +
-  geom_point(data = df2, aes(r1s, r2s, color = acc, linetype = acc), size = 2) +
+  geom_point(data = df2, aes(r1s, r2s, color = acc), size = 2) +
   geom_rug(data = subset(df2, acc== 'a'), aes(x = r1s, r2s),
-           col = 'darkgreen', sides = 'b') +
+           col = 'forestgreen', sides = 'b') +
   labs(y = '') +
   scale_y_continuous(breaks = NULL) +
-  scale_linetype_manual(values = c(0, 2, 1, 0), labels = labs2) +
-  scale_color_manual(values=c('darkgreen','red','black','red'), labels = labs2) +
+  scale_linetype_manual(values = c(2, 1, 0, 0), labels = labs2) +
+  scale_color_manual(values=c('forestgreen','red','#00BFC4','red'), labels = labs2) +
   guides(color=guide_legend(override.aes=list(
     shape = c(16, 16, NA, NA), linetype = c(0, 0, 2, 1),
-    color=c('darkgreen', 'red', 'red', 'black'), labels = labs2))) +
+    color=c('forestgreen', 'red', 'red', '#00BFC4'), labels = labs2)),
+    linetype=FALSE) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
-#' Alternative proposal distribution
-ga <- rep(0, length(x))
-ga[x <= -1.5] <- seq(q[1], max(q[x <= -1.5]), length.out = length(x[x <= -1.5]))
-ga[(x > -1.5) & (x <= 0.2)] <- seq(max(q[x <= -1.5]), max(q[(x > -1.5) & (x <= 0.2)]),
-                                   length.out = length(x[(x > -1.5) & (x <= 0.2)]))
-ga[(x > 0.2) & (x <= 2.3)] <- seq(max(q[(x > -1.5) & (x <= 0.2)]), max(q[x > 2.3]),
-                                  length.out = length(x[(x > 0.2) & (x <= 2.3)]))
-ga[x > 2.3] <- seq(max(q[x > 2.3]), q[length(q)],
-                   length.out = length(x[x > 2.3]))
-#' M is computed by discrete approximation
-M = max(q/ga)
-ga <- ga*M
-
-#' Visualize alternate proposal distribution
-df3 <- data.frame(x, q, g = ga) %>% gather(grp, p, -x)
+#' Rejection sampling for truncated distribution
+q <- g
+q[x < -1.5] <- 0
+df1 <- data.frame(x, q, g) %>% gather(grp, p, -x)
+acc <- ifelse(r1s > -1.5, 'a', 'r')
+df2 <- data.frame(r1s, r2s, acc)
+dfq <- subset(df1 , grp == "q")
+# labels
+labs2 <- c('Accepted', 'Rejected', 'Mg(theta)', 'q(theta|y)')
 ggplot() +
-  geom_line(data = df3, aes(x, p, fill = grp, color = grp, linetype = grp)) +
+  geom_line(data = df1, aes(x, p, color = grp, linetype = grp)) +
   geom_area(data = dfq, aes(x, p), fill = 'lightblue', alpha = 0.3) +
-  labs(title = 'Alternative proposal distribution', y = '') +
+  geom_point(data = df2, aes(r1s, r2s, color = acc), size = 2) +
+  geom_rug(data = subset(df2, acc== 'a'), aes(x = r1s, r2s),
+           col = 'forestgreen', sides = 'b') +
+  labs(y = '') +
   scale_y_continuous(breaks = NULL) +
-  scale_color_discrete(labels = labs1) +
-  scale_linetype_manual(values = c('dashed', 'solid'), labels = labs1) +
+  scale_linetype_manual(values = c(2, 1, 0, 0), labels = labs2) +
+  scale_color_manual(values=c('forestgreen','red','#00BFC4','red'), labels = labs2) +
+  guides(color=guide_legend(override.aes=list(
+      shape = c(16, 16, NA, NA), linetype = c(0, 0, 2, 1),
+      color=c('forestgreen', 'red', 'red', '#00BFC4'), labels = labs2)),
+    linetype=FALSE) +
   theme(legend.position = 'bottom', legend.title = element_blank())
