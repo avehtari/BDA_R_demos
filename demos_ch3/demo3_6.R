@@ -44,7 +44,8 @@ cB <- rep(B, length(A))
 
 #' Make a helper function to calculate the log likelihood
 #' given a dataframe with x, y, and n and evaluation
-#' points a and b. For the likelihood see BDA p. 75
+#' points a and b. For the likelihood see BDA3 p. 75<br>
+#' `log1p(x)` computes log(x+1) in numerically more stable way.
 logl <- function(df, a, b)
   df['y']*(a + b*df['x']) - df['n']*log1p(exp(a + b*df['x']))
 
@@ -67,9 +68,6 @@ samp_B <- samp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
 #'  Create data frame
 samps <- data_frame(ind = 1:nsamp, alpha = samp_A, beta = samp_B) %>%
   mutate(ld50 = - alpha/beta)
-
-#' Sample LD50 conditional beta > 0
-sampsposbeta <- filter(samps, beta > 0)
 
 #' Plot draws of logistic curves
 invlogit <- plogis
