@@ -26,9 +26,9 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 library(loo)
 library(ggplot2)
+library(gridExtra)
 library(bayesplot)
 theme_set(bayesplot::theme_default(base_family = "sans"))
-library(gridExtra)
 library(shinystan)
 source('stan_utility.R')
 ```
@@ -60,7 +60,7 @@ monitor(fit_bern, probs = c(0.1, 0.5, .9))
 ```
 Plot the histogram of the posterior draws
 ```{r}
-draws <- as.matrix(fit_bern)
+draws <- as.data.frame(fit_bern)
 mcmc_hist(draws, pars='theta')
 # or with base R
 # hist(draws[,'theta'])
@@ -86,7 +86,7 @@ fit_bin <- stan(file = 'binom.stan', data = d_bin)
 monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
 ```
 ```{r}
-draws <- as.matrix(fit_bin)
+draws <- as.data.frame(fit_bin)
 mcmc_hist(draws, pars = 'theta')
 ```
 
@@ -99,7 +99,7 @@ fit_bin <- stan(file = 'binom.stan', data = d_bin)
 monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
 ```
 ```{r}
-draws <- as.matrix(fit_bin)
+draws <- as.data.frame(fit_bin)
 mcmc_hist(draws, pars = 'theta')
 ```
 
@@ -128,7 +128,7 @@ fit_bin <- stan(file = 'binomb.stan', data = d_bin)
 monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
 ```
 ```{r}
-draws <- as.matrix(fit_bin)
+draws <- as.data.frame(fit_bin)
 mcmc_hist(draws, pars = 'theta')
 ```
 
@@ -159,7 +159,7 @@ fit_bin2 <- stan(file = 'binom2.stan', data = d_bin2)
 monitor(fit_bin2, probs = c(0.1, 0.5, 0.9))
 ```
 ```{r}
-draws <- as.matrix(fit_bin2)
+draws <- as.data.frame(fit_bin2)
 mcmc_hist(draws, pars = 'oddsratio') +
   geom_vline(xintercept = 1) +
   scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))
@@ -234,13 +234,13 @@ mu <- apply(samples_lin$mu, 2, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = d_lin$x, .)  %>% gather(pct, y, -x)
 
 pfit <- ggplot() +
-  geom_point(aes(x, y), data = data.frame(d_lin), size = 0.5) +
+  geom_point(aes(x, y), data = data.frame(d_lin), size = 1) +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
   guides(linetype = F)
 pars <- intersect(names(samples_lin), c('beta','sigma','ypred'))
-draws <- as.matrix(fit_lin)
+draws <- as.data.frame(fit_lin)
 phist <- mcmc_hist(draws, pars = pars)
 grid.arrange(pfit, phist, nrow = 2)
 ```
@@ -310,13 +310,13 @@ mu <- apply(samples_lin_t$mu, 2, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = d_lin$x, .)  %>% gather(pct, y, -x)
 
 pfit <- ggplot() +
-  geom_point(aes(x, y), data = data.frame(d_lin), size = 0.5) +
+  geom_point(aes(x, y), data = data.frame(d_lin), size = 1) +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
   guides(linetype = F)
 pars <- intersect(names(samples_lin_t), c('beta','sigma','nu','ypred'))
-draws <- as.matrix(fit_lin_t)
+draws <- as.data.frame(fit_lin_t)
 phist <- mcmc_hist(draws, pars = pars)
 grid.arrange(pfit, phist, nrow = 2)
 ```
@@ -410,5 +410,5 @@ combn(unique(temps$month), 2, function(months, data) {
 
 # Licenses {.unnumbered}
 
-* Code &copy; 2017-2018, Aki Vehtari, Markus Paasiniemi, licensed under BSD-3.
+* Code &copy; 2017-2018, Aki Vehtari, 2017 Markus Paasiniemi, licensed under BSD-3.
 * Text &copy; 2017-2018, Aki Vehtari, licensed under CC-BY-NC 4.0.
