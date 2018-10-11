@@ -26,6 +26,7 @@ library(gridExtra)
 library(rstanarm)
 library(rstan)
 library(bayesplot)
+theme_set(theme_minimal())
 library(loo)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
@@ -57,8 +58,7 @@ First plot just the data.
 ggplot() +
   geom_point(aes(year, deaths), data = deaths, size = 1) +
   labs(y = 'Traffic deaths', x= "Year") +
-  guides(linetype = F) +
-  theme_bw()
+  guides(linetype = F)
 ```
 
 # Poisson regression model
@@ -90,8 +90,7 @@ pfit <- ggplot() +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(x = 'Year', y = 'Traffic deaths') +
-  guides(linetype = F) +
-  theme_bw()
+  guides(linetype = F)
 (pfit)
 ```
 
@@ -116,8 +115,7 @@ pfit <- ggplot() +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(x = 'Year', y = 'Traffic deaths') +
-  guides(linetype = F) +
-  theme_bw()
+  guides(linetype = F)
 (pfit)
 ```
 
@@ -159,8 +157,7 @@ pfit <- ggplot() +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(x = 'Year', y = 'Traffic deaths') +
-  guides(linetype = F) +
-  theme_bw()
+  guides(linetype = F)
 (pfit)
 ```
 
