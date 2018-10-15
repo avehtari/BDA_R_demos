@@ -15,7 +15,7 @@ output:
 # Setup  {.unnumbered}
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=FALSE, comment=NA, out.width='95%')
+knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
 ```
 
 **Load packages**
@@ -97,8 +97,8 @@ pfit <- ggplot() +
 Next we fit a non-linear spline model with `stan_gamm4`
 ```{r}
 fit_gam <- stan_gamm4(deaths ~ year + s(year), data=deaths,
-                      family="poisson",
-                      refresh=1000, iter=1000, chain=4, seed=583829)
+                      family="poisson", adapt_delta=0.999, 
+                      refresh=1000, iter=2000, chain=4, seed=583829)
 summary(fit_gam, probs=c(0.1, 0.5, 0.9))
 ```
 
@@ -168,7 +168,10 @@ Finally we compare models using PSIS-LOO predictive performance estimates.
 (loo_lin<-loo(fit_lin))
 (loo_gam<-loo(fit_gam))
 compare(loo_lin, loo_gam)
-(loo_gp<-loo(gp_params$log_lik))
+```
+```{r}
+log_lik_gp <- extract_log_lik(fit_gp, merge_chains = FALSE)
+(loo_gp<-loo(log_lik_gp, r_eff = relative_eff(exp(log_lik_gp))))
 compare(loo_lin, loo_gp)
 ```
 
