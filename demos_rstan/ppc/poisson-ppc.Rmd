@@ -1,26 +1,34 @@
 ---
 title: "Detecting model misfit with posterior predictive checks"
 author: "Jonah Gabry, Aki Vehtari"
-date: ''
+date: "Last modified `r format(Sys.Date())`."
 output:
-  html_document: default
-  html_notebook: default
+  html_document:
+    fig_caption: yes
+    toc: TRUE
+    toc_depth: 2
+    number_sections: TRUE
+    toc_float:
+      smooth_scroll: FALSE
 ---
 
+# Setup  {.unnumbered}
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.align="center")
+knitr::opts_chunk$set(chache = TRUE, echo = TRUE, comment=NA, fig.align="center")
 ```
 
+**Load packages**
 ```{r load-packages, message=FALSE, warning=FALSE}
 library("rstan")
 library("ggplot2")
 library("bayesplot")
-theme_set(theme_default())
+theme_set(bayesplot::theme_default(base_family = "sans"))
+library(loo)
 ```
 
 
-## Load and examine data
-
+# Load and examine data
 ```{r poisson-data, fig.width = 4, fig.height = 4}
 source("count-data.R")
 print(N)
@@ -28,7 +36,7 @@ print(y)
 qplot(y)
 ```
 
-#### Compare `y` to draws from Poisson with same mean
+## `y` to draws from Poisson with same mean
 
 ```{r plot-x, fig.width = 4, fig.height = 4}
 x <- rpois(N, mean(y))
@@ -46,7 +54,7 @@ ggplot(plotdata, aes(x = value, color = variable)) +
   scale_color_manual(name = "", values = c("gray30", "purple"))
 ```
 
-## Fit basic Poisson model
+# Fit basic Poisson model
 
 Even though we already suspect it won't be a good model for this data, it's
 still a good idea to start by fitting the simplest Poisson model. From there we
@@ -61,15 +69,15 @@ fit <- stan("poisson-simple.stan", data = c("y", "N"))
 print(fit)
 ```
 
-#### Look at posterior distribution of lambda
+## Look at posterior distribution of lambda
 
 ```{r, plot-lambda}
-color_scheme_set("red") # check out ?bayesplot::color_scheme_set
+color_scheme_set("brightblue") # check out ?bayesplot::color_scheme_set
 lambda_draws <- as.matrix(fit, pars = "lambda")
 mcmc_areas(lambda_draws, prob = 0.8) # color 80% interval
 ```
 
-#### Check summary of lambda and compare to mean of the data
+## Check summary of lambda and compare to mean of the data
 ```{r, print-fit}
 print(fit, pars = "lambda")
 mean(y)
@@ -77,9 +85,9 @@ mean(y)
 The model gets the mean right, but, as we'll see next, the model is quite bad
 at predicting the outcome.
 
-## Graphical posterior predictive checks
+# Graphical posterior predictive checks
 
-#### Extract `y_rep` draws from the fitted model object
+## Extract `y_rep` draws from the fitted model object
 
 ```{r y_rep}
 y_rep <- as.matrix(fit, pars = "y_rep")
@@ -89,21 +97,20 @@ y_rep <- as.matrix(fit, pars = "y_rep")
 dim(y_rep) 
 ```
 
-#### Compare histogram of `y` to histograms of several `y_rep`s
+## Compare histogram of `y` to histograms of several `y_rep`s
 
 ```{r ppc-hist, message=FALSE}
 ppc_hist(y, y_rep[1:8, ], binwidth = 1)
 ```
 
-#### Compare density estimate of `y` to density estimates of a bunch of `y_rep`s
+## Compare density estimate of `y` to density estimates of a bunch of `y_rep`s
 
 ```{r ppc-dens-overlay}
-color_scheme_set("brightblue")
 ppc_dens_overlay(y, y_rep[1:50, ])
 ```
 
 
-#### Compare proportion of zeros in `y` to the distribution of that proportion over all `y_rep`s
+## Compare proportion of zeros in `y` to the distribution of that proportion over all `y_rep`s
 
 ```{r prop-zero, message=FALSE}
 prop_zero <- function(x) mean(x == 0)
@@ -112,7 +119,7 @@ print(prop_zero(y))
 ppc_stat(y, y_rep, stat = "prop_zero")
 ```
 
-#### Some other checks
+## Some other checks
 
 Look at two statistics in a scatterplot:
 
@@ -126,7 +133,7 @@ Distributions of predictive errors:
 ppc_error_hist(y, y_rep[1:4, ], binwidth = 1) + xlim(-15, 15)
 ```
 
-## Fit Poisson "hurdle" model (also with truncation from above)
+# Fit Poisson "hurdle" model (also with truncation from above)
 
 This model says that there is some probability `theta` that `y`
 is zero and probability `1 - theta` that `y` is positive. 
@@ -151,7 +158,7 @@ fit2 <- stan("poisson-hurdle.stan", data = c("y", "N"))
 print(fit2, pars = c("lambda", "theta"))
 ```
 
-#### Compare posterior distributions of lambda from the two models
+## Compare posterior distributions of lambda from the two models
 ```{r, compare-lambdas}
 lambda_draws2 <- as.matrix(fit2, pars = "lambda")
 lambdas <- cbind(lambda_fit1 = lambda_draws[, 1],
@@ -159,7 +166,7 @@ lambdas <- cbind(lambda_fit1 = lambda_draws[, 1],
 mcmc_areas(lambdas, prob = 0.8) # color 80% interval
 ```
 
-## Posterior predictive checks again
+# Posterior predictive checks again
 
 Same plots as before (and a few others), but this time using `y_rep` from `fit2`.
 Everything looks much more reasonable:
@@ -183,15 +190,18 @@ ppc_stat_2d(y, y_rep2, stat = c("mean", "sd"))
 ppc_error_hist(y, y_rep2[sample(nrow(y_rep2), 4), ], binwidth = 1)
 ```
 
-How about the predictive performance with LOO?
+# Comparison with leave-one-out cross-validation
+
+Compare predictive performance with LOO.
 
 ```{r}
-library(loo)
-log_lik1 <- extract_log_lik(fit)
-(loo1<-loo(log_lik1))
-log_lik2 <- extract_log_lik(fit2)
-(loo2<-loo(log_lik2))
-compare(loo1,loo2)
+log_lik1 <- extract_log_lik(fit, merge_chains = FALSE)
+r_eff1 <- relative_eff(exp(log_lik1)) 
+(loo1 <- loo(log_lik1, r_eff = r_eff1))
+log_lik2 <- extract_log_lik(fit2, merge_chains = FALSE)
+r_eff2 <- relative_eff(exp(log_lik2)) 
+(loo2 <- loo(log_lik2, r_eff = r_eff2))
+compare(loo1, loo2)
 ```
 
 Model 2 is a clear winner in the predictive performance.
