@@ -15,7 +15,7 @@ output:
 # Setup  {.unnumbered}
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=TRUE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
+knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
 ```
 
 **Load packages**
@@ -158,7 +158,7 @@ fit_bin2 <- stan(file = 'binom2.stan', data = d_bin2)
 ```{r}
 monitor(fit_bin2, probs = c(0.1, 0.5, 0.9))
 ```
-```{r}
+```{r, warning=FALSE}
 draws <- as.data.frame(fit_bin2)
 mcmc_hist(draws, pars = 'oddsratio') +
   geom_vline(xintercept = 1) +
@@ -207,7 +207,7 @@ Run Stan
 ```{r, results='hide'}
 fit_lin <- stan(file = 'lin.stan', data = d_lin_priors)
 ```
-Stan gives a warning that "There were 91 transitions after warmup that exceeded the maximum treedepth". You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the treedepth info and joint posterior of alpha and beta, to get a hint for the reason. ShinyStan helps also checking divergences, energy diagnostic, n_eff's and Rhats.
+Stan gives a warning: There were `r get_num_max_treedepth(fit_lin)` transitions after warmup that exceeded the maximum treedepth. You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the treedepth info and joint posterior of alpha and beta, to get a hint for the reason. ShinyStan helps also checking divergences, energy diagnostic, n_eff's and Rhats.
 
 Instead of interactive ShinyStan, we can also check the diagnostics as follows
 ```{r}
@@ -215,10 +215,8 @@ monitor(fit_lin, probs = c(0.1, 0.5, 0.9))
 ```
 
 The following diagnostics are explained in [Robust Statistical Workflow with RStan Case Study](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html) by Michael Betancourt.
-```{r}
-check_treedepth(fit_lin)
-check_energy(fit_lin)
-check_div(fit_lin)
+```{r, message=TRUE}
+check_hmc_diagnostics(fit_lin)
 ```
 
 
@@ -258,11 +256,9 @@ fit_lin_std <- stan(file = 'lin_std.stan', data = d_lin)
 ```
 Now there were no warnings. You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the posterior and diagnostics and compare to the previous model results. We can also check diagnostics with the following commands.
 
-```{r}
+```{r, message=TRUE}
 monitor(fit_lin_std, probs = c(0.1, 0.5, 0.9))
-check_treedepth(fit_lin_std)
-check_energy(fit_lin_std)
-check_div(fit_lin_std)
+check_hmc_diagnostics(fit_lin_std)
 ```
 
 We see that there are no warnings by diagnostics and n_eff's are higher than with the previous case with non-standardized data.
@@ -287,14 +283,12 @@ fit_lin_t <- stan(file = 'lin_t.stan', data = d_lin)
 We get some warnings, but these specific warnings are not critical if counts are small as here.
 
 Let's examine further diagnostics.
-```{r}
+```{r, message=TRUE}
 monitor(fit_lin_t, probs = c(0.1, 0.5, 0.9))
-check_treedepth(fit_lin_t)
-check_energy(fit_lin_t)
-check_div(fit_lin_t)
+check_hmc_diagnostics(fit_lin_t)
 ```
 
-We get similar diagnostics as for the linear Gaussian model witw non-standardised data.
+We get similar diagnostics as for the linear Gaussian model with non-standardised data.
 
 Compute the probability that the summer temperature is increasing.
 ```{r}
