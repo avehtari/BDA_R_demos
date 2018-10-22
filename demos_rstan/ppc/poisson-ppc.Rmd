@@ -15,7 +15,7 @@ output:
 # Setup  {.unnumbered}
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(chache = TRUE, echo = TRUE, comment=NA, fig.align="center")
+knitr::opts_chunk$set(cache = FALSE, echo = TRUE, comment=NA, fig.align="center")
 ```
 
 **Load packages**
