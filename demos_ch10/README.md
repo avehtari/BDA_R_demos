@@ -1,4 +1,6 @@
-# Links to html versions of demos
+# Bayesian Data Analysis R Demos - Chapter 10
+
+[BDA_R_demos git repo](https://github.com/avehtari/BDA_R_demos/)
 
 - [demo10_1: Rejection sampling](http://avehtari.github.io/BDA_R_demos/demos_ch10/demo10_1.html)
 - [demo10_2: Importance sampling](http://avehtari.github.io/BDA_R_demos/demos_ch10/demo10_2.html)
