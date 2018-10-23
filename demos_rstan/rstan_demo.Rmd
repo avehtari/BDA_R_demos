@@ -292,7 +292,7 @@ We get similar diagnostics as for the linear Gaussian model with non-standardise
 
 Compute the probability that the summer temperature is increasing.
 ```{r}
-samples_lin_t <- rstan::extract(fit_lin_t, permuted = T)
+samples_lin_t <- extract(fit_lin_t, permuted = T)
 mean(samples_lin_t$beta>0) # probability that beta > 0
 ```
 We get similar probability as with Gaussian obervation model.
@@ -388,16 +388,17 @@ Plot the results
 ```{r}
 samples_grp <- extract(fit_grp, permuted = T)
 
-temps <- data.frame(samples_grp$mu) %>% setNames(6:8) %>% gather(month, temp)
-qplot(month, temp, data = temps, geom = 'violin')
+temps <- data.frame(samples_grp$mu) %>%
+  setNames(c('June','July','August'))
+mcmc_areas(temps) + xlab('Temperature')
 ```
 
 Probabilities that June is hotter than July, June is hotter than August
 and July is hotter than August:
 ```{r}
-combn(unique(temps$month), 2, function(months, data) {
-  mean(subset(data, month == months[1])$temp > subset(data, month == months[2])$temp)
-}, data = temps) %>% setNames(c('6>7', '6>8', '7>8'))
+paste('p(TempJun > TempJul) = ', mean(temps$June > temps$July))
+paste('p(TempJun > TempAug) = ', mean(temps$June > temps$August))
+paste('p(TempJul > TempAug) = ', mean(temps$July > temps$August))
 ```
 
 <br />
