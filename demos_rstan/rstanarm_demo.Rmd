@@ -1,5 +1,5 @@
 ---
-title: "Bayesian data analysis - rstanarm demos"
+title: "Bayesian data analysis - RStanARM demos"
 author: "Aki Vehtari, Markus Paasiniemi"
 date: "First version 2017-07-17. Last modified `r format(Sys.Date())`."
 output:
@@ -31,6 +31,7 @@ library(ggplot2)
 library(bayesplot)
 theme_set(bayesplot::theme_default(base_family = "sans"))
 library(gridExtra)
+SEED <- 48927 # set random seed for reproducability
 ```
 
 # Introduction
@@ -53,7 +54,7 @@ which is not recommended in general. y ~ 1 means y depends only on
 the intercept term
 ```{r, results='hide'}
 fit_bern <- stan_glm(y ~ 1, family = binomial(),
-                     data = d_bern, prior_intercept = NULL)
+                     data = d_bern, prior_intercept = NULL, seed = SEED)
 ```
 
 You can use ShinyStan examine and diagnose the fitted model is to call shinystan in R terminal as follows:
@@ -99,7 +100,8 @@ Binomial model (we are not able to replicate the Binomial example in rstan_demo 
 ```{r, results='hide'}
 d_bin <- data.frame(N = c(5,5), y = c(4,3))
 fit_bin <- stan_glm(y/N ~ 1, family = binomial(), data = d_bin,
-                     prior_intercept = prior_intercept, weights = N)
+                     prior_intercept = prior_intercept, weights = N,
+		     seed = SEED)
 ```
 
 ```{r}
@@ -159,7 +161,8 @@ To analyse whether the treatment is useful, we can use Binomial model for both g
 
 ```{r, results='hide'}
 fit_bin2 <- stan_glm(y/N ~ grp2, family = binomial(), data = d_bin2,
-                     prior_intercept = NULL, prior = NULL, weights = N)
+                     prior_intercept = NULL, prior = NULL, weights = N,
+		     seed = SEED)
 ```
 ```{r}
 summary(fit_bin2, probs = c(0.1, 0.5, 0.9))
@@ -195,7 +198,8 @@ To analyse has there been change in the average summer month temperature we use 
 
 y ~ x means y depends on the intercept and x
 ```{r, results='hide'}
-fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian())
+fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian(),
+                    seed = SEED)
 ```
 
 You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the divergences, treedepth exceedences, n_eff, Rhats, and joint posterior of alpha and beta. In the corresponding rstan_demo notebook we observed some treedepth exceedences leading to slightly less efficient sampling, but rstanarm has slightly different model and performs better.
@@ -242,7 +246,7 @@ Currently, rstanarm does not yet support Student's t likelihood. Below we use br
 
 ```{r, results='hide'}
 library(brms)
-fit_lin_t <- brm(temp ~ year, data = d_lin, family = student())
+fit_lin_t <- brm(temp ~ year, data = d_lin, family = student(), seed = SEED)
 ```
 
 ```{r}

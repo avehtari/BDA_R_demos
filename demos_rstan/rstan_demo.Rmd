@@ -1,5 +1,5 @@
 ---
-title: "Bayesian data analysis - rstan demos"
+title: "Bayesian data analysis - RStan demos"
 author: "Aki Vehtari, Markus Paasiniemi"
 date: "First version 2017-07-17. Last modified `r format(Sys.Date())`."
 output:
@@ -31,6 +31,7 @@ library(bayesplot)
 theme_set(bayesplot::theme_default(base_family = "sans"))
 library(shinystan)
 source('stan_utility.R')
+SEED <- 48927 # set random seed for reproducability
 ```
 
 # Introduction
@@ -53,7 +54,7 @@ writeLines(readLines("bern.stan"))
 
 Sample form the posterior and show the summary
 ```{r, results='hide'}
-fit_bern <- stan(file = 'bern.stan', data = d_bern)
+fit_bern <- stan(file = 'bern.stan', data = d_bern, seed = SEED)
 ```
 ```{r}
 monitor(fit_bern, probs = c(0.1, 0.5, .9))
@@ -80,7 +81,7 @@ writeLines(readLines("binom.stan"))
 
 Sample from the posterior and plot the posterior. The histogram should look similar as in the Bernoulli case.
 ```{r, results='hide'}
-fit_bin <- stan(file = 'binom.stan', data = d_bin)
+fit_bin <- stan(file = 'binom.stan', data = d_bin, seed = SEED)
 ```
 ```{r}
 monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
@@ -93,7 +94,7 @@ mcmc_hist(draws, pars = 'theta')
 Re-run the model with a new data. The compiled Stan program is re-used making the re-use faster.
 ```{r, results='hide'}
 d_bin <- list(N = 100, y = 70)
-fit_bin <- stan(file = 'binom.stan', data = d_bin)
+fit_bin <- stan(file = 'binom.stan', data = d_bin, seed = SEED)
 ```
 ```{r}
 monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
@@ -122,7 +123,7 @@ Sample from the posterior and plot the posterior. The histogram should look simi
 
 ```{r, results='hide'}
 d_bin <- list(N = 100, y = 70)
-fit_bin <- stan(file = 'binomb.stan', data = d_bin)
+fit_bin <- stan(file = 'binomb.stan', data = d_bin, seed = SEED)
 ```
 ```{r}
 monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
@@ -153,7 +154,7 @@ writeLines(readLines("binom2.stan"))
 
 Sample from the posterior and plot the posterior
 ```{r, results='hide'}
-fit_bin2 <- stan(file = 'binom2.stan', data = d_bin2)
+fit_bin2 <- stan(file = 'binom2.stan', data = d_bin2, seed = SEED)
 ```
 ```{r}
 monitor(fit_bin2, probs = c(0.1, 0.5, 0.9))
@@ -205,7 +206,7 @@ d_lin_priors <- c(list(
 
 Run Stan
 ```{r, results='hide'}
-fit_lin <- stan(file = 'lin.stan', data = d_lin_priors)
+fit_lin <- stan(file = 'lin.stan', data = d_lin_priors, seed = SEED)
 ```
 Stan gives a warning: There were `r get_num_max_treedepth(fit_lin)` transitions after warmup that exceeded the maximum treedepth. You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the treedepth info and joint posterior of alpha and beta, to get a hint for the reason. ShinyStan helps also checking divergences, energy diagnostic, n_eff's and Rhats.
 
@@ -252,7 +253,7 @@ writeLines(readLines("lin_std.stan"))
 ```
 
 ```{r, results='hide'}
-fit_lin_std <- stan(file = 'lin_std.stan', data = d_lin)
+fit_lin_std <- stan(file = 'lin_std.stan', data = d_lin, seed = SEED)
 ```
 Now there were no warnings. You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the posterior and diagnostics and compare to the previous model results. We can also check diagnostics with the following commands.
 
@@ -278,7 +279,7 @@ writeLines(readLines("lin_t.stan"))
 ```
 
 ```{r, results='hide'}
-fit_lin_t <- stan(file = 'lin_t.stan', data = d_lin)
+fit_lin_t <- stan(file = 'lin_t.stan', data = d_lin, seed = SEED)
 ```
 We get some warnings, but these specific warnings are not critical if counts are small as here.
 
@@ -349,7 +350,7 @@ writeLines(readLines("grp_aov.stan"))
 
 Fit the model
 ```{r, results='hide'} 
-fit_grp <- stan(file = 'grp_aov.stan', data = d_grp)
+fit_grp <- stan(file = 'grp_aov.stan', data = d_grp, seed = SEED)
 ```
 ```{r}
 monitor(fit_grp, probs = c(0.1, 0.5, 0.9))
@@ -365,7 +366,7 @@ writeLines(readLines("grp_prior_mean.stan"))
 
 Fit the model
 ```{r, results='hide'} 
-fit_grp <- stan(file = 'grp_prior_mean.stan', data = d_grp)
+fit_grp <- stan(file = 'grp_prior_mean.stan', data = d_grp, seed = SEED)
 ```
 ```{r}
 monitor(fit_grp, probs = c(0.1, 0.5, 0.9))
@@ -378,7 +379,7 @@ writeLines(readLines("grp_prior_mean_var.stan"))
 ```
 Fit the model
 ```{r, results='hide'}
-fit_grp <- stan(file = 'grp_prior_mean_var.stan', data = d_grp)
+fit_grp <- stan(file = 'grp_prior_mean_var.stan', data = d_grp, seed = SEED)
 ```
 ```{r}
 monitor(fit_grp, probs = c(0.1, 0.5, 0.9))
