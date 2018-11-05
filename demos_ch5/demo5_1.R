@@ -11,8 +11,10 @@
 #' manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
+library(latex2exp)
 
 #' Data
 y <- c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,
@@ -73,12 +75,12 @@ lp <- mapply(lpfun, cA, cB, MoreArgs = list(y, n))
 df_marg <- data.frame(x = cA, y = cB, p = exp(lp - max(lp)))
 
 #' Create a plot of the marginal posterior density
-title1 <- 'The marginal posterior of alpha and beta in hierarchical model'
+title1 <- TeX('The marginal of $\\alpha$ and $\\beta$')
 ggplot(data = df_marg, aes(x = x, y = y)) +
   geom_raster(aes(fill = p, alpha = p), interpolate = T) +
   geom_contour(aes(z = p), colour = 'black', size = 0.2) +
   coord_cartesian(xlim = c(1,5), ylim = c(4, 26)) +
-  labs(x = 'alpha', y = 'beta', title = title1) +
+  labs(x = TeX('$\\alpha$'), y = TeX('$\\beta$'), title = title1) +
   scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
   scale_alpha(range = c(0, 1), guide = F)
 
@@ -98,9 +100,9 @@ df_psamp <- mapply(function(a, b, x) dbeta(x, a, b),
 #' samples of alpha and beta
 # helper function to convert ind to numeric for subsetting
 indtonum <- function(x) strtoi(substring(x,2))
-title2 <- 'Posterior samples from the distribution of distributions Beta(a,b)'
+title2 <- TeX('Beta($\\alpha,\\beta$) given posterior drwas of $\\alpha$ and $\\beta$')
 plot_psamp <- ggplot(data = subset(df_psamp, indtonum(ind) <= 20)) +
-  geom_line(aes(x = x, y = p, group = ind)) +
+  geom_line(aes(x = x, y = p, group = ind), color='forestgreen') +
   labs(x = expression(theta), y = '', title = title2) +
   scale_y_continuous(breaks = NULL)
 
@@ -110,9 +112,9 @@ df_psampmean <- spread(df_psamp, ind, p) %>% subset(select = -x) %>%
     rowMeans() %>% data.frame(x = x, p = .)
 
 #' Create plot for samples from the predictive distribution for new theta
-title3 <- 'Predictive distribution for a new theta and prior for theta_j'
+title3 <- TeX('Population distribution (prior) for $\\theta_j$')
 plot_psampmean <- ggplot(data = df_psampmean) +
-  geom_line(aes(x = x, y = p)) +
+  geom_line(aes(x = x, y = p), color='forestgreen') +
   labs(x = expression(theta), y = '', title = title3) +
   scale_y_continuous(breaks = NULL)
 

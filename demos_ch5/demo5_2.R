@@ -4,7 +4,7 @@
 #' date: "`r format(Sys.Date())`"
 #' ---
 
-#' ## Hierarchical model for SAT-example data (BDA3, p. 102)
+#' ## Hierarchical model for SAT-example data (BDA3, p. 120)
 #' 
 
 #' ggplot2, grid, and gridExtra are used for plotting, tidyr for
@@ -14,6 +14,7 @@ library(ggplot2)
 theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
+library(latex2exp)
 library(rprojroot)
 root<-has_dirname("BDA_R_demos")$make_fix_file()
 
@@ -65,22 +66,24 @@ grid.arrange(plot_sep, plot_pool, plot_hier)
 
 #' Various marginal and conditional posterior summaries
 df_margpost = data.frame(x = t(tt), p = t(tp))
-title1 <- 'Marginal posterior density p(tau|y)'
+title1 <- TeX('Marginal posterior $p(\\tau | y)$')
 plot_margpost <-
   ggplot(data = df_margpost) +
-  geom_line(aes(x = x, y = p)) +
-  labs(x = expression(tau), y = 'p(tau|y)', title = title1) +
-  scale_y_continuous(breaks = NULL)
+  geom_line(aes(x = x, y = p), color='forestgreen') +
+  labs(x = expression(tau), y = TeX('$p(\\tau | y)$'), title = title1) +
+    scale_y_continuous(breaks = 0) +
+    xlim(c(0, 35))
+
 
 df_condmeans <- as.data.frame(t(tm)) %>% setNames(LETTERS[1:8]) %>%
   cbind(x = t(tt)) %>% gather(school, p, -x)
 
 yl <- c(-5, 40)
-title2 <- 'Conditional posterior means of effects E[theta_j|tau,y]'
+title2 <- TeX('Conditional means E\\[$\\theta_j | \\tau , y $\\]')
 plot_condmeans <- ggplot(data = df_condmeans) +
   geom_line(aes(x = x, y = p, color = (school=='A'), group = school)) +
-  coord_cartesian(ylim = yl) +
-  labs(x = expression(tau), y = 'E[theta_j|tau,y)', title = title2, color = '') +
+  coord_cartesian(ylim = yl, xlim = c(0, 35)) +
+  labs(x = expression(tau), y = TeX('E\\[$\\theta_j | \\tau , y $\\]'), title = title2, color = '') +
   scale_color_manual(values = c('blue','red'), labels = labs1) +
   theme(legend.background = element_blank(), legend.position = c(0.8,0.9))
 
@@ -88,11 +91,11 @@ df_condsds <- as.data.frame(t(tsd)) %>% setNames(LETTERS[1:8]) %>%
   cbind(x = t(tt)) %>% gather(school, p, -x)
 
 yl <- c(0, 25)
-title3 <- 'Conditional posterior standard deviations of effects sd[theta_j|tau,y]'
+title3 <- TeX('Conditional standard deviations sd\\[$\\theta_j | \\tau , y $\\]')
 plot_condsds <- ggplot(data = df_condsds) +
   geom_line(aes(x = x, y = p, color = (school=='A'), group = school)) +
-  coord_cartesian(ylim = yl) +
-  labs(x = expression(tau), y = 'sd[theta_j|tau,y)', title = title3, color = '') +
+  coord_cartesian(ylim = yl, xlim = c(0,35)) +
+  labs(x = expression(tau), y = TeX('sd\\[$\\theta_j | \\tau , y $\\]'), title = title3, color = '') +
   scale_color_manual(values = c('blue','red'), labels = labs1) +
   theme(legend.background = element_blank(), legend.position = c(0.8,0.9))
 
