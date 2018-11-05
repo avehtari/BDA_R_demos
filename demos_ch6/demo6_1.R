@@ -12,6 +12,7 @@
 library(ggplot2)
 theme_set(theme_minimal())
 library(tidyr)
+library(latex2exp)
 library(rprojroot)
 root<-has_dirname("BDA_R_demos")$make_fix_file()
 
@@ -22,24 +23,24 @@ n <- length(y)
 s <- sd(y)
 my <- mean(y)
 
-#' Create 10 random replicate data sets from the posterior
+#' Create 9 random replicate data sets from the posterior
 #' predictive density.
 #' Each set has same number of virtual observations as the
 #' original data set.
-sampt <- replicate(10, rt(n, n-1)*sqrt(1+1/n)*s+my) %>%
+sampt <- replicate(9, rt(n, n-1)*sqrt(1+1/n)*s+my) %>%
   as.data.frame()
 
 #' Replace one of the replicates with observed data.
 #' If you can spot which one has been replaced, it means
 #' that the replicates do not resemble the original data
 #' and thus the model has a defect
-ind <- sample(10, 1)
-sampt_y <- replace(sampt, ind, y) %>% setNames(1:10) %>% gather()
+ind <- sample(9, 1)
+sampt_y <- replace(sampt, ind, y) %>% setNames(1:9) %>% gather()
 ggplot(data = sampt_y) +
   geom_histogram(aes(x = value), fill = 'steelblue',
                  color = 'black', binwidth = 4) +
-  facet_wrap(~key, nrow = 4) +
-  coord_cartesian(xlim = c(-50, 50)) +
+  facet_wrap(~key, nrow = 3) +
+  coord_cartesian(xlim = c(-55, 65)) +
   labs(x = '', y = '') +
   scale_y_continuous(breaks=NULL) +
   theme(strip.background = element_blank())
@@ -55,9 +56,10 @@ title1 <- 'Smallest observation in the replicated
 data (hist.) vs in the original data (vertical line)'
 ggplot(data = minvals) +
   geom_histogram(aes(x = x), fill = 'steelblue',
-                 color = 'black', binwidth = 4) +
+                 color = 'black', binwidth = 2) +
   geom_vline(aes(xintercept = min(x)), data = data.frame(x = y),
              color = 'red') +
   coord_cartesian(xlim = c(-50, 20)) +
-  labs(x = '', y = '', title = title1) +
+  labs(x = TeX('Minimum of \\mathit{y} and \\mathit{y}^{\\mathrm{rep}}'),
+       y = '', title = title1) +
   scale_y_continuous(breaks=NULL)

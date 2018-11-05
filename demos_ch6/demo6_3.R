@@ -14,6 +14,7 @@
 library(ggplot2)
 theme_set(theme_minimal())
 library(tidyr)
+library(latex2exp)
 library(rprojroot)
 root<-has_dirname("BDA_R_demos")$make_fix_file()
 
@@ -42,6 +43,7 @@ ggplot(data = sampt_vars) +
                  color = 'black', binwidth = 6) +
   geom_vline(aes(xintercept = x), data = data.frame(x = s^2),
              color = 'red') +
-  labs(x = '', y = '', title = title1) +
+  labs(x = TeX('Variance of \\mathit{y} and \\mathit{y}^{\\mathrm{rep}}'),
+       y = '', title = title1) +
   scale_y_continuous(breaks=NULL)
 

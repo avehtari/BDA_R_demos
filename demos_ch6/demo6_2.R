@@ -12,7 +12,9 @@
 #' ggplot2 is used for plotting, tidyr for manipulating data frames
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
+theme_set(theme_minimal())
 library(tidyr)
+library(latex2exp)
 
 #' Data
 y <- c(1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -40,10 +42,11 @@ mean(Tyr<=Ty)
 title1 <- 'Binomial example - number of changes?
 Pr(T(yrep,theta) <= T(y,theta)|y) = 0.03'
 ggplot(data = Tyr) +
-  geom_histogram(aes(x = x), fill = 'darkblue',
+  geom_histogram(aes(x = x), fill = 'steelblue',
                  color = 'black', binwidth = 1) +
   geom_vline(aes(xintercept = x), data = data.frame(x = Ty),
              color = 'red') +
-  labs(x = '', y = '', title = title1) +
+  labs(x = TeX('Number of changes in \\mathit{y} and \\mathit{y}^{\\mathrm{rep}}'),
+       y = '', title = title1) +
   scale_y_continuous(breaks=NULL)
 
