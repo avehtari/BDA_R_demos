@@ -12,6 +12,8 @@ The initial demos were originally written for Matlab by [Aki
 Vehtari](http://users.aalto.fi/~ave/) and translated to R by [Markus
 Paasiniemi](https://github.com/paasim). Recently more demos have been
 added for [RStan and RStanARM](demos_rstan).
+Unless otherwise specified in specific files all code licensed
+under BSD-3 and all text, slides and figures licensed under CC-BY-NC 4.0.
 
 The corresponding [Python demos](https://github.com/avehtari/BDA_py_demos)
 and the corresponding [Matlab/Octave demos](https://github.com/avehtari/BDA_m_demos).
