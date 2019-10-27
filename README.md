@@ -1,6 +1,6 @@
 # Bayesian Data Analysis R Demos
 
-This repository contains some R demos and additional notes for the book [Bayesian Data
+The [BDA_R_demos repository](https://github.com/avehtari/BDA_R_demos) contains some R demos and additional notes for the book [Bayesian Data
 Analysis, 3rd ed by Gelman, Carlin, Stern, Dunson, Vehtari, and Rubin (BDA3)](http://www.stat.columbia.edu/~gelman/book/).
 
 Currently there are demos for BDA3 Chapters 2, 3, 4, 5, 6, 10 and 11.
