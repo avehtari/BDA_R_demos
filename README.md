@@ -3,7 +3,7 @@
 The [BDA_R_demos repository](https://github.com/avehtari/BDA_R_demos) contains some R demos and additional notes for the book [Bayesian Data
 Analysis, 3rd ed by Gelman, Carlin, Stern, Dunson, Vehtari, and Rubin (BDA3)](http://www.stat.columbia.edu/~gelman/book/).
 
-Currently there are demos for BDA3 Chapters 2, 3, 4, 5, 6, 10 and 11.
+Currently there are demos for BDA3 Chapters 2, 3, 4, 5, 6, 10, 11 and 12.
 Furthermore there are demos for
 [RStan](https://github.com/stan-dev/rstan) and
 [RStanARM](https://github.com/stan-dev/rstanarm).
