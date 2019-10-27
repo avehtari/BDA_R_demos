@@ -100,7 +100,7 @@ df_psamp <- mapply(function(a, b, x) dbeta(x, a, b),
 #' samples of alpha and beta
 # helper function to convert ind to numeric for subsetting
 indtonum <- function(x) strtoi(substring(x,2))
-title2 <- TeX('Beta($\\alpha,\\beta$) given posterior drwas of $\\alpha$ and $\\beta$')
+title2 <- TeX('Beta($\\alpha,\\beta$) given posterior draws of $\\alpha$ and $\\beta$')
 plot_psamp <- ggplot(data = subset(df_psamp, indtonum(ind) <= 20)) +
   geom_line(aes(x = x, y = p, group = ind), color='forestgreen') +
   labs(x = expression(theta), y = '', title = title2) +
@@ -157,3 +157,15 @@ plot_hier7 <- ggplot(data = subset(df_hier, indtonum(ind)%%7==0)) +
 #' Combine the plots
 grid.arrange(plot_sep7, plot_hier7)
 
+#' 90% intervals<br>
+#' for separate models
+qq_separate<-data.frame(id=1:length(n), n=n, y=y,
+               q10=qbeta(0.1,y+1,n-y+1), q90=qbeta(0.9,y+1,n-y+1))
+#' for hierarchical model
+qh <- function(q, n, y) colMeans(mapply(function(q, n, y, a, b)
+    mapply(qbeta, q, a + y, n - y + b), q, n, y, MoreArgs = list(samp_A, samp_B)))
+qq_hier <- data.frame(id=1:length(n), n=n, y=y,
+                      qh(0.05, n, y), qh(0.95, n, y))
+#' plot
+
+ggplot(data=qq_separate[seq(1,length(n),by=3),], aes(x=jitter(n,amount=1),ymin=q10,ymax=q90)) + geom_linerange() + xlim(c(0,60))
