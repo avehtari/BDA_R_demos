@@ -71,7 +71,7 @@ fit_lin <- stan_glm(deaths ~ year, data = deaths, family="poisson",
  	            refresh=1000, iter=1000, chains=4, seed=583829)
 ```
 ```{r, comment=NA}
-summary(fit_lin, probs=c(0.1, 0.5, 0.9))
+monitor(fit_lin$stanfit)
 ```
 
 n_eff's and Rhat's are ok (see, e.g., [RStan
@@ -98,7 +98,7 @@ Next we fit a non-linear spline model with `stan_gamm4`
 fit_gam <- stan_gamm4(deaths ~ year + s(year), data=deaths,
                       family="poisson", adapt_delta=0.999, 
                       refresh=1000, iter=2000, chain=4, seed=583829)
-summary(fit_gam, probs=c(0.1, 0.5, 0.9))
+monitor(fit_gam$stanfit)
 ```
 
 n_eff is clearly smaller than for the linear model, but Rhat's are ok.
@@ -141,7 +141,7 @@ fit_gp <- stan(file='poisson_gp.stan', data=d_data, refresh=1000, iter=4000,
 
 Check inference.
 ```{r}
-monitor(fit_gp, probs=c(0.1, 0.5, 0.9))
+monitor(fit_gp)
 check_hmc_diagnostics(fit_gp)
 ```
 
@@ -181,8 +181,8 @@ predictions.
 
 # Licenses {.unnumbered}
 
-* Code &copy; 2017-2018, Aki Vehtari, licensed under BSD-3.
-* Text &copy; 2017-2018, Aki Vehtari, licensed under CC-BY-NC 4.0.
+* Code &copy; 2017-2019, Aki Vehtari, licensed under BSD-3.
+* Text &copy; 2017-2019, Aki Vehtari, licensed under CC-BY-NC 4.0.
 
 # Original Computing Environment {.unnumbered}
 
