@@ -401,5 +401,5 @@ paste('p(TempJul > TempAug) = ', mean(temps$July > temps$August))
 
 # Licenses {.unnumbered}
 
-* Code &copy; 2017-2018, Aki Vehtari, 2017 Markus Paasiniemi, licensed under BSD-3.
-* Text &copy; 2017-2018, Aki Vehtari, licensed under CC-BY-NC 4.0.
+* Code &copy; 2017-2019, Aki Vehtari, 2017 Markus Paasiniemi, licensed under BSD-3.
+* Text &copy; 2017-2019, Aki Vehtari, licensed under CC-BY-NC 4.0.

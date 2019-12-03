@@ -22,6 +22,7 @@ knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, com
 ```{r}
 library(tidyr)
 library(dplyr)
+library(rstan) 
 library(rstanarm)
 options(mc.cores = 1)
 library(loo)
@@ -325,5 +326,5 @@ combn(unique(temps$month), 2, function(months, data) {
 
 # Licenses {.unnumbered}
 
-* Code &copy; 2017-2018, Aki Vehtari, 2017 Markus Paasiniemi, licensed under BSD-3.
-* Text &copy; 2017-2018, Aki Vehtari, licensed under CC-BY-NC 4.0.
+* Code &copy; 2017-2019, Aki Vehtari, 2017 Markus Paasiniemi, licensed under BSD-3.
+* Text &copy; 2017-2019, Aki Vehtari, licensed under CC-BY-NC 4.0.
