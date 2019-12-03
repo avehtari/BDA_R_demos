@@ -27,10 +27,10 @@ library(dplyr)
 library(gridExtra)
 library(rstan)
 library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
 library(loo)
 rstan_options(auto_write = TRUE)
-options(mc.cores = parallel::detectCores())
-source("stan_utility.R")
+options(mc.cores = 1)
 ```
 
 ## Data
@@ -254,9 +254,8 @@ fit_gpd <- stan(file='gpareto.stan', data=ds, refresh=0,
 
 Run the usual diagnostics (see [Robust Statistical Workflow with RStan](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html))
 ```{r}
-check_treedepth(fit_gpd)
-check_energy(fit_gpd)
-check_div(fit_gpd)
+monitor(as.array(fit_gpd, pars=c("k","sigma")))
+check_hmc_diagnostics(fit_gpd)
 ```
 The diagnostics do not reveal anything alarming.
 
@@ -289,17 +288,17 @@ For additional model checking plot 1) kernel density estimate of log(dst) and po
 ```{r}
 ppc1 <- ppc_dens_overlay(log(d$dst),log(gpd_params$yrep[1:50,])) + labs(x="log(absolute dst)")
 ppc2 <- ppc_stat(log(d$dst), log(gpd_params$yrep), stat = "max") + labs(x="max(log(absolute dst))")
-psis <- psislw(-gpd_params$log_lik)
+psiss <- psis(-gpd_params$log_lik)
 clrs <- color_scheme_get("brightblue")
-pkhats <- ggplot() + geom_point(aes(x=seq(1,n),y=psis$pareto_k), color=clrs[[5]]) + labs(y="khat", x="") +
+pkhats <- ggplot() + geom_point(aes(x=seq(1,n),y=psiss$diagnostics$pareto_k), color=clrs[[5]]) + labs(y="khat", x="") +
   geom_hline(yintercept=0, linetype="dashed") + ylim(-0.25,1) + theme_default()
-ppc3 <- ppc_loo_pit(log(d$dst), log(gpd_params$yrep), lw=psis$lw_smooth)
+ppc3 <- ppc_loo_pit_qq(log(d$dst), log(gpd_params$yrep), lw=psiss$log_weights)
 grid.arrange(ppc1,ppc2,ppc3,pkhats,ncol=2)
 ```
 
 We compute also PSIS-LOO estimate, although this is not much use without an alternative model to compare against.
 ```{r}
-(loo_gpd<-loo(gpd_params$log_lik))
+(loo_gpd<-loo(fit_gpd))
 ```
 
 ## Conclusion on the data analysis
