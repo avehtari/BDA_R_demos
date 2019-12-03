@@ -18,7 +18,7 @@ under BSD-3 and all text, slides and figures licensed under CC-BY-NC 4.0.
 The corresponding [Python demos](https://github.com/avehtari/BDA_py_demos)
 and the corresponding [Matlab/Octave demos](https://github.com/avehtari/BDA_m_demos).
 
-See also [Model Selection tutorial](https://github.com/avehtari/modelselection_tutorial).
+See also [Model Selection tutorial](https://avehtari.github.io/modelselection/).
 
 List of demos (not including [rstan and rstanarm demos](demos_rstan))
 - [Chapter 2](demos_ch2)
