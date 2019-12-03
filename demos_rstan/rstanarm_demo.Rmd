@@ -23,8 +23,7 @@ knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, com
 library(tidyr)
 library(dplyr)
 library(rstanarm)
-library(rstan)
-options(mc.cores = parallel::detectCores())
+options(mc.cores = 1)
 library(loo)
 library(shinystan)
 library(ggplot2)
@@ -53,8 +52,8 @@ Uniform prior (beta(1,1)) is achieved by setting the prior to NULL,
 which is not recommended in general. y ~ 1 means y depends only on
 the intercept term
 ```{r, results='hide'}
-fit_bern <- stan_glm(y ~ 1, family = binomial(),
-                     data = d_bern, prior_intercept = NULL, seed = SEED)
+fit_bern <- stan_glm(y ~ 1, family = binomial(), data = d_bern,
+                     prior_intercept = NULL, seed = SEED, refresh = 0)
 ```
 
 You can use ShinyStan examine and diagnose the fitted model is to call shinystan in R terminal as follows:
@@ -62,7 +61,7 @@ You can use ShinyStan examine and diagnose the fitted model is to call shinystan
 ```launch_shinystan(fit_bern)```
 
 ```{r}
-summary(fit_bern, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bern$stanfit)
 ```
 
 To see the parameter values on the ouput space, do the inverse
@@ -101,11 +100,11 @@ Binomial model (we are not able to replicate the Binomial example in rstan_demo 
 d_bin <- data.frame(N = c(5,5), y = c(4,3))
 fit_bin <- stan_glm(y/N ~ 1, family = binomial(), data = d_bin,
                      prior_intercept = prior_intercept, weights = N,
-		     seed = SEED)
+		     seed = SEED, refresh = 0)
 ```
 
 ```{r}
-summary(fit_bin, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bin$stanfit)
 ```
 
 ```{r}
@@ -129,7 +128,7 @@ d_bin <- data.frame(N = c(5,5), y = c(4,5))
 fit_bin <- update(fit_bin, data = d_bin)
 ```
 ```{r}
-summary(fit_bin, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bin$stanfit)
 ```
 
 Probability of success
@@ -162,10 +161,10 @@ To analyse whether the treatment is useful, we can use Binomial model for both g
 ```{r, results='hide'}
 fit_bin2 <- stan_glm(y/N ~ grp2, family = binomial(), data = d_bin2,
                      prior_intercept = NULL, prior = NULL, weights = N,
-		     seed = SEED)
+		     seed = SEED, refresh = 0)
 ```
 ```{r}
-summary(fit_bin2, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bin2$stanfit)
 ```
 
 Plot odds ratio
@@ -199,14 +198,15 @@ To analyse has there been change in the average summer month temperature we use 
 y ~ x means y depends on the intercept and x
 ```{r, results='hide'}
 fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian(),
-                    seed = SEED)
+                    seed = SEED, refresh = 0)
 ```
 
 You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the divergences, treedepth exceedences, n_eff, Rhats, and joint posterior of alpha and beta. In the corresponding rstan_demo notebook we observed some treedepth exceedences leading to slightly less efficient sampling, but rstanarm has slightly different model and performs better.
 
 Instead of interactive ShinyStan, we can also check the diagnostics as follows
 ```{r}
-summary(fit_lin, probs = c(0.1, 0.5, 0.9))
+monitor(fit_lin$stanfit)
+check_hmc_diagnostics(fit_lin$stanfit)
 ```
 
 Plot data and the fit
@@ -246,11 +246,12 @@ Currently, rstanarm does not yet support Student's t likelihood. Below we use br
 
 ```{r, results='hide'}
 library(brms)
-fit_lin_t <- brm(temp ~ year, data = d_lin, family = student(), seed = SEED)
+fit_lin_t <- brm(temp ~ year, data = d_lin, family = student(), seed = SEED,
+                 refresh = 1000)
 ```
 
 ```{r}
-summary(fit_lin_t, probs = c(0.1, 0.5, 0.9))
+summary(fit_lin_t)
 ```
 
 brms package generates Stan code which we can extract as follows. By saving this code to a file you can extend the model, beyond the models supported by brms.
@@ -266,7 +267,7 @@ Let's use LOO to compare whether Student's t model has better predictive perform
 ```{r}
 loo1 <- loo(fit_lin)
 loo2 <- loo(fit_lin_t)
-loo::compare(loo1, loo2)
+loo_compare(loo1, loo2)
 ```
 There is no practical difference between Gaussian and Student's t models.
 
@@ -295,7 +296,7 @@ fit_grp <- stan_lmer(temp ~ 1 + (1 | month), data = d_grp,
 ```
 
 ```{r}
-summary(fit_grp, probs = c(0.1, 0.5, 0.9))
+monitor(fit_grp$stanfit)
 ```
 
 Average temperature and monthly deviations from the mean

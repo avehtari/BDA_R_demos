@@ -56,7 +56,7 @@ Sample form the posterior and show the summary
 fit_bern <- stan(file = 'bern.stan', data = d_bern, seed = SEED)
 ```
 ```{r}
-monitor(fit_bern, probs = c(0.1, 0.5, .9))
+monitor(fit_bern)
 ```
 Plot the histogram of the posterior draws
 ```{r}
@@ -83,7 +83,7 @@ Sample from the posterior and plot the posterior. The histogram should look simi
 fit_bin <- stan(file = 'binom.stan', data = d_bin, seed = SEED)
 ```
 ```{r}
-monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bin)
 ```
 ```{r}
 draws <- as.data.frame(fit_bin)
@@ -96,7 +96,7 @@ d_bin <- list(N = 100, y = 70)
 fit_bin <- stan(file = 'binom.stan', data = d_bin, seed = SEED)
 ```
 ```{r}
-monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bin)
 ```
 ```{r}
 draws <- as.data.frame(fit_bin)
@@ -125,7 +125,7 @@ d_bin <- list(N = 100, y = 70)
 fit_bin <- stan(file = 'binomb.stan', data = d_bin, seed = SEED)
 ```
 ```{r}
-monitor(fit_bin, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bin)
 ```
 ```{r}
 draws <- as.data.frame(fit_bin)
@@ -156,7 +156,7 @@ Sample from the posterior and plot the posterior
 fit_bin2 <- stan(file = 'binom2.stan', data = d_bin2, seed = SEED)
 ```
 ```{r}
-monitor(fit_bin2, probs = c(0.1, 0.5, 0.9))
+monitor(fit_bin2)
 ```
 ```{r, warning=FALSE}
 draws <- as.data.frame(fit_bin2)
@@ -211,7 +211,7 @@ Stan gives a warning: There were `r get_num_max_treedepth(fit_lin)` transitions 
 
 Instead of interactive ShinyStan, we can also check the diagnostics as follows
 ```{r}
-monitor(fit_lin, probs = c(0.1, 0.5, 0.9))
+monitor(fit_lin)
 ```
 
 The following diagnostics are explained in [Robust Statistical Workflow with RStan Case Study](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html) by Michael Betancourt.
@@ -257,7 +257,7 @@ fit_lin_std <- stan(file = 'lin_std.stan', data = d_lin, seed = SEED)
 Now there were no warnings. You can use ShinyStan (```launch_shinystan(fit_lin)```) to look at the posterior and diagnostics and compare to the previous model results. We can also check diagnostics with the following commands.
 
 ```{r, message=TRUE}
-monitor(fit_lin_std, probs = c(0.1, 0.5, 0.9))
+monitor(fit_lin_std)
 check_hmc_diagnostics(fit_lin_std)
 ```
 
@@ -284,7 +284,7 @@ We get some warnings, but these specific warnings are not critical if counts are
 
 Let's examine further diagnostics.
 ```{r, message=TRUE}
-monitor(fit_lin_t, probs = c(0.1, 0.5, 0.9))
+monitor(fit_lin_t)
 check_hmc_diagnostics(fit_lin_t)
 ```
 
@@ -318,15 +318,11 @@ We see also that the marginal posterior of nu is wide with lot of mass for value
 
 # Pareto-smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO)
 
-We can use leave-one-out cross-validation to compare the expected predictive performance. For the following three lines to execute, the log-likelihood needs to be evaluated in the stan code. For an example, see lin.stan and [Computing approximate leave-one-out cross-validation usig PSIS-LOO](http://mc-stan.org/loo/articles/loo2-with-rstan.html).
+We can use leave-one-out cross-validation to compare the expected predictive performance. For the following lines to work, the log-likelihood needs to be evaluated in the stan code. For an example, see lin.stan and [Computing approximate leave-one-out cross-validation usig PSIS-LOO](http://mc-stan.org/loo/articles/loo2-with-rstan.html).
 ```{r}
-log_lik <- extract_log_lik(fit_lin, merge_chains = FALSE)
-r_eff <- relative_eff(exp(log_lik)) 
-loo_lin <- loo(log_lik, r_eff = r_eff)
-log_lik_t <- extract_log_lik(fit_lin_t, merge_chains = FALSE)
-r_eff_t <- relative_eff(exp(log_lik)) 
-loo_lin_t <- loo(log_lik_t, r_eff = r_eff_t)
-compare(loo_lin, loo_lin_t)
+loo_lin <- loo(fit_lin)
+loo_lin_t <- loo(fit_lin_t)
+loo_compare(loo_lin, loo_lin_t)
 ```
 There is no practical difference between Gaussian and Student's t observation model for this data.
 
@@ -352,7 +348,7 @@ Fit the model
 fit_grp <- stan(file = 'grp_aov.stan', data = d_grp, seed = SEED)
 ```
 ```{r}
-monitor(fit_grp, probs = c(0.1, 0.5, 0.9))
+monitor(fit_grp)
 ```
 
 ## Common variance and hierarchical prior for mean.
@@ -368,7 +364,7 @@ Fit the model
 fit_grp <- stan(file = 'grp_prior_mean.stan', data = d_grp, seed = SEED)
 ```
 ```{r}
-monitor(fit_grp, probs = c(0.1, 0.5, 0.9))
+monitor(fit_grp)
 ```
 
 ## Unequal variance and hierarchical prior for mean and variance
@@ -381,7 +377,7 @@ Fit the model
 fit_grp <- stan(file = 'grp_prior_mean_var.stan', data = d_grp, seed = SEED)
 ```
 ```{r}
-monitor(fit_grp, probs = c(0.1, 0.5, 0.9))
+monitor(fit_grp)
 ```
 
 Plot the results
