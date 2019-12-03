@@ -30,7 +30,6 @@ theme_set(theme_minimal())
 library(loo)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
-source("stan_utility.R")
 ```
 
 # Introduction
@@ -143,9 +142,7 @@ fit_gp <- stan(file='poisson_gp.stan', data=d_data, refresh=1000, iter=4000,
 Check inference.
 ```{r}
 monitor(fit_gp, probs=c(0.1, 0.5, 0.9))
-check_treedepth(fit_gp)
-check_energy(fit_gp)
-check_div(fit_gp)
+check_hmc_diagnostics(fit_gp)
 ```
 
 Let's look at the posterior predictive distribution.
