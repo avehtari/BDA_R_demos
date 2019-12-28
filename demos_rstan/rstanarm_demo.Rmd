@@ -109,7 +109,7 @@ monitor(fit_bin$stanfit)
 ```
 
 ```{r}
-draws <- as.data.frame(fit_bern)
+draws <- as.data.frame(fit_bin)
 mean(draws$`(Intercept)`)
 ```
 Probability of success
