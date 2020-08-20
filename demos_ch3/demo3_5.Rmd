@@ -2,6 +2,10 @@
 title: "Bayesian data analysis demo 3.5"
 author: "Aki Vehtari, Markus Paasiniemi"
 date: "`r format(Sys.Date())`"
+output:
+  html_document:
+    theme: readable
+    code_download: true
 ---
 ## Estimating the speed of light using normal model BDA3 p. 66
 

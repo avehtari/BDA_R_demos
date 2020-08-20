@@ -1,7 +1,11 @@
 #' ---
-#' title: "Bayesian data analysis demo 4.1"
+#' title: "Bayesian data analysis demo 5.2"
 #' author: "Aki Vehtari, Markus Paasiniemi"
 #' date: "`r format(Sys.Date())`"
+#' output:
+#'   html_document:
+#'     theme: readable
+#'     code_download: true
 #' ---
 
 #' ## Hierarchical model for SAT-example data (BDA3, p. 120)

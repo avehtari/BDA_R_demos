@@ -2,6 +2,10 @@
 #' title: "Bayesian data analysis demos 11.3, and 11.4"
 #' author: "Aki Vehtari, Markus Paasiniemi"
 #' date: "`r format(Sys.Date())`"
+#' output:
+#'   html_document:
+#'     theme: readable
+#'     code_download: true
 #' ---
 
 #' ## Metropolis algorithm + Rhat (PSRF) demonstration
