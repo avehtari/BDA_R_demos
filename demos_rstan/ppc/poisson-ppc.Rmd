@@ -10,6 +10,8 @@ output:
     number_sections: TRUE
     toc_float:
       smooth_scroll: FALSE
+    theme: readable
+    code_download: true
 ---
 
 # Setup  {.unnumbered}
