@@ -2,6 +2,10 @@
 #' title: "Bayesian data analysis demo 6.4"
 #' author: "Aki Vehtari, Markus Paasiniemi"
 #' date: "`r format(Sys.Date())`"
+#' output:
+#'   html_document:
+#'     theme: readable
+#'     code_download: true
 #' ---
 
 #' ## Marginal posterior predictive checking
