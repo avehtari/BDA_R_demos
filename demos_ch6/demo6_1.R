@@ -18,7 +18,7 @@ theme_set(theme_minimal())
 library(tidyr)
 library(latex2exp)
 library(rprojroot)
-root<-has_dirname("BDA_R_demos")$make_fix_file()
+root<-has_file(".BDA_R_demos_root")$make_fix_file()
 
 #' Data
 y <- read.table(root("demos_ch6","light.txt"))$V1
