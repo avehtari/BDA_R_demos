@@ -16,10 +16,6 @@
 library(ggplot2)
 theme_set(theme_minimal())
 library(tidyr)
-# gganimate-package (for animations) is installed
-# from github using the devtools package
-#library(devtools)
-#install_github("dgrtwo/gganimate")
 library(gganimate)
 library(ggforce)
 library(MASS)
@@ -84,7 +80,7 @@ dfs <- data.frame(th1 = tt[(warm+1):s, 1], th2 = tt[(warm+1):s, 2])
 labs1 <- c('Draws', 'Steps of the sampler', '90% HPD')
 p1 <- ggplot() +
   geom_jitter(data = df100, width=0.05, height=0.05,
-              aes(th1, th2, color ='1'), alpha=0.3) +
+              aes(th1, th2, group=id, color ='1'), alpha=0.3) +
   geom_segment(data = df100, aes(x = th1, xend = th1l, color = '2',
                                  y = th2, yend = th2l)) +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '3'), level = 0.9) +
@@ -99,7 +95,7 @@ p1 <- ggplot() +
 #' of the steps of the sampler (might take 10 seconds).
 #+ Metropolis (1)
 animate(p1 +   
-          transition_reveal(id=id, along=iter) + 
+          transition_reveal(along=iter) + 
           shadow_trail(0.01))
 
 #' Plot the final frame
@@ -253,7 +249,7 @@ dfs <- data.frame(th1 = tt[(warm+1):s, 1], th2 = tt[(warm+1):s, 2])
 labs1 <- c('Draws', 'Steps of the sampler', '90% HPD')
 p1 <- ggplot() +
   geom_jitter(data = df100, width=0.05, height=0.05,
-             aes(th1, th2, color ='1'), alpha=0.3) +
+             aes(th1, th2, group=id, color ='1'), alpha=0.3) +
   geom_segment(data = df100, aes(x = th1, xend = th1l, color = '2',
                                  y = th2, yend = th2l)) +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '3'), level = 0.9) +
@@ -268,7 +264,7 @@ p1 <- ggplot() +
 #' of the steps of the sampler (might take 10 seconds).
 #+ Metropolis (2)
 animate(p1 +   
-          transition_reveal(id=id, along=iter) + 
+          transition_reveal(along=iter) + 
         shadow_trail(0.01))
 
 #' Plot the final frame
@@ -396,7 +392,7 @@ dfs <- data.frame(th1 = tt[(warm+1):s, 1], th2 = tt[(warm+1):s, 2])
 labs1 <- c('Draws', 'Steps of the sampler', '90% HPD')
 p1 <- ggplot() +
   geom_jitter(data = df100, width=0.05, height=0.05,
-             aes(th1, th2, color ='1'), alpha=0.3) +
+             aes(th1, th2, group=id, color ='1'), alpha=0.3) +
   geom_segment(data = df100, aes(x = th1, xend = th1l, color = '2',
                                  y = th2, yend = th2l)) +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '3'), level = 0.9) +
@@ -411,7 +407,7 @@ p1 <- ggplot() +
 #' of the steps of the sampler (might take 10 seconds).
 #+ Metropolis (3)
 animate(p1 +   
-          transition_reveal(id=id, along=iter) + 
+          transition_reveal(along=iter) + 
         shadow_trail(0.01))
 
 

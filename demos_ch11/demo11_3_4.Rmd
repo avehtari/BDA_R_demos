@@ -16,8 +16,6 @@ library(ggplot2)
 theme_set(theme_minimal())
 library(gridExtra)
 library(tidyverse)
-#library(devtools)
-#install_github("dgrtwo/gganimate")
 library(gganimate)
 library(MASS)
 library(rstan)
@@ -126,7 +124,7 @@ they draw possibly a few points that are rejected
 
 ```{r Metropolis}
 animate(chains1 + 
-          transition_reveal(id=chain, along=iter) + 
+          transition_reveal(along=iter) + 
           shadow_trail(1/s1))
 ```
 
