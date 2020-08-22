@@ -17,8 +17,6 @@ library(ggplot2)
 theme_set(theme_minimal())
 library(gridExtra)
 library(tidyverse)
-#library(devtools)
-#install_github("dgrtwo/gganimate")
 library(gganimate)
 library(MASS)
 library(rstan)
@@ -97,7 +95,7 @@ chains1 <- ggplot(data = dfs1) +
 #' (rejected points not shown) and thus the chain is not moving
 #+ Metropolis
 animate(chains1 + 
-          transition_reveal(id=chain, along=iter) + 
+          transition_reveal(along=iter) + 
           shadow_trail(1/s1))
 
 #' Plot the result, no convergence yet

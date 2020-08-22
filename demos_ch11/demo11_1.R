@@ -16,10 +16,6 @@
 library(ggplot2)
 theme_set(theme_minimal())
 library(tidyr)
-# gganimate-package (for animations) is installed
-# from github using the devtools package
-#library(devtools)
-#install_github("dgrtwo/gganimate")
 library(gganimate)
 library(MASS)
 library(rstan)
@@ -89,7 +85,7 @@ df100s <- df100
 df100s[ind1+1,3:4]=df100s[ind1,3:4]
 p1 <- ggplot() +
   geom_point(data = df100s,
-             aes(th1, th2, color ='1')) +
+             aes(th1, th2, group=id, color ='1')) +
   geom_segment(data = df100, aes(x = th1, xend = th1l, color = '2',
                                  y = th2, yend = th2l)) +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '3'), level = 0.9) +
@@ -104,7 +100,7 @@ p1 <- ggplot() +
 #' of the steps of the sampler (might take 10 seconds).
 #+ Gibbs (1)
 animate(p1 +   
-          transition_reveal(id=id, along=iter) + 
+          transition_reveal(along=iter) + 
           shadow_trail(0.01))
           
 #' Show only the end result as a static figure
@@ -253,7 +249,7 @@ df100s <- df100
 df100s[ind1+1,3:4]=df100s[ind1,3:4]
 p1 <- ggplot() +
   geom_point(data = df100s,
-             aes(th1, th2, color ='1')) +
+             aes(th1, th2, group=id, color ='1')) +
   geom_segment(data = df100, aes(x = th1, xend = th1l, color = '2',
                                  y = th2, yend = th2l)) +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '3'), level = 0.9) +
@@ -268,7 +264,7 @@ p1 <- ggplot() +
 #' of the steps of the sampler (might take 10 seconds).
 #+ Gibbs (2)
 animate(p1 +   
-          transition_reveal(id=id, along=iter) + 
+          transition_reveal(along=iter) + 
           shadow_trail(0.01))
           
 #' Show only the end result as a static figure
