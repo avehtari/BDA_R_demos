@@ -23,7 +23,7 @@ library(gganimate)
 library(MASS)
 library(rstan)
 library(rprojroot)
-root<-has_dirname("BDA_R_demos")$make_fix_file()
+root<-has_file(".BDA_R_demos_root")$make_fix_file()
 
 #' Parameters of a Normal distribution used as a toy target distribution
 y1 <- 0

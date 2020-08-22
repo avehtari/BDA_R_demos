@@ -20,7 +20,7 @@ library(gridExtra)
 library(tidyr)
 library(latex2exp)
 library(rprojroot)
-root<-has_dirname("BDA_R_demos")$make_fix_file()
+root<-has_file(".BDA_R_demos_root")$make_fix_file()
 
 #' Data 
 y <- c(28,8,-3,7,-1,1,18,12)
