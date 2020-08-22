@@ -16,11 +16,6 @@
 library(ggplot2)
 theme_set(theme_minimal())
 library(tidyr)
-# gganimate-package (for animations) is installed
-# from github using the devtools package
-#library(devtools)
-#install_github("dgrtwo/gganimate")
-library(gganimate)
 library(ggforce)
 library(MASS)
 library(rprojroot)
