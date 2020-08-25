@@ -17,7 +17,7 @@ output:
 # Setup  {.unnumbered}
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
+knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, out.width='95%')
 ```
 
 **Load packages**
@@ -32,6 +32,8 @@ theme_set(theme_minimal())
 library(loo)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
+library(rprojroot)
+root<-has_file(".BDA_R_demos_root")$make_fix_file()
 ```
 
 # Introduction
@@ -50,7 +52,7 @@ Read the data (there would data for earlier years, too, but this is
 sufficient for the demonstration)
 ```{r}
 # file preview shows a header row
-deaths <- read.csv("trafficdeaths.csv", header = TRUE)
+deaths <- read.csv(root("demos_rstan", "trafficdeaths.csv"), header = TRUE)
 head(deaths)
 ```
 
@@ -68,15 +70,16 @@ The number of deaths is count data, so we use Poisson observation
 model.  We first fit log-linear model for the Poisson intensity, which
 corresponds to assuming constant proportional change in the rate.
 
-```{r, comment=NA, results='hide'}
-fit_lin <- stan_glm(deaths ~ year, data = deaths, family="poisson",
- 	            refresh=1000, iter=1000, chains=4, seed=583829)
+```{r}
+fit_lin <- stan_glm(deaths ~ year, data=deaths, family="poisson",
+ 	            refresh=1000, iter=1000, chains=4, seed=583829, refresh=0)
 ```
 ```{r, comment=NA}
 monitor(fit_lin$stanfit)
+check_hmc_diagnostics(fit_lin$stanfit)
 ```
 
-n_eff's and Rhat's are ok (see, e.g., [RStan
+ESS's and Rhat's are ok (see, e.g., [RStan
 workflow](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html)). Let's
 look at the posterior predictive distribution (median and 5% and 95%
 intervals).
@@ -99,11 +102,12 @@ Next we fit a non-linear spline model with `stan_gamm4`
 ```{r}
 fit_gam <- stan_gamm4(deaths ~ year + s(year), data=deaths,
                       family="poisson", adapt_delta=0.999, 
-                      refresh=1000, iter=2000, chain=4, seed=583829)
+                      refresh=1000, iter=2000, chain=4, seed=583829, refresh=0)
 monitor(fit_gam$stanfit)
+check_hmc_diagnostics(fit_gam$stanfit)
 ```
 
-n_eff is clearly smaller than for the linear model, but Rhat's are ok.
+ESS is clearly smaller than for the linear model, but Rhat's are ok.
 
 Let's look at the posterior predictive distribution.
 ```{r}
@@ -129,7 +133,8 @@ Finally we fit Gaussian process centered on linear model. This is not
 yet available in rstanarm, and has been written directly in Stan
 language:
 ```{r, comment=NA}
-writeLines(readLines("poisson_gp.stan"))
+code_poisson_gp <- root("demos_rstan", "poisson_gp.stan")
+writeLines(readLines(code_poisson_gp))
 ```
 
 ```{r, results='hide'}
@@ -137,7 +142,7 @@ N<-nrow(deaths)
 Ey<-mean(deaths$deaths)
 d_data <- list(N=N, x=deaths$year, y=deaths$deaths, Ey=Ey, N_predict=N_predict,
                      x_predict=x_predict, alpha0=2, beta0=4)
-fit_gp <- stan(file='poisson_gp.stan', data=d_data, refresh=1000, iter=4000,
+fit_gp <- stan(file=code_poisson_gp, data=d_data, refresh=1000, iter=4000,
                      chains=4, seed=583829, init=0, control=list(adapt_delta=0.999))
 ```
 
@@ -169,8 +174,7 @@ Finally we compare models using PSIS-LOO predictive performance estimates.
 compare(loo_lin, loo_gam)
 ```
 ```{r}
-log_lik_gp <- extract_log_lik(fit_gp, merge_chains = FALSE)
-(loo_gp<-loo(log_lik_gp, r_eff = relative_eff(exp(log_lik_gp))))
+(loo_gp<-loo(fit_gp))
 compare(loo_lin, loo_gp)
 ```
 
@@ -183,8 +187,8 @@ predictions.
 
 # Licenses {.unnumbered}
 
-* Code &copy; 2017-2019, Aki Vehtari, licensed under BSD-3.
-* Text &copy; 2017-2019, Aki Vehtari, licensed under CC-BY-NC 4.0.
+* Code &copy; 2017-2020, Aki Vehtari, licensed under BSD-3.
+* Text &copy; 2017-2020, Aki Vehtari, licensed under CC-BY-NC 4.0.
 
 # Original Computing Environment {.unnumbered}
 
