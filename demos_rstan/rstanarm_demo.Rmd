@@ -50,14 +50,14 @@ The models are not exactly equal to the models at rstan_demo.Rmd, but rather ser
 
 Toy data with sequence of failures (0) and successes (1). We would like to learn about the unknown probability of success.
 ```{r}
-d_bern <- data.frame(y = c(1, 1, 1, 0, 1, 1, 1, 0, 1, 0))
+data_bern <- data.frame(y = c(1, 1, 1, 0, 1, 1, 1, 0, 1, 0))
 ```
 
 Uniform prior (beta(1,1)) is achieved by setting the prior to NULL,
 which is not recommended in general. y ~ 1 means y depends only on
 the intercept term
 ```{r}
-fit_bern <- stan_glm(y ~ 1, family = binomial(), data = d_bern,
+fit_bern <- stan_glm(y ~ 1, family = binomial(), data = data_bern,
                      prior_intercet = NULL, seed = SEED, refresh = 0)
 ```
 
@@ -97,7 +97,7 @@ mcmc_hist(prior_samples)
 ```
 
 ```{r}
-fit_bern <- stan_glm(y ~ 1, family = binomial(), data = d_bern,
+fit_bern <- stan_glm(y ~ 1, family = binomial(), data = data_bern,
                      seed = SEED, refresh = 0)
 ```
 
@@ -140,8 +140,8 @@ mcmc_hist(prior_samples)
 
 Binomial model (we are not able to replicate the Binomial example in rstan_demo exactly, as `stan_glm` does not accept just one observation, so the Bernoulli is needed for the same model, and Binomial will be demonstrated first with other data).
 ```{r}
-d_bin <- data.frame(N = c(5,5), y = c(4,3))
-fit_bin <- stan_glm(y/N ~ 1, family = binomial(), data = d_bin,
+data_bin <- data.frame(N = c(5,5), y = c(4,3))
+fit_bin <- stan_glm(y/N ~ 1, family = binomial(), data = data_bin,
                      prior_intercept = prior_intercept, weights = N,
 		     seed = SEED, refresh = 0)
 ```
@@ -167,8 +167,8 @@ mcmc_hist(draws, pars='theta') + xlab('theta')
 
 Re-run the model with a new data dataset.
 ```{r}
-d_bin <- data.frame(N = c(5,5), y = c(4,5))
-fit_bin <- update(fit_bin, data = d_bin)
+data_bin <- data.frame(N = c(5,5), y = c(4,5))
+fit_bin <- update(fit_bin, data = data_bin)
 ```
 ```{r}
 monitor(fit_bin$stanfit)
@@ -196,13 +196,13 @@ An experiment was performed to estimate the effect of beta-blockers on mortality
 Data, where grp2 is a dummy variable that captures the differece of
 the intercepts in the first and the second group.
 ```{r}
-d_bin2 <- data.frame(N = c(674, 680), y = c(39,22), grp2 = c(0,1))
+data_bin2 <- data.frame(N = c(674, 680), y = c(39,22), grp2 = c(0,1))
 ```
 
 To analyse whether the treatment is useful, we can use Binomial model for both groups and compute odds-ratio.
 
 ```{r}
-fit_bin2 <- stan_glm(y/N ~ grp2, family = binomial(), data = d_bin2,
+fit_bin2 <- stan_glm(y/N ~ grp2, family = binomial(), data = data_bin2,
                      weights = N, seed = SEED, refresh = 0)
 ```
 ```{r}
@@ -222,15 +222,15 @@ mcmc_hist(draws_bin2, pars='oddsratio')
 
 The following file has Kilpisjärvi summer month temperatures 1952-2013:
 ```{r}
-d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
-d_lin <-data.frame(year = d_kilpis$year,
-                   temp = d_kilpis[,5])
+data_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
+data_lin <-data.frame(year = data_kilpis$year,
+                   temp = data_kilpis[,5])
 ```
 
 Plot the data
 ```{r}
 ggplot() +
-  geom_point(aes(year, temp), data = data.frame(d_lin), size = 1) +
+  geom_point(aes(year, temp), data = data.frame(data_lin), size = 1) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
   guides(linetype = F)
 ```
@@ -239,7 +239,7 @@ To analyse has there been change in the average summer month temperature we use 
 
 y ~ x means y depends on the intercept and x
 ```{r}
-fit_lin <- stan_glm(temp ~ year, data = d_lin, family = gaussian(),
+fit_lin <- stan_glm(temp ~ year, data = data_lin, family = gaussian(),
                     seed = SEED, refresh = 0)
 ```
 
@@ -263,12 +263,12 @@ draws_lin <- as.data.frame(fit_lin)
 mean(draws_lin$year>0) # probability that beta > 0
 ```
 ```{r}
-mu_draws <- tcrossprod(cbind(1, d_lin$year),
+mu_draws <- tcrossprod(cbind(1, data_lin$year),
                          cbind(draws_lin$`(Intercept)`,draws_lin$year))
 mu <- apply(mu_draws, 1, quantile, c(0.05, 0.5, 0.95)) %>%
-  t() %>% data.frame(x = d_lin$year, .) %>% gather(pct, y, -x)
+  t() %>% data.frame(x = data_lin$year, .) %>% gather(pct, y, -x)
 pfit <- ggplot() +
-  geom_point(aes(year, temp), data = data.frame(d_lin), size = 1) +
+  geom_point(aes(year, temp), data = data.frame(data_lin), size = 1) +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(x = '', y = 'Summer temp. @Kilpisjärvi') +
@@ -294,7 +294,7 @@ Currently, rstanarm does not yet support Student's t likelihood. Below we use br
 
 ```{r, results='hide'}
 library(brms)
-fit_lin_t <- brm(temp ~ year, data = d_lin, family = student(), seed = SEED,
+fit_lin_t <- brm(temp ~ year, data = data_lin, family = student(), seed = SEED,
                  refresh = 1000)
 ```
 
@@ -323,9 +323,9 @@ There is no practical difference between Gaussian and Student's t models.
 
 Let's compare the temperatures in three summer months.
 ```{r}
-d_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
-d_grp <- data.frame(month = rep(6:8, nrow(d_kilpis)),
-              temp = c(t(d_kilpis[,2:4])))
+data_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
+data_grp <- data.frame(month = rep(6:8, nrow(data_kilpis)),
+              temp = c(t(data_kilpis[,2:4])))
 ```
 
 # Common variance (ANOVA) model
@@ -338,7 +338,7 @@ To use no (= uniform) prior, prior_intercept could be set to NULL
 
 y ~ 1 + (1 | x) means y depends on common intercept and group speficific intercepts (grouping determined by x)
 ```{r}
-fit_grp <- stan_lmer(temp ~ 1 + (1 | month), data = d_grp,
+fit_grp <- stan_lmer(temp ~ 1 + (1 | month), data = data_grp,
                      prior_intercept = prior_intercept, refresh = 0)
 # launch_shinystan(fit_grp)
 ```

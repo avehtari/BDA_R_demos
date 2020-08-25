@@ -27,18 +27,20 @@ library("ggplot2")
 library("bayesplot")
 theme_set(bayesplot::theme_default(base_family = "sans"))
 library(loo)
+library(rprojroot)
+root<-has_file(".BDA_R_demos_root")$make_fix_file()
 ```
 
 
 # Load and examine data
 ```{r poisson-data, fig.width = 4, fig.height = 4}
-source("count-data.R")
+source(root("demos_rstan/ppc", "count-data.R"))
 print(N)
 print(y)
 qplot(y)
 ```
 
-## `y` to draws from Poisson with same mean
+## Plot histogram of draws from Poisson with same mean
 
 ```{r plot-x, fig.width = 4, fig.height = 4}
 x <- rpois(N, mean(y))
@@ -62,13 +64,14 @@ Even though we already suspect it won't be a good model for this data, it's
 still a good idea to start by fitting the simplest Poisson model. From there we
 can then identify in which ways the model is inadequate.
 ```{r}
-writeLines(readLines("poisson-simple.stan"))
+code_poisson <- root("demos_rstan/ppc", "poisson-simple.stan")
+writeLines(readLines(code_poisson))
 ```
 
 
-```{r, fit, results="hide", warning=FALSE, message=FALSE}
-fit <- stan("poisson-simple.stan", data = c("y", "N"))
-print(fit)
+```{r, fit}
+fit <- stan(file = code_poisson, data = c("y", "N"), refresh = 0)
+monitor(fit)
 ```
 
 ## Look at posterior distribution of lambda
@@ -148,12 +151,13 @@ where `T[1,U]` indicates truncation with lower bound `1` and upper bound `U`,
 which for simplicity we'll _assume_ is `max(y)`.
 
 ```{r}
-writeLines(readLines("poisson-hurdle.stan"))
+code_poisson_hurdle <- root("demos_rstan/ppc", "poisson-hurdle.stan")
+writeLines(readLines(code_poisson_hurdle))
 ```
 
 
-```{r fit-2, results="hide", message=FALSE, warning=FALSE}
-fit2 <- stan("poisson-hurdle.stan", data = c("y", "N"))
+```{r fit-2}
+fit2 <- stan(file = code_poisson_hurdle, data = c("y", "N"), refresh = 0)
 ```
 
 ```{r, print-fit2}
@@ -197,13 +201,9 @@ ppc_error_hist(y, y_rep2[sample(nrow(y_rep2), 4), ], binwidth = 1)
 Compare predictive performance with LOO.
 
 ```{r}
-log_lik1 <- extract_log_lik(fit, merge_chains = FALSE)
-r_eff1 <- relative_eff(exp(log_lik1)) 
-(loo1 <- loo(log_lik1, r_eff = r_eff1))
-log_lik2 <- extract_log_lik(fit2, merge_chains = FALSE)
-r_eff2 <- relative_eff(exp(log_lik2)) 
-(loo2 <- loo(log_lik2, r_eff = r_eff2))
-compare(loo1, loo2)
+(loo1 <- loo(fit))
+(loo2 <- loo(fit2))
+loo_compare(loo1, loo2)
 ```
 
 Model 2 is a clear winner in the predictive performance.
