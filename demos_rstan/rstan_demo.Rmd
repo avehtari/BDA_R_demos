@@ -25,16 +25,16 @@ knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, com
 library(tidyr) 
 library(rstan) 
 rstan_options(auto_write = TRUE)
-options(mc.cores = parallel::detectCores())
+options(mc.cores = 1)
 library(loo)
 library(ggplot2)
 library(gridExtra)
 library(bayesplot)
 theme_set(bayesplot::theme_default(base_family = "sans"))
 library(shinystan)
-SEED <- 48927 # set random seed for reproducability
 library(rprojroot)
 root<-has_file(".BDA_R_demos_root")$make_fix_file()
+SEED <- 48927 # set random seed for reproducability
 ```
 
 # Introduction
