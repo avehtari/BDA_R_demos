@@ -304,15 +304,15 @@ We get similar diagnostics as for the linear Gaussian model with non-standardise
 
 Compute the probability that the summer temperature is increasing.
 ```{r}
-draws_lin_t <- extract(fit_lin_std_t, permuted = T)
-mean(draws_lin_t$beta>0) # probability that beta > 0
+draws_lin_std_t <- extract(fit_lin_std_t, permuted = T)
+mean(draws_lin_std_t$beta>0) # probability that beta > 0
 ```
 We get similar probability as with Gaussian obervation model.
 
 
 Plot data and the model fit
 ```{r}
-mu <- apply(draws_lin_t$mu, 2, quantile, c(0.05, 0.5, 0.95)) %>%
+mu <- apply(draws_lin_std_t$mu, 2, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = data_lin$x, .)  %>% gather(pct, y, -x)
 
 pfit <- ggplot() +
@@ -321,7 +321,7 @@ pfit <- ggplot() +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
   guides(linetype = F)
-pars <- intersect(names(draws_lin_t), c('beta','sigma','nu','ypred'))
+pars <- intersect(names(draws_lin_std_t), c('beta','sigma','nu','ypred'))
 draws <- as.data.frame(fit_lin_std_t)
 phist <- mcmc_hist(draws, pars = pars)
 grid.arrange(pfit, phist, nrow = 2)
