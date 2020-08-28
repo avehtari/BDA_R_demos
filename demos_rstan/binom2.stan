@@ -15,7 +15,7 @@ model {
   theta2 ~ beta(1, 1);          // prior
   y1 ~ binomial(N1, theta1);    // observation model / likelihood
   y2 ~ binomial(N2, theta2);    // observation model / likelihood
-  // the notation using ~ is syntactical sugar for
+  // the notation using ~ is syntactic sugar for
   //  target += beta_lpdf(theta1 | 1, 1);       // lpdf for continuous theta1
   //  target += beta_lpdf(theta2 | 1, 1);       // lpdf for continuous theta2
   //  target += binomial_lpmf(y1 | N1, theta1); // lpmf for discrete y1

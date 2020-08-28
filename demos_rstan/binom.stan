@@ -10,7 +10,7 @@ model {
   // model block creates the log density to be sampled
   theta ~ beta(1, 1);          // prior
   y ~ binomial(N, theta);      // observation model / likelihood
-  // the notation using ~ is syntactical sugar for
+  // the notation using ~ is syntactic sugar for
   //  target += beta_lpdf(theta | 1, 1);     // lpdf for continuous theta
   //  target += binomial_lpmf(y | N, theta); // lpmf for discrete y
   // target is the log density to be sampled

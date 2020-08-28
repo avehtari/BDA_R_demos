@@ -25,7 +25,7 @@ model {
   sigma ~ normal(0, pssigma);         // as sigma is constrained to be positive,
                                       // this is same as half-normal prior
   y ~ normal(mu, sigma);              // observation model / likelihood
-  // the notation using ~ is syntactical sugar for
+  // the notation using ~ is syntactic sugar for
   //  target += normal_lpdf(alpha | pmualpha, psalpha);
   //  target += normal_lpdf(beta | pmubeta, psbeta); 
   //  target += normal_lpdf(y | mu, sigma);
