@@ -14,4 +14,15 @@ model {
   //  target += beta_lpdf(theta | 1, 1);   // lpdf for continuous theta
   //  target += bernoulli_lpmf(y | theta); // lpmf for discrete y
   // target is the log density to be sampled
+  //
+  // y is an array of integers and
+  //  y ~ bernoulli(theta);
+  // is equivalent to
+  //  for (i in 1:N) {
+  //    y[i] ~ bernoulli(theta);
+  //  }
+  // which is equivalent to
+  //  for (i in 1:N) {
+  //    target += bernoulli_lpmf(y[i] | theta); 
+  //  }
 }
