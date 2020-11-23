@@ -350,7 +350,7 @@ data_grp <-list(N = 3*nrow(data_kilpis),
              y = c(t(data_kilpis[,2:4])))
 ```
 
-# Common variance (ANOVA) model
+## Common variance (ANOVA) model
 ```{r}
 code_grp_aov <- root("demos_rstan", "grp_aov.stan")
 writeLines(readLines(code_grp_aov))
