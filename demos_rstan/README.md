@@ -1,6 +1,7 @@
 # Links to html versions of demos
 
 - [rstan_demo: RStan demo](http://avehtari.github.io/BDA_R_demos/demos_rstan/rstan_demo.html)
+- [cmdstanr_demo: CmdStanR demo](http://avehtari.github.io/BDA_R_demos/demos_rstan/cmdstanr_demo.html)
 - [rstanarm_demo: RStanARM demo](http://avehtari.github.io/BDA_R_demos/demos_rstan/rstanarm_demo.html)
 - [Posterior predictive checking](http://avehtari.github.io/BDA_R_demos/demos_rstan/ppc/poisson-ppc.html)
 - [sleep: Does brain mass predict how much mammals sleep in a day?](http://avehtari.github.io/BDA_R_demos/demos_rstan/sleep.html)
