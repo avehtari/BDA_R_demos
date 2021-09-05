@@ -59,7 +59,7 @@ df1 <- data.frame(x, q, g) %>% gather(grp, p, -x)
 distr <- ggplot(data = df1) +
   geom_line(aes(x, p, fill = grp, color = grp)) +
   labs(title = 'Target and proposal distributions', x = '', y = '') +
-  scale_color_discrete(labels = c('q(theta|y)', 'g(theta)')) +
+  scale_color_discrete(labels = c('g(theta|y)', 'q(theta)')) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 ```
 
