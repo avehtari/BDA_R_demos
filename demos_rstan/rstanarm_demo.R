@@ -203,7 +203,7 @@ data_lin <-data.frame(year = data_kilpis$year,
 ggplot() +
   geom_point(aes(year, temp), data = data.frame(data_lin), size = 1) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
-  guides(linetype = F)
+  guides(linetype = "none")
 
 
 #' To analyse has there been change in the average summer month temperature we use a linear model with Gaussian model for the unexplained variation. rstanarm uses by default scaled priors.
@@ -238,7 +238,7 @@ pfit <- ggplot() +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(x = '', y = 'Summer temp. @Kilpisjärvi') +
-  guides(linetype = F)
+  guides(linetype = "none")
 phist <- mcmc_hist(draws_lin) + ggtitle('parameters')
 grid.arrange(pfit, phist)
 
