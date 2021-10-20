@@ -171,7 +171,7 @@ data_lin <-list(N = nrow(data_kilpis),
 ggplot() +
   geom_point(aes(x, y), data = data.frame(data_lin), size = 1) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
-  guides(linetype = F)
+  guides(linetype = "none")
 
 
 #' To analyse whether the average summer month temperature is rising, we use a linear model with Gaussian model for the unexplained variation. 
@@ -230,7 +230,7 @@ pfit <- ggplot() +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
-  guides(linetype = F)
+  guides(linetype = "none")
 phist <- mcmc_hist(draws_lin, pars = c('beta','sigma','ypred'))
 grid.arrange(pfit, phist, nrow = 2)
 
@@ -305,7 +305,7 @@ pfit <- ggplot() +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
   labs(y = 'Summer temp. @Kilpisjärvi', x= "Year") +
-  guides(linetype = F)
+  guides(linetype = "none")
 phist <- mcmc_hist(draws_lin_std_t, pars = c('beta','sigma','ypred'))
 grid.arrange(pfit, phist, nrow = 2)
 
