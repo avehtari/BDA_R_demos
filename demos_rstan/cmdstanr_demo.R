@@ -203,11 +203,9 @@ fit_lin <- mod_lin$sample(data = data_lin_priors, seed = SEED)
 #' We can check the diagnostics as follows
 fit_lin$summary()
 
-
-#' The following diagnostics are explained in [Robust Statistical Workflow with RStan Case Study](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html) by Michael Betancourt.
+#' The following diagnostics are explained in [CmdStan User's Guide](https://mc-stan.org/docs/cmdstan-guide/diagnose.html).
 #+  message=TRUE
 fit_lin$cmdstan_diagnose()
-
 
 #' 
 #' Compute the probability that the summer temperature is increasing.
