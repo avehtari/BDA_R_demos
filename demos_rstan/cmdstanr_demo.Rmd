@@ -238,7 +238,7 @@ We can check the diagnostics as follows
 fit_lin$summary()
 ```
 
-The following diagnostics are explained in [Robust Statistical Workflow with RStan Case Study](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html) by Michael Betancourt.
+The following diagnostics are explained in [CmdStan User's Guide](https://mc-stan.org/docs/cmdstan-guide/diagnose.html).
 
 ```{r message=TRUE}
 fit_lin$cmdstan_diagnose()

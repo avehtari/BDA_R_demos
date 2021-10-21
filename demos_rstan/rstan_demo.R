@@ -202,7 +202,7 @@ fit_lin <- stan(file = code_lin, data = data_lin_priors, seed = SEED)
 monitor(fit_lin)
 
 
-#' The following diagnostics are explained in [Robust Statistical Workflow with RStan Case Study](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html) by Michael Betancourt.
+#' The following diagnostics are explained in [CmdStan User's Guide](https://mc-stan.org/docs/cmdstan-guide/diagnose.html).
 #+  message=TRUE
 check_hmc_diagnostics(fit_lin)
 
