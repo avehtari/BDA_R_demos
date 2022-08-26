@@ -23,6 +23,7 @@ library(ggplot2)
 theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
+library(dplyr)
 
 #' ### Evaluating posterior with non-conjugate prior in grid
 #' 
@@ -53,11 +54,14 @@ df1$nc_po <- po / sum(po)
 
 #' Plot posterior with uniform prior, non-conjugate
 #' prior and the corresponding non-conjugate posterior
-# gather the data frame into key-value pairs
+# pivot the data frame into key-value pairs
 # and change variable names for plotting
-df2 <- gather(df1, grp, p, -theta, factor_key = T) #%>%
-levels(df2$grp) <- c('Posterior with uniform prior',
-                     'Non-conjugate prior', 'Non-conjugate posterior')
+df2 <- df1 %>%
+  pivot_longer(cols = -theta, names_to = "grp", values_to = "p") %>%
+  mutate(grp = factor(grp, labels=c('Posterior with uniform prior',
+                                    'Non-conjugate prior',
+                                    'Non-conjugate posterior')))
+## levels(df2$grp) <- 
 ggplot(data = df2) +
   geom_line(aes(theta, p)) +
   facet_wrap(~grp, ncol = 1, scales = 'free_y') +

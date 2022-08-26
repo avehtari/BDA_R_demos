@@ -19,6 +19,7 @@
 library(ggplot2)
 theme_set(theme_minimal())
 library(tidyr)
+library(dplyr)
 
 #' Observed data: 437 girls and 543 boys
 a <- 437
@@ -44,12 +45,13 @@ apr <- 0.488 # prior ratio of success
 # values evaluated at points theta.
 helperf <- function(n, apr, a, b, df)
   cbind(df, pr = dbeta(df$theta, n*apr, n*(1-apr)), po = dbeta(df$theta, n*apr + a, n*(1-apr) + b), n = n)
-# lapply function over prior counts n and gather results into key-value pairs.
-df2 <- lapply(n, helperf, apr, a, b, df1) %>% do.call(rbind, args = .) %>%
-  gather(grp, p, -c(theta, n), factor_key = T)
+# lapply function over prior counts n and pivot results into key-value pairs.
+df2 <- lapply(n, helperf, apr, a, b, df1) %>%
+  do.call(rbind, args = .) %>%
+  pivot_longer(!c(theta, n), names_to = "grp", values_to = "p") %>%
+  mutate(grp = factor(grp, labels=c('Posterior with unif prior', 'Prior', 'Posterior')))
 # add correct labels for plotting
 df2$title <- factor(paste0('alpha/(alpha+beta)=0.488, alpha+beta=',df2$n))
-levels(df2$grp) <- c('Posterior with unif prior', 'Prior', 'Posterior')
 
 #' Plot distributions
 ggplot(data = df2) +
@@ -59,4 +61,3 @@ ggplot(data = df2) +
   labs(x = '', y = '') +
   scale_y_continuous(breaks = NULL) +
   theme(legend.position = 'bottom', legend.title = element_blank())
-
