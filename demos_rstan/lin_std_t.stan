@@ -33,7 +33,7 @@ generated quantities {
   vector[N] mu = mu_std*sd(y) + mean(y);
   real<lower=0> sigma = sigma_std*sd(y);
   // sample from the predictive distribution
-  real ypred = student_t_rng(nu, (alpha + beta*xpred_std)*sd(y)+mean(y), sigma*sd(y));
+  real ypred = student_t_rng(nu, (alpha + beta*xpred_std)*sd(y)+mean(y), sigma_std*sd(y));
   // compute log predictive densities to be used for LOO-CV
   // to make appropriate comparison to other models, this log density is computed
   // using the original data scale (y, mu, sigma)
