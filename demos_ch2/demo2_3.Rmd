@@ -47,13 +47,13 @@ Histogram plots with 30 bins for theta and phi
 
 ```{r }
 # merge the data into one data frame for plotting
-df1 <- data.frame(phi,theta) %>% gather()
+df1 <- data.frame(phi,theta) %>% pivot_longer(everything())
 # merge quantiles into one data frame for plotting
-df2 <- data.frame(phi = phiq, theta = thetaq) %>% gather()
+df2 <- data.frame(phi = phiq, theta = thetaq) %>% pivot_longer(everything())
 ggplot() +
   geom_histogram(data = df1, aes(value), bins = 30) +
   geom_vline(data = df2, aes(xintercept = value), linetype = 'dotted') +
-  facet_wrap(~key, ncol = 1, scales = 'free_x')  +
+  facet_wrap(~name, ncol = 1, scales = 'free_x')  +
   labs(x = '', y = '') +
   scale_y_continuous(breaks = NULL)
 ```
