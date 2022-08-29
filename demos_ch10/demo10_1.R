@@ -42,7 +42,8 @@ r21 = 0.3 * g[zi]
 r22 = 0.8 * g[zi]
 
 #' Visualize one accepted and one rejected draw:
-df1 <- data.frame(x, q, g) %>% gather(grp, p, -x)
+df1 <- data.frame(x, q, g) %>% 
+  pivot_longer(cols = !x, names_to = "grp", values_to = "p")
 # subset with only target distribution
 dfq <- subset(df1 , grp == "q")
 # labels 
@@ -87,13 +88,14 @@ ggplot() +
   guides(color=guide_legend(override.aes=list(
     shape = c(16, 16, NA, NA), linetype = c(0, 0, 2, 1),
     color=c('forestgreen', 'red', 'red', '#00BFC4'), labels = labs2)),
-    linetype=FALSE) +
+    linetype="none") +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' Rejection sampling for truncated distribution
 q <- g
 q[x < -1.5] <- 0
-df1 <- data.frame(x, q, g) %>% gather(grp, p, -x)
+df1 <- data.frame(x, q, g) %>%
+  pivot_longer(cols = !x, names_to = "grp", values_to = "p")
 acc <- ifelse(r1s > -1.5, 'a', 'r')
 df2 <- data.frame(r1s, r2s, acc)
 dfq <- subset(df1 , grp == "q")
@@ -112,5 +114,5 @@ ggplot() +
   guides(color=guide_legend(override.aes=list(
       shape = c(16, 16, NA, NA), linetype = c(0, 0, 2, 1),
       color=c('forestgreen', 'red', 'red', '#00BFC4'), labels = labs2)),
-    linetype=FALSE) +
+    linetype="none") +
   theme(legend.position = 'bottom', legend.title = element_blank())
