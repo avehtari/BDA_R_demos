@@ -39,11 +39,14 @@ sampt <- replicate(9, rt(n, n-1)*sqrt(1+1/n)*s+my) %>%
 #' that the replicates do not resemble the original data
 #' and thus the model has a defect
 ind <- sample(9, 1)
-sampt_y <- replace(sampt, ind, y) %>% setNames(1:9) %>% gather()
+sampt_y <- replace(sampt, ind, y) %>%
+  setNames(1:9) %>%
+  pivot_longer(everything())
+#  gather()
 ggplot(data = sampt_y) +
   geom_histogram(aes(x = value), fill = 'steelblue',
                  color = 'black', binwidth = 4) +
-  facet_wrap(~key, nrow = 3) +
+  facet_wrap(~name, nrow = 3) +
   coord_cartesian(xlim = c(-55, 65)) +
   labs(x = '', y = '') +
   scale_y_continuous(breaks=NULL) +
@@ -64,6 +67,6 @@ ggplot(data = minvals) +
   geom_vline(aes(xintercept = min(x)), data = data.frame(x = y),
              color = 'red') +
   coord_cartesian(xlim = c(-50, 20)) +
-  labs(x = TeX('Minimum of \\mathit{y} and \\mathit{y}^{\\mathrm{rep}}'),
+  labs(x = TeX('Minimum of \\textit{y} and \\textit{y}$^{rep}$'),
        y = '', title = title1) +
   scale_y_continuous(breaks=NULL)

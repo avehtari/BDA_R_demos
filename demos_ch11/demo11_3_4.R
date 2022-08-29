@@ -86,17 +86,20 @@ chains1 <- ggplot(data = dfs1) +
   stat_ellipse(data = dft, aes(x = X1, y = X2), level = 0.9, color = 'black') +
   coord_cartesian(xlim = c(-4, 4), ylim = c(-4, 4)) +
   labs(x = 'theta1', y = 'theta2') +
-  scale_color_discrete(guide = FALSE)
+  scale_color_discrete(guide = "none")
 
 #' Animate s1 first iterations of the chains. 
 #' At some points some of the chains seem to halt for
 #  a moment. What really happens at that point is that
 #' they draw possibly a few points that are rejected
 #' (rejected points not shown) and thus the chain is not moving
-#+ Metropolis
-animate(chains1 + 
-          transition_reveal(along=iter) + 
-          shadow_trail(1/s1))
+#+ Metropolis, results='hide', message=FALSE
+anim <- animate(chains1 + 
+                  transition_reveal(along=iter) + 
+                  shadow_trail(1/s1))
+
+#' Show the animation
+anim
 
 #' Plot the result, no convergence yet
 chains1 + labs(title = 'No convergence')
@@ -106,14 +109,14 @@ ggplot(data = filter(dfs2, iter<=50)) +
   geom_line(aes(iter, val, color = chain)) +
   facet_grid(var~.) +
   labs(title = 'Not converged', y = '') +
-  scale_color_discrete(guide = FALSE)
+  scale_color_discrete(guide = "none")
 
 #' Plot trends of the all draws
 ggplot(data = filter(dfs2, iter>500)) +
   geom_line(aes(iter, val, color = chain)) +
   facet_grid(var~.) +
   labs(title = 'Visually converged', y = '') +
-  scale_color_discrete(guide = FALSE)
+  scale_color_discrete(guide = "none")
 
 #' Function for plotting components of Rhat
 plotRhatcomps <- function(df = NULL, niter = NULL) {

@@ -55,7 +55,8 @@ wrn <- wr/sum(wr)
 Create a plot of the target and proposal distributions
 
 ```{r }
-df1 <- data.frame(x, q, g) %>% gather(grp, p, -x)
+df1 <- data.frame(x, q, g) %>%
+  pivot_longer(cols = !x, names_to = "grp", values_to = "p")
 distr <- ggplot(data = df1) +
   geom_line(aes(x, p, fill = grp, color = grp)) +
   labs(title = 'Target and proposal distributions', x = '', y = '') +

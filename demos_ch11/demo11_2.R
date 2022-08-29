@@ -19,23 +19,23 @@ library(tidyr)
 library(gganimate)
 library(ggforce)
 library(MASS)
+library(posterior)
 library(rprojroot)
-library(rstan)
 root<-has_file(".BDA_R_demos_root")$make_fix_file()
 
 #' Parameters of a normal distribution used as a toy target distribution
 y1 <- 0
 y2 <- 0
 r <- 0.8
-S <- diag(2)
-S[1, 2] <- r
-S[2, 1] <- r
+Sigma <- diag(2)
+Sigma[1, 2] <- r
+Sigma[2, 1] <- r
 #' Metropolis proposal distribution scale
 sp <- 0.3
 
 #' Sample from the toy distribution to visualize 90% HPD
 #' interval with ggplot's stat_ellipse()
-dft <- data.frame(mvrnorm(100000, c(0, 0), S))
+dft <- data.frame(mvrnorm(100000, c(0, 0), Sigma))
 #' see BDA3 p. 85 for how to compute HPD for multivariate normal
 #' in 2d-case contour for 90% HPD is an ellipse, whose semimajor
 #' axes can be computed from the eigenvalues of the covariance
@@ -71,9 +71,9 @@ df100 <- data.frame(id=rep(1,100),
                     th2l = c(tt[1, 2], tt[1:(100-1), 2]))
 
 #' Take the first 5000 observations after warmup of 50
-s <- 5000
+S <- 5000
 warm <- 500
-dfs <- data.frame(th1 = tt[(warm+1):s, 1], th2 = tt[(warm+1):s, 2])
+dfs <- data.frame(th1 = tt[(warm+1):S, 1], th2 = tt[(warm+1):S, 2])
 #' Remove warm-up period of 50 first draws later
 
 # labels and frame indices for the plot
@@ -93,10 +93,13 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Metropolis (1)
-animate(p1 +   
-          transition_reveal(along=iter) + 
-          shadow_trail(0.01))
+#+ Metropolis (1), results='hide', message=FALSE
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
+
+#' Show the animation
+anim
 
 #' Plot the final frame
 p1
@@ -128,36 +131,35 @@ ggplot() +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' ### Convergence diagnostics
-samp <- tt
-dim(samp) <- c(dim(tt),1)
-samp <- aperm(samp, c(1, 3, 2))
-res<-monitor(samp, probs = c(0.25, 0.5, 0.75), digits_summary = 2)
-neff <- res[,'n_eff']
-# both theta have owen neff, but for plotting these are so close to each
+summarise_draws(dfs)
+neff <- apply(dfs, 2, ess_basic)
+# both theta have own neff, but for plotting these are so close to each
 # other, so that single relative efficiency value is used
-reff <- mean(neff/(s/2))
+reff <- mean(neff/S)
 
 #' ### Visual convergence diagnostics
 
 #' Collapse the data frame with row numbers augmented
 #' into key-value pairs for visualizing the chains
 dfb <- dfs
-sb <- s-warm
-dfch <- within(dfb, iter <- 1:sb) %>% gather(grp, value, -iter)
+Sb <- S-warm
+dfch <- within(dfb, iter <- 1:Sb) %>% 
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' Another data frame for visualizing the estimate of
 #' the autocorrelation function
 nlags <- 50
 dfa <- sapply(dfb, function(x) acf(x, lag.max = nlags, plot = F)$acf) %>%
-  data.frame(iter = 0:(nlags)) %>% gather(grp, value, -iter)
+  data.frame(iter = 0:(nlags)) %>% 
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' A third data frame to visualize the cumulative averages
 #' and the 95% intervals
-dfca <- (cumsum(dfb) / (1:sb)) %>%
-  within({iter <- 1:sb
-  uppi <-  1.96/sqrt(1:sb)
-  upp <- 1.96/(sqrt(1:sb*reff))}) %>%
-  gather(grp, value, -iter)
+dfca <- (cumsum(dfb) / (1:Sb)) %>%
+  within({iter <- 1:Sb
+  uppi <-  1.96/sqrt(1:Sb)
+  upp <- 1.96/(sqrt(1:Sb*reff))}) %>%
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' Visualize the chains
 ggplot(data = dfch) +
@@ -181,8 +183,8 @@ labs3 <- c('theta1', 'theta2',
            '95% interval for independent MC')
 ggplot() +
   geom_line(data = dfca, aes(iter, value, color = grp, linetype = grp)) +
-  geom_line(aes(1:sb, -1.96/sqrt(1:sb*reff)), linetype = 2) +
-  geom_line(aes(1:sb, -1.96/sqrt(1:sb)), linetype = 3) +
+  geom_line(aes(1:Sb, -1.96/sqrt(1:Sb*reff)), linetype = 2) +
+  geom_line(aes(1:Sb, -1.96/sqrt(1:Sb)), linetype = 3) +
   geom_hline(aes(yintercept = 0)) +
   coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,4000)) +
   labs(title = 'Cumulative averages') +
@@ -196,15 +198,15 @@ ggplot() +
 y1 <- 0
 y2 <- 0
 r <- 0.99
-S <- diag(2)
-S[1, 2] <- r
-S[2, 1] <- r
+Sigma <- diag(2)
+Sigma[1, 2] <- r
+Sigma[2, 1] <- r
 #' Metropolis proposal distribution scale
 sp <- 0.3
 
 #' Sample from the toy distribution to visualize 90% HPD
 #' interval with ggplot's stat_ellipse()
-dft <- data.frame(mvrnorm(100000, c(0, 0), S))
+dft <- data.frame(mvrnorm(100000, c(0, 0), Sigma))
 #' see BDA3 p. 85 for how to compute HPD for multivariate normal
 #' in 2d-case contour for 90% HPD is an ellipse, whose semimajor
 #' axes can be computed from the eigenvalues of the covariance
@@ -240,9 +242,9 @@ df100 <- data.frame(id=rep(1,100),
                     th2l = c(tt[1, 2], tt[1:(100-1), 2]))
 
 #' Take the first 5000 observations after warmup of 50
-s <- 5000
+S <- 5000
 warm <- 500
-dfs <- data.frame(th1 = tt[(warm+1):s, 1], th2 = tt[(warm+1):s, 2])
+dfs <- data.frame(th1 = tt[(warm+1):S, 1], th2 = tt[(warm+1):S, 2])
 #' Remove warm-up period of 50 first draws later
 
 # labels and frame indices for the plot
@@ -262,10 +264,13 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Metropolis (2)
-animate(p1 +   
-          transition_reveal(along=iter) + 
-        shadow_trail(0.01))
+#+ Metropolis (2), results='hide', message=FALSE
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
+
+#' Show the animation
+anim
 
 #' Plot the final frame
 p1
@@ -297,36 +302,35 @@ ggplot() +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' ### Convergence diagnostics
-samp <- tt
-dim(samp) <- c(dim(tt),1)
-samp <- aperm(samp, c(1, 3, 2))
-res<-monitor(samp, probs = c(0.25, 0.5, 0.75), digits_summary = 2)
-neff <- res[,'n_eff']
-# both theta have owen neff, but for plotting these are so close to each
+summarise_draws(dfs)
+neff <- apply(dfs, 2, ess_basic)
+# both theta have own neff, but for plotting these are so close to each
 # other, so that single relative efficiency value is used
-reff <- mean(neff/(s/2))
+reff <- mean(neff/S)
 
 #' ### Visual convergence diagnostics
 
 #' Collapse the data frame with row numbers augmented
 #' into key-value pairs for visualizing the chains
 dfb <- dfs
-sb <- s-warm
-dfch <- within(dfb, iter <- 1:sb) %>% gather(grp, value, -iter)
+Sb <- S-warm
+dfch <- within(dfb, iter <- 1:Sb) %>% 
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' Another data frame for visualizing the estimate of
 #' the autocorrelation function
 nlags <- 100
 dfa <- sapply(dfb, function(x) acf(x, lag.max = nlags, plot = F)$acf) %>%
-  data.frame(iter = 0:(nlags)) %>% gather(grp, value, -iter)
+  data.frame(iter = 0:(nlags)) %>% 
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' A third data frame to visualize the cumulative averages
 #' and the 95% intervals
-dfca <- (cumsum(dfb) / (1:sb)) %>%
-  within({iter <- 1:sb
-          uppi <-  1.96/sqrt(1:sb)
-          upp <- 1.96/(sqrt(1:sb*reff))}) %>%
-  gather(grp, value, -iter)
+dfca <- (cumsum(dfb) / (1:Sb)) %>%
+  within({iter <- 1:Sb
+          uppi <-  1.96/sqrt(1:Sb)
+          upp <- 1.96/(sqrt(1:Sb*reff))}) %>%
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' Visualize the chains
 ggplot(data = dfch) +
@@ -350,8 +354,8 @@ labs3 <- c('theta1', 'theta2',
            '95% interval for independent MC')
 ggplot() +
   geom_line(data = dfca, aes(iter, value, color = grp, linetype = grp)) +
-  geom_line(aes(1:sb, -1.96/sqrt(1:sb*reff)), linetype = 2) +
-  geom_line(aes(1:sb, -1.96/sqrt(1:sb)), linetype = 3) +
+  geom_line(aes(1:Sb, -1.96/sqrt(1:Sb*reff)), linetype = 2) +
+  geom_line(aes(1:Sb, -1.96/sqrt(1:Sb)), linetype = 3) +
   geom_hline(aes(yintercept = 0)) +
   coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,4000)) +
   labs(title = 'Cumulative averages') +
@@ -383,9 +387,9 @@ df100 <- data.frame(id=rep(1,100),
                     th2l = c(tt[1, 2], tt[1:(100-1), 2]))
 
 #' Take the first 5000 observations after warmup of 50
-s <- 5000
+S <- 5000
 warm <- 500
-dfs <- data.frame(th1 = tt[(warm+1):s, 1], th2 = tt[(warm+1):s, 2])
+dfs <- data.frame(th1 = tt[(warm+1):S, 1], th2 = tt[(warm+1):S, 2])
 #' Remove warm-up period of 50 first draws later
 
 # labels and frame indices for the plot
@@ -405,11 +409,13 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Metropolis (3)
-animate(p1 +   
-          transition_reveal(along=iter) + 
-        shadow_trail(0.01))
+#+ Metropolis (3), results='hide', message=FALSE
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
 
+#' Show the animation
+anim
 
 #' show 1000 draws after the warm-up
 labs2 <- c('Draws', '90% HPD')
@@ -438,36 +444,35 @@ ggplot() +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' ### Convergence diagnostics
-samp <- tt
-dim(samp) <- c(dim(tt),1)
-samp <- aperm(samp, c(1, 3, 2))
-res<-monitor(samp, probs = c(0.25, 0.5, 0.75), digits_summary = 2)
-neff <- res[,'n_eff']
-# both theta have owen neff, but for plotting these are so close to each
+summarise_draws(dfs)
+neff <- apply(dfs, 2, ess_basic)
+# both theta have own neff, but for plotting these are so close to each
 # other, so that single relative efficiency value is used
-reff <- mean(neff/(s/2))
+reff <- mean(neff/S)
 
 #' ### Visual convergence diagnostics
 
 #' Collapse the data frame with row numbers augmented
 #' into key-value pairs for visualizing the chains
 dfb <- dfs
-sb <- s-warm
-dfch <- within(dfb, iter <- 1:sb) %>% gather(grp, value, -iter)
+Sb <- S-warm
+dfch <- within(dfb, iter <- 1:Sb) %>% 
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' Another data frame for visualizing the estimate of
 #' the autocorrelation function
 nlags <- 100
 dfa <- sapply(dfb, function(x) acf(x, lag.max = nlags, plot = F)$acf) %>%
-  data.frame(iter = 0:(nlags)) %>% gather(grp, value, -iter)
+  data.frame(iter = 0:(nlags)) %>% 
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' A third data frame to visualize the cumulative averages
 #' and the 95% intervals
-dfca <- (cumsum(dfb) / (1:sb)) %>%
-  within({iter <- 1:sb
-          uppi <-  1.96/sqrt(1:sb)
-          upp <- 1.96/(sqrt(1:sb*reff))}) %>%
-  gather(grp, value, -iter)
+dfca <- (cumsum(dfb) / (1:Sb)) %>%
+  within({iter <- 1:Sb
+          uppi <-  1.96/sqrt(1:Sb)
+          upp <- 1.96/(sqrt(1:Sb*reff))}) %>%
+  pivot_longer(cols = !iter, names_to = "grp", values_to = "value")
 
 #' Visualize the chains
 ggplot(data = dfch) +
@@ -491,8 +496,8 @@ labs3 <- c('theta1', 'theta2',
            '95% interval for independent MC')
 ggplot() +
   geom_line(data = dfca, aes(iter, value, color = grp, linetype = grp)) +
-  geom_line(aes(1:sb, -1.96/sqrt(1:sb*reff)), linetype = 2) +
-  geom_line(aes(1:sb, -1.96/sqrt(1:sb)), linetype = 3) +
+  geom_line(aes(1:Sb, -1.96/sqrt(1:Sb*reff)), linetype = 2) +
+  geom_line(aes(1:Sb, -1.96/sqrt(1:Sb)), linetype = 3) +
   geom_hline(aes(yintercept = 0)) +
   coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,4000)) +
   labs(title = 'Cumulative averages') +

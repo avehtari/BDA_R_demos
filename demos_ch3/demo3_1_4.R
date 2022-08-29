@@ -100,7 +100,8 @@ cl <- seq(1e-5, max(dfj$z), length.out = 6)
 #' of normal distribution with unknown mean and variance.
 #' 
 #' Create a plot of the marginal density of mu
-dfm <- data.frame(t1, Exact = pm, Empirical = pmk) %>% gather(grp, p, -t1)
+dfm <- data.frame(t1, Exact = pm, Empirical = pmk) %>%
+   pivot_longer(cols = !t1, names_to="grp", values_to="p")
 margmu <- ggplot(dfm) +
   geom_line(aes(t1, p, color = grp)) +
   coord_cartesian(xlim = t1l) +
@@ -111,7 +112,8 @@ margmu <- ggplot(dfm) +
         legend.title = element_blank())
 
 #' Create a plot of the marginal density of sigma
-dfs <- data.frame(t2, Exact = ps, Empirical = psk) %>% gather(grp, p, -t2)
+dfs <- data.frame(t2, Exact = ps, Empirical = psk) %>% 
+   pivot_longer(cols = !t2, names_to="grp", values_to="p")
 margsig <- ggplot(dfs) +
   geom_line(aes(t2, p, color = grp)) +
   coord_cartesian(xlim = t2l) +
@@ -154,7 +156,7 @@ grid.arrange(joint1, margsig, margmu, bp, nrow = 2)
 # data frame for the conditional of mu and marginal of sigma
 dfc <- data.frame(mu = t1, marg = rep(sigma[1], length(t1)),
                   cond = sigma[1] + dnorm(t1 ,my, sqrt(sigma2[1]/n)) * 100) %>%
-  gather(grp, p, marg, cond)
+  pivot_longer(cols = c(marg,cond), names_to="grp", values_to="p")
 # legend labels for the following plot
 joint2labs <- c('Exact contour plot', 'Sample from joint post.',
                'Cond. distribution of mu', 'Sample from the marg. of sigma')
@@ -192,14 +194,16 @@ condpdfs <- sapply(t1, function(x) dnorm(x, my, sqrt(sigma2/n)))
 
 #' Create a plot of some of them
 # data frame of 25 first samples
-dfm25 <- data.frame(t1, t(condpdfs[1:25,])) %>% gather(grp, p, -t1)
+dfm25 <- data.frame(t1, t(condpdfs[1:25,])) %>%
+  pivot_longer(cols = !t1, names_to="grp", values_to="p")
 condmu <- ggplot(data = dfm25) +
   geom_line(aes(t1, p, group = grp), linetype = 'dashed') +
   labs(title = 'Conditional distribution of mu for first 25 samples', y = '', x = '') +
   scale_y_continuous(breaks = NULL)
 
 #' create a plot of their mean
-dfsam <- data.frame(t1, colMeans(condpdfs), pm) %>% gather(grp,p,-t1)
+dfsam <- data.frame(t1, colMeans(condpdfs), pm) %>%
+  pivot_longer(cols = !t1, names_to="grp", values_to="p")
 # labels
 mulabs <- c('avg of sampled conds', 'exact marginal of mu')
 meanmu <- ggplot(data = dfsam) +

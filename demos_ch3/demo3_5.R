@@ -55,8 +55,8 @@ p1 <- ggplot() +
   labs(title = 'Newcomb\'s measurements', x = 'y')
 
 #' Create a plot of the normal model
-# gather the data points into key-value pairs
-df2 <- gather(df1, grp, p, -t1)
+# pivot the data points into key-value pairs
+df2 <- df1 %>% pivot_longer(cols = !t1, names_to="grp", values_to="p")
 # legend labels
 labs2 <- c('Posterior of mu', 'Posterior of mu given y > 0', 'Modern estimate')
 p2 <- ggplot(data = df2) +
@@ -67,7 +67,7 @@ p2 <- ggplot(data = df2) +
   scale_y_continuous(breaks = NULL) +
   labs(title = 'Normal model', x = 'mu', y = '') +
   scale_color_manual(values = c('blue', 'darkgreen', 'black')) +
-  guides(color=FALSE) +
+  guides(color="none") +
   annotate("text", x=24, y=0.26, label=labs2[1], hjust="right", size=5) +
   annotate("text", x=26, y=0.58, label=labs2[2], hjust="right", size=5) +
   annotate("text", x=32, y=0.7, label=labs2[3], hjust="right", size=5)

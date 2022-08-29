@@ -37,7 +37,8 @@ bdens <- function(n, y, x)
 
 #' Separate model
 df_sep <- mapply(bdens, n, y, MoreArgs = list(x = x)) %>%
-  as.data.frame() %>% cbind(x) %>% gather(ind, p, -x)
+  as.data.frame() %>% cbind(x) %>% 
+  pivot_longer(cols = !x, names_to = "ind", values_to = "p")
 
 #' Plot the separate model
 labs1 <- paste('posterior of', c('theta_j', 'theta_71'))
@@ -96,7 +97,8 @@ samp_A <- cA[samp_indices[1:nsamp]]
 samp_B <- cB[samp_indices[1:nsamp]]
 df_psamp <- mapply(function(a, b, x) dbeta(x, a, b),
                   samp_A, samp_B, MoreArgs = list(x = x)) %>%
-  as.data.frame() %>% cbind(x) %>% gather(ind, p, -x)
+  as.data.frame() %>% cbind(x) %>% 
+  pivot_longer(cols = !x, names_to = "ind", values_to = "p")
 
 
 #' Create plot for samples from the distribution of distributions
@@ -148,7 +150,8 @@ plot_sep7 <- ggplot(data = subset(df_sep, indtonum(ind)%%7==0)) +
 bdens2 <- function(n, y, a, b, x)
   rowMeans(mapply(dbeta, a + y, n - y + b, MoreArgs = list(x = x)))
 df_hier <- mapply(bdens2, n, y, MoreArgs = list(samp_A, samp_B, x)) %>%
-  as.data.frame() %>% cbind(x) %>% gather(ind, p, -x)
+  as.data.frame() %>% cbind(x) %>% 
+  pivot_longer(cols = !x, names_to = "ind", values_to = "p")
 
 #' Create plot for the hierarchical model
 plot_hier7 <- ggplot(data = subset(df_hier, indtonum(ind)%%7==0)) +
@@ -161,15 +164,30 @@ plot_hier7 <- ggplot(data = subset(df_hier, indtonum(ind)%%7==0)) +
 #' Combine the plots
 grid.arrange(plot_sep7, plot_hier7)
 
-#' 90% intervals<br>
-#' for separate models
+#' 90% intervals for separate models
 qq_separate<-data.frame(id=1:length(n), n=n, y=y,
-               q10=qbeta(0.1,y+1,n-y+1), q90=qbeta(0.9,y+1,n-y+1))
-#' for hierarchical model
+               q10=qbeta(0.1,y+1,n-y+1), q50=qbeta(0.5,y+1,n-y+1), q90=qbeta(0.9,y+1,n-y+1))
+#' 90% intervals for hierarchical model
 qh <- function(q, n, y) colMeans(mapply(function(q, n, y, a, b)
     mapply(qbeta, q, a + y, n - y + b), q, n, y, MoreArgs = list(samp_A, samp_B)))
 qq_hier <- data.frame(id=1:length(n), n=n, y=y,
-                      qh(0.05, n, y), qh(0.95, n, y))
-#' plot
+                      q10 = qh(0.1, n, y), q50 = qh(0.5, n, y), q90 = qh(0.9, n, y))
+#' pooled mean
+m_pooled <- (sum(y)+1)/(sum(n)+2)
 
-ggplot(data=qq_separate[seq(1,length(n),by=3),], aes(x=jitter(n,amount=1),ymin=q10,ymax=q90)) + geom_linerange() + xlim(c(0,60))
+#' plot
+plot_sep_int <- qq_separate %>%
+  ggplot(aes(x=n,y=q50,ymin=q10,ymax=q90)) +
+  geom_pointrange(color="blue", alpha=0.2) +
+  geom_hline(yintercept=m_pooled, linetype="dashed")+
+  lims(x=c(0,60), y=c(0,0.51))+
+  labs(x="N", y="Probability of pylops", title="Separate")+
+  annotate("text", x=0, y=m_pooled, label = "Pooled mean", vjust=-0.2, hjust=0.3)
+plot_hier_int <- qq_hier %>%
+  ggplot(aes(x=n,y=q50,ymin=q10,ymax=q90)) +
+  geom_pointrange(color="blue", alpha=0.2) +
+  geom_hline(yintercept=m_pooled, linetype="dashed")+
+  lims(x=c(0,60), y=c(0,0.51))+
+  labs(x="N", y="Probability of pylops", title="Hierarchical")+
+  annotate("text", x=0, y=m_pooled, label = "Pooled mean", vjust=-0.2, hjust=0.3)
+grid.arrange(plot_sep_int, plot_hier_int)
