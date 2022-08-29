@@ -5,13 +5,14 @@ Analysis, 3rd ed by Gelman, Carlin, Stern, Dunson, Vehtari, and Rubin (BDA3)](ht
 
 Currently there are demos for BDA3 Chapters 2, 3, 4, 5, 6, 10, 11 and 12.
 Furthermore there are demos for
-[RStan](https://github.com/stan-dev/rstan) and
+[CmdStanR](https://github.com/stan-dev/cmdstanr),
+[RStan](https://github.com/stan-dev/rstan)
 [RStanARM](https://github.com/stan-dev/rstanarm).
 
 The initial demos were originally written for Matlab by [Aki
 Vehtari](http://users.aalto.fi/~ave/) and translated to R by [Markus
 Paasiniemi](https://github.com/paasim). Recently more demos have been
-added for [RStan and RStanARM](demos_rstan).
+added for [CmdStanR, RStan and RStanARM](demos_rstan).
 Unless otherwise specified in specific files all code licensed
 under BSD-3 and all text, slides and figures licensed under CC-BY-NC 4.0.
 
@@ -53,3 +54,4 @@ List of demos (not including [rstan and rstanarm demos](demos_rstan))
 - [Chapter 12](https://avehtari.github.io/BDA_R_demos/demos_ch12)
   - [demo12_1: Static Hamiltonian Monte Carlo illustration](https://avehtari.github.io/BDA_R_demos/demos_ch12/demo12_1.html)
   - [demo12_2: NUTS / Dynamic Hamiltonian Monte Carlo illustration](https://avehtari.github.io/BDA_R_demos/demos_ch12/demo12_2.html)
+- [CmdStanR, RStan, RStanARM](https://avehtari.github.io/BDA_R_demos/demos_rstan)
