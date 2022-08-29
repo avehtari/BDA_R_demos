@@ -342,9 +342,9 @@ ggplot() +
                                 "green" = "green4", 
                                 "HPD" = "blue"),
                      labels = c("black" = "Starting point",
-                                "red" = "Part including U-turn",
-                                "yellow" = "Part without U-turn",
-                                "green" = "Draw from the trajectory",
+                                "red" = "Outside of the slice",
+                                "yellow" = "Within the slice",
+                                "green" = "Draw from the slice",
                                 "HPD" = "90% HPD")) +
   guides(color = guide_legend(override.aes = list(shape = c(16, 16, 16, 16, NA),
                                                   linetype = c(0,0,0,0,1)))) +
@@ -390,9 +390,9 @@ p <- ggplot() +
                                 "green" = "green4", 
                                 "HPD" = "blue"),
                      labels = c("black" = "Starting point",
-                                "red" = "Part including U-turn",
-                                "yellow" = "Part without U-turn",
-                                "green" = "Draw from the trajectory",
+                                "red" = "Outside of the slice",
+                                "yellow" = "Within the slice",
+                                "green" = "Draw from the slice",
                                 "HPD" = "90% HPD")) +
   guides(color = guide_legend(override.aes = list(shape = c(16, 16, 16, 16, NA),
                                                   linetype = c(0,0,0,0,1)))) +
