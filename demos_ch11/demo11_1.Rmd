@@ -124,10 +124,16 @@ p1 <- ggplot() +
 The following generates a gif animation
 of the steps of the sampler (might take 10 seconds).
 
-```{r Gibbs (1)}
-animate(p1 +   
+```{r Gibbs (1), results='hide', message=FALSE}
+anim <- animate(p1 +
           transition_reveal(along=iter) + 
           shadow_trail(0.01))
+```
+
+Show the animation
+
+```{r }
+anim
 ```
 
 Show only the end result as a static figure
@@ -345,10 +351,16 @@ p1 <- ggplot() +
 The following generates a gif animation
 of the steps of the sampler (might take 10 seconds).
 
-```{r Gibbs (2)}
-animate(p1 +   
-          transition_reveal(along=iter) + 
-          shadow_trail(0.01))
+```{r Gibbs (2), results='hide', message=FALSE}
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
+```
+
+Show the animation
+
+```{r }
+anim
 ```
 
 Show only the end result as a static figure

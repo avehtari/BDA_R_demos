@@ -98,11 +98,14 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Gibbs (1)
-animate(p1 +   
+#+ Gibbs (1), results='hide', message=FALSE
+anim <- animate(p1 +
           transition_reveal(along=iter) + 
           shadow_trail(0.01))
-          
+
+#' Show the animation
+anim
+
 #' Show only the end result as a static figure
 p1
 #' Highlight warm-up period of the 30 first draws with purple
@@ -263,11 +266,14 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Gibbs (2)
-animate(p1 +   
-          transition_reveal(along=iter) + 
-          shadow_trail(0.01))
-          
+#+ Gibbs (2), results='hide', message=FALSE
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
+
+#' Show the animation
+anim
+
 #' Show only the end result as a static figure
 p1
 #' Highlight warm-up period of the 30 first draws with purple

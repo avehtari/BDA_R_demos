@@ -93,10 +93,13 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Metropolis (1)
-animate(p1 +   
-          transition_reveal(along=iter) + 
-          shadow_trail(0.01))
+#+ Metropolis (1), results='hide', message=FALSE
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
+
+#' Show the animation
+anim
 
 #' Plot the final frame
 p1
@@ -261,10 +264,13 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Metropolis (2)
-animate(p1 +   
-          transition_reveal(along=iter) + 
-          shadow_trail(0.01))
+#+ Metropolis (2), results='hide', message=FALSE
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
+
+#' Show the animation
+anim
 
 #' Plot the final frame
 p1
@@ -403,11 +409,13 @@ p1 <- ggplot() +
 
 #' The following generates a gif animation
 #' of the steps of the sampler (might take 10 seconds).
-#+ Metropolis (3)
-animate(p1 +   
-          transition_reveal(along=iter) + 
-        shadow_trail(0.01))
+#+ Metropolis (3), results='hide', message=FALSE
+anim <- animate(p1 +   
+                  transition_reveal(along=iter) + 
+                  shadow_trail(0.01))
 
+#' Show the animation
+anim
 
 #' show 1000 draws after the warm-up
 labs2 <- c('Draws', '90% HPD')
