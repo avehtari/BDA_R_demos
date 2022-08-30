@@ -32,6 +32,7 @@ options(pillar.neg=FALSE)
 library(ggplot2)
 library(gridExtra)
 library(bayesplot)
+library(ggdist)
 theme_set(bayesplot::theme_default(base_family = "sans"))
 library(rprojroot)
 root<-has_file(".BDA_R_demos_root")$make_fix_file()
@@ -61,16 +62,25 @@ Sample form the posterior and show the summary
 
 ```{r results='hide'}
 mod_bern <- cmdstan_model(stan_file = code_bern)
-fit_bern <- mod_bern$sample(data = data_bern, seed = SEED)
+fit_bern <- mod_bern$sample(data = data_bern, seed = SEED, refresh=1000)
 
 fit_bern$summary()
 ```
 
-Plot the histogram of the posterior draws
+Plot a histogram of the posterior draws with bayesplot (uses ggplot)
 
 ```{r }
 draws <- fit_bern$draws()
-mcmc_hist(draws, pars='theta')
+mcmc_hist(draws, pars='theta') + xlim(c(0,1))
+```
+
+Plot a dots plot of the posterior draws with ggplot + ggdist
+
+```{r warning=FALSE}
+draws %>% as_draws_df() %>%
+  ggplot(aes(x=theta)) + 
+  stat_dotsinterval() + 
+  xlim(c(0,1))
 ```
 
 # Binomial model
@@ -92,24 +102,24 @@ Sample from the posterior and plot the posterior. The histogram should look simi
 
 ```{r results='hide'}
 mod_bin <- cmdstan_model(stan_file = code_binom)
-fit_bin <- mod_bin$sample(data = data_bin, seed = SEED)
+fit_bin <- mod_bin$sample(data = data_bin, seed = SEED, refresh=1000)
 
 fit_bin$summary()
 
 draws <- fit_bin$draws()
-mcmc_hist(draws, pars = 'theta')
+mcmc_hist(draws, pars = 'theta') + xlim(c(0,1))
 ```
 
 Re-run the model with a new data. The compiled Stan program is re-used making the re-use faster.
 
 ```{r results='hide'}
 data_bin <- list(N = 100, y = 70)
-fit_bin <- mod_bin$sample(data = data_bin, seed = SEED)
+fit_bin <- mod_bin$sample(data = data_bin, seed = SEED, refresh=1000)
 
 fit_bin$summary()
 
 draws <- fit_bin$draws()
-mcmc_hist(draws, pars = 'theta')
+mcmc_hist(draws, pars = 'theta', binwidth = 0.01) + xlim(c(0,1))
 ```
 
 ## Explicit transformation of variables
@@ -134,12 +144,12 @@ Sample from the posterior and plot the posterior. The histogram should look simi
 ```{r results='hide'}
 data_bin <- list(N = 100, y = 70)
 mod_binb <- cmdstan_model(stan_file = code_binomb)
-fit_binb <- mod_bin$sample(data = data_bin, seed = SEED)
+fit_binb <- mod_bin$sample(data = data_bin, seed = SEED, refresh=1000)
 
 fit_binb$summary()
 
 draws <- fit_binb$draws()
-mcmc_hist(draws, pars = 'theta')
+mcmc_hist(draws, pars = 'theta', binwidth = 0.01) + xlim(c(0,1))
 ```
 
 
@@ -167,16 +177,29 @@ Sample from the posterior and plot the posterior
 
 ```{r results='hide'}
 mod_bin2 <- cmdstan_model(stan_file = code_binom2)
-fit_bin2 <- mod_bin2$sample(data = data_bin2, seed = SEED)
+fit_bin2 <- mod_bin2$sample(data = data_bin2, seed = SEED, refresh=1000)
 
 fit_bin2$summary()
-
 ```
+
+Histogram
+
 ```{r warning=FALSE}
 draws <- fit_bin2$draws()
 mcmc_hist(draws, pars = 'oddsratio') +
   geom_vline(xintercept = 1) +
   scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))
+```
+
+Dots plot with median and 66% and 95% intervals
+
+```{r warning=FALSE}
+draws %>% as_draws_df() %>%
+  ggplot(aes(x=oddsratio)) + 
+    stat_dotsinterval() + 
+    geom_vline(xintercept = 1) +
+    scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))+
+    labs(x='Odds ratio', y='')
 ```
 
 # Linear Gaussian model
@@ -227,7 +250,7 @@ Run Stan
 
 ```{r results='hide'}
 mod_lin <- cmdstan_model(stan_file = code_lin)
-fit_lin <- mod_lin$sample(data = data_lin_priors, seed = SEED)
+fit_lin <- mod_lin$sample(data = data_lin_priors, seed = SEED, refresh=1000)
 ```
 
 Stan gives a warning: There were X transitions after warmup that exceeded the maximum treedepth. 
@@ -247,14 +270,14 @@ fit_lin$cmdstan_diagnose()
 
 Compute the probability that the summer temperature is increasing.
 
-```{r }
+```{r warning=FALSE}
 draws_lin <- as_draws_df(fit_lin$draws())
 mean(draws_lin[,"beta"]>0) # probability that beta > 0
 ```
 
 Plot the data, the model fit and prediction for year 2016.
 
-```{r }
+```{r warning=FALSE}
 mu <- draws_lin %>%
   as_draws_df() %>%
   as_tibble() %>%
@@ -286,7 +309,7 @@ writeLines(readLines(code_lin_std))
 ```
 ```{r results='hide'}
 mod_lin_std <- cmdstan_model(stan_file = code_lin_std)
-fit_lin_std <- mod_lin_std$sample(data = data_lin, seed = SEED)
+fit_lin_std <- mod_lin_std$sample(data = data_lin, seed = SEED, refresh=1000)
 ```
 
 Now there were no warnings. We can check diagnostics with the following commands.
@@ -300,7 +323,7 @@ We see that there are no warnings by diagnostics and ESS's are higher than with 
 
 Next we check that we get similar probability for beta>0.
 
-```{r }
+```{r warning=FALSE}
 draws_lin_std <- as_draws_df(fit_lin_std$draws())
 mean(draws_lin_std[,"beta"]>0) # probability that beta > 0
 ```
@@ -317,7 +340,7 @@ writeLines(readLines(code_lin_std_t))
 ```
 ```{r results='hide'}
 mod_lin_std_t <- cmdstan_model(stan_file = code_lin_std_t)
-fit_lin_std_t <- mod_lin_std_t$sample(data = data_lin, seed = SEED)
+fit_lin_std_t <- mod_lin_std_t$sample(data = data_lin, seed = SEED, refresh=1000)
 ```
 
 We get some warnings, but these specific warnings are not critical if counts are small as here.
@@ -333,7 +356,7 @@ We get similar diagnostics as for the linear Gaussian model with non-standardise
 
 Compute the probability that the summer temperature is increasing.
 
-```{r }
+```{r warning=FALSE}
 draws_lin_std_t <- as_draws_df(fit_lin_std_t$draws())
 mean(draws_lin_std_t[,"beta"]>0) # probability that beta > 0
 ```
@@ -343,7 +366,7 @@ We get similar probability as with Gaussian obervation model.
 
 Plot data and the model fit
 
-```{r }
+```{r warning=FALSE}
 mu <- draws_lin_std_t %>%
   as_draws_df() %>%
   as_tibble() %>%
@@ -405,7 +428,7 @@ Fit the model
 
 ```{r results='hide'}
 mod_grp <- cmdstan_model(stan_file = code_grp_aov)
-fit_grp <- mod_grp$sample(data = data_grp, seed = SEED)
+fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000)
 
 fit_grp$summary()
 fit_grp$cmdstan_diagnose()
@@ -425,7 +448,7 @@ Fit the model
 
 ```{r results='hide'}
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean)
-fit_grp <- mod_grp$sample(data = data_grp, seed = SEED)
+fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000)
 
 fit_grp$summary()
 fit_grp$cmdstan_diagnose()
@@ -439,7 +462,7 @@ identifiability or parameter transformations.
 
 ```{r results='hide'}
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean)
-fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, adapt_delta=0.95)
+fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000, adapt_delta=0.95)
 
 
 fit_grp$summary()
@@ -457,7 +480,7 @@ Fit the model
 
 ```{r results='hide'}
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean_var)
-fit_grp <- mod_grp$sample(data = data_grp, seed = SEED)
+fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000)
 
 fit_grp$summary()
 fit_grp$cmdstan_diagnose()
@@ -471,7 +494,7 @@ identifiability or parameter transformations.
 
 ```{r results='hide'}
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean_var)
-fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, adapt_delta=0.95);
+fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000, adapt_delta=0.95);
 
 
 fit_grp$summary()
@@ -480,7 +503,7 @@ fit_grp$cmdstan_diagnose()
 
 Plot the results
 
-```{r }
+```{r warning=FALSE}
 temps <- fit_grp$draws() %>%
   as_draws_df() %>%
   as_tibble() %>%
@@ -492,7 +515,7 @@ mcmc_areas(temps) + xlab('Temperature')
 Probabilities that June is hotter than July, June is hotter than August
 and July is hotter than August:
 
-```{r }
+```{r warning=FALSE}
 paste('p(TempJun > TempJul) = ', mean(temps$June > temps$July))
 paste('p(TempJun > TempAug) = ', mean(temps$June > temps$August))
 paste('p(TempJul > TempAug) = ', mean(temps$July > temps$August))
