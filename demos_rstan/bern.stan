@@ -12,7 +12,7 @@ model {
   y ~ bernoulli(theta); // observation model / likelihood
   // the notation using ~ is syntactic sugar for
   //  target += beta_lpdf(theta | 1, 1);   // lpdf for continuous theta
-
+  // target += bernoulli_lpmf(y | theta); // lpmf for discrete y
   // target is the log density to be sampled
   //
   // y is an array of integers and
