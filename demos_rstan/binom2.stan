@@ -12,7 +12,7 @@ parameters {
 model {
   // model block creates the log density to be sampled
   theta1 ~ beta(1, 1); // prior
-
+  theta2 ~ beta(1, 1); // prior
   y1 ~ binomial(N1, theta1); // observation model / likelihood
   y2 ~ binomial(N2, theta2); // observation model / likelihood
   // the notation using ~ is syntactic sugar for

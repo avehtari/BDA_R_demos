@@ -10,7 +10,7 @@ parameters {
 }
 transformed parameters {
   // transformed parameters are deterministic transformations of parameters (and data)
-
+  real theta = inv_logit(alpha); // probability of success in range (0,1)
 }
 model {
   // model block creates the log density to be sampled
