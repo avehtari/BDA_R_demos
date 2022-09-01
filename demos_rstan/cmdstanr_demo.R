@@ -175,8 +175,9 @@ draws %>% as_draws_df() %>%
 
 #' # Linear Gaussian model
 #' 
-#' The following file has Kilpisjärvi summer month temperatures 1952-2013:
-data_kilpis <- read.delim(root("demos_rstan","kilpisjarvi-summer-temp.csv"), sep = ";")
+#' The following file has Kilpisjärvi summer month temperatures 1952-2022
+#' (data by Finnish Meteorological Institute, CC-BY 4.0). 
+data_kilpis <- read.delim(root("demos_rstan","kilpisjarvi-summer-temp-2022.csv"), sep = ";")
 data_lin <-list(N = nrow(data_kilpis),
              x = data_kilpis$year,
              xpred = 2016,
@@ -346,7 +347,6 @@ loo_compare(loo_lin_std, loo_lin_std_t)
 #' # Comparison of $k$ groups with hierarchical models
 #' 
 #' Let's compare the temperatures in three summer months.
-data_kilpis <- read.delim(root("demos_rstan","kilpisjarvi-summer-temp.csv"), sep = ";")
 data_grp <-list(N = 3*nrow(data_kilpis),
              K = 3,
              x = rep(1:3, nrow(data_kilpis)),
