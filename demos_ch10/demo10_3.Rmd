@@ -22,6 +22,12 @@ library(MASS)
 library(loo)
 ```
 
+set seed to match the numbers with slides
+
+```{r }
+set.seed(5710)
+```
+
 Bioassay data, (BDA3 page 86)
 
 ```{r }
@@ -92,8 +98,8 @@ pos <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   geom_contour(aes(z = p), colour = 'black', size = 0.2) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta') +
-  scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
-  scale_alpha(range = c(0, 1), guide = F)
+  scale_fill_gradient(low = 'yellow', high = 'red', guide = "none") +
+  scale_alpha(range = c(0, 1), guide = "none")
 pos
 ```
 
@@ -128,7 +134,7 @@ bioassayfun <- function(w, df) {
 }
 ```
 
-Optimize
+Optimize and compute the Hessian at the mode
 
 ```{r }
 w0 <- c(0,0)
@@ -151,7 +157,7 @@ this is just for illustration and would not be needed otherwise
 p <- apply(cbind(cA, cB), 1, dmvnorm, w, S)
 ```
 
-Sample from the multivariate normal 
+Sample from the multivariate normal
 
 ```{r }
 samp_norm <- mvrnorm(nsamp, w, S)
@@ -176,8 +182,8 @@ pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   geom_contour(aes(z = p), colour = 'black', size = 0.2) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta') +
-  scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
-  scale_alpha(range = c(0, 1), guide = F)
+  scale_fill_gradient(low = 'yellow', high = 'red', guide = "none") +
+  scale_alpha(range = c(0, 1), guide = "none")
 pos_norm
 ```
 

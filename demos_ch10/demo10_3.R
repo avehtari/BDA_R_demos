@@ -21,6 +21,8 @@ library(grid)
 library(tidyr)
 library(MASS)
 library(loo)
+#' set seed to match the numbers with slides
+set.seed(5710)
 
 #' Bioassay data, (BDA3 page 86)
 df1 <- data.frame(
@@ -75,8 +77,8 @@ pos <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   geom_contour(aes(z = p), colour = 'black', size = 0.2) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta') +
-  scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
-  scale_alpha(range = c(0, 1), guide = F)
+  scale_fill_gradient(low = 'yellow', high = 'red', guide = "none") +
+  scale_alpha(range = c(0, 1), guide = "none")
 pos
 
 #' Plot of the samples
@@ -102,7 +104,7 @@ bioassayfun <- function(w, df) {
   -sum(df$y*(z) - df$n*log1p(exp(z)))
 }
 
-#' Optimize
+#' Optimize and compute the Hessian at the mode
 w0 <- c(0,0)
 optim_res <- optim(w0, bioassayfun, gr = NULL, df1, hessian = T)
 w <- optim_res$par
@@ -116,7 +118,7 @@ dmvnorm <- function(x, mu, sig)
 #' this is just for illustration and would not be needed otherwise
 p <- apply(cbind(cA, cB), 1, dmvnorm, w, S)
 
-#' Sample from the multivariate normal 
+#' Sample from the multivariate normal
 samp_norm <- mvrnorm(nsamp, w, S)
 
 #' Samples of LD50 conditional beta > 0:
@@ -133,8 +135,8 @@ pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   geom_contour(aes(z = p), colour = 'black', size = 0.2) +
   coord_cartesian(xlim = xl, ylim = yl) +
   labs(x = 'alpha', y = 'beta') +
-  scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
-  scale_alpha(range = c(0, 1), guide = F)
+  scale_fill_gradient(low = 'yellow', high = 'red', guide = "none") +
+  scale_alpha(range = c(0, 1), guide = "none")
 pos_norm
 
 #' Plot of the samples
