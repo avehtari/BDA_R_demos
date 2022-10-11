@@ -21,7 +21,9 @@ knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, com
 
 
 #' **Load packages**
-library(cmdstanr) 
+library(cmdstanr)
+# If running in Aalto JupyterHub
+# set_cmdstan_path('/coursedata/cmdstan')
 options(mc.cores = 1)
 library(posterior)
 library(loo)
