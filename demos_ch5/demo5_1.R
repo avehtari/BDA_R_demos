@@ -181,13 +181,13 @@ plot_sep_int <- qq_separate %>%
   geom_pointrange(color="blue", alpha=0.2) +
   geom_hline(yintercept=m_pooled, linetype="dashed")+
   lims(x=c(0,60), y=c(0,0.51))+
-  labs(x="N", y="Probability of pylops", title="Separate")+
+  labs(x="N", y="Probability of polyps", title="Separate")+
   annotate("text", x=0, y=m_pooled, label = "Pooled mean", vjust=-0.2, hjust=0.3)
 plot_hier_int <- qq_hier %>%
   ggplot(aes(x=n,y=q50,ymin=q10,ymax=q90)) +
   geom_pointrange(color="blue", alpha=0.2) +
   geom_hline(yintercept=m_pooled, linetype="dashed")+
   lims(x=c(0,60), y=c(0,0.51))+
-  labs(x="N", y="Probability of pylops", title="Hierarchical")+
+  labs(x="N", y="Probability of polyps", title="Hierarchical")+
   annotate("text", x=0, y=m_pooled, label = "Pooled mean", vjust=-0.2, hjust=0.3)
 grid.arrange(plot_sep_int, plot_hier_int)
