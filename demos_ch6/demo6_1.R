@@ -11,10 +11,14 @@
 #' ## Posterior predictive checking of normal model for light data
 #' 
 
-#' ggplot2 is used for plotting, tidyr for manipulating data frames
+#' ggplot2 and bayesplot are used for plotting
+#' tidyr is used for manipulating data frames
+#' posterior is used to handle posterior draws
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(ggplot2)
-theme_set(theme_minimal())
+library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
+library(posterior)
 library(tidyr)
 library(latex2exp)
 library(rprojroot)
@@ -31,19 +35,20 @@ my <- mean(y)
 #' predictive density.
 #' Each set has same number of virtual observations as the
 #' original data set.
-sampt <- replicate(9, rt(n, n-1)*sqrt(1+1/n)*s+my) %>%
-  as.data.frame()
+yrep <- replicate(9, rt(n, n-1)*sqrt(1+1/n)*s+my)
 
 #' Replace one of the replicates with observed data.
 #' If you can spot which one has been replaced, it means
 #' that the replicates do not resemble the original data
 #' and thus the model has a defect
 ind <- sample(9, 1)
-sampt_y <- replace(sampt, ind, y) %>%
-  setNames(1:9) %>%
-  pivot_longer(everything())
-#  gather()
-ggplot(data = sampt_y) +
+yrep_df <- yrep %>%
+  as.data.frame() %>%
+  replace(ind, y) %>% # replace one of the yreps
+  setNames(1:9) %>%   # rename to hide which one is the real data
+  pivot_longer(everything()) # use the long format for plotting
+
+ggplot(data = yrep_df) +
   geom_histogram(aes(x = value), fill = 'steelblue',
                  color = 'black', binwidth = 4) +
   facet_wrap(~name, nrow = 3) +
@@ -55,9 +60,10 @@ ggplot(data = sampt_y) +
 #' Generate 1000 replicate data sets and compute test statistic. The
 #' test statistic here is the smallest observation in the data or in
 #' the replicated data.
-sampt1000 <- replicate(1000, rt(n, n-1)*sqrt(1+1/n)*s+my) %>%
+yrep1000 <- replicate(1000, rt(n, n-1)*sqrt(1+1/n)*s+my) %>%
   as.data.frame()
-minvals <- data.frame(x = sapply(sampt1000, min))
+# the minimum value over 1000 replicates
+minvals <- data.frame(x = sapply(yrep1000, min))
 #' Plot test statistic for the data and the replicated data sets
 title1 <- 'Smallest observation in the replicated
 data (hist.) vs in the original data (vertical line)'
@@ -70,3 +76,40 @@ ggplot(data = minvals) +
   labs(x = TeX('Minimum of \\textit{y} and \\textit{y}$^{rep}$'),
        y = '', title = title1) +
   scale_y_continuous(breaks=NULL)
+
+#' Posterior predictive checks provided by bayesplot<br>
+#' https://mc-stan.org/bayesplot/reference/PPC-distributions.html
+#'
+
+#' For convenience switch to use draws object
+rownames(yrep1000) <- paste0("yrep[", 1:66, "]")
+yrep_draws <- as_draws_matrix(t(yrep1000))
+
+#' Histogram of y + 8 yrep histograms
+ppc_hist(y, yrep_draws[1:8,])
+
+#' Kernel density estimate of y + 100 yrep kernel density estimates
+ppc_dens_overlay(y, yrep_draws[1:100,])
+
+#' ECDF of y + 100 yrep ECDFs
+ppc_ecdf_overlay(y, yrep_draws[1:100,])
+
+#' Scatterplot of yrep vs y
+ppc_scatter(y, yrep_draws[1:4,])+geom_abline()
+
+#' The distribution of a (test) statistic T(yrep) compared to the
+#' observed value T(y) computed from the data y. The default test
+#' statistic mean is a bad statistic as the model has a parameter for
+#' the mean.
+ppc_stat(y, yrep_draws)
+
+#' The distribution of a (test) statistic T(yrep) compared to the
+#' observed value T(y) computed from the data y. Min and max are often
+#' good test statistics for continuous outcomes.
+ppc_stat(y, yrep_draws, stat="min")
+ppc_stat(y, yrep_draws, stat="max")
+
+#' Show 2 test statistics in one plot
+color_scheme_set("brewer-Paired")
+ppc_stat_2d(y, yrep_draws, stat=c("min","max"))
+color_scheme_set()
