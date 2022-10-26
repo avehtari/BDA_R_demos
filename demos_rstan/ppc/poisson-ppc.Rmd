@@ -114,6 +114,13 @@ ppc_hist(y, y_rep[1:8, ], binwidth = 1)
 ppc_dens_overlay(y, y_rep[1:50, ])
 ```
 
+## Rootogram shows the square root of counts
+
+Rootogram shows the square root of counts, with histogram for the observed data and and model predictions (yrep) as a ribbon
+
+```{r ppc-rootogram}
+ppc_rootogram(y, y_rep)
+```
 
 ## Compare proportion of zeros in `y` to the distribution of that proportion over all `y_rep`s
 
@@ -184,6 +191,10 @@ ppc_hist(y, y_rep2[1:8, ], binwidth = 1)
 
 ```{r ppc-dens-overlay-2}
 ppc_dens_overlay(y, y_rep2[1:50, ])
+```
+
+```{r ppc-rootogram-2}
+ppc_rootogram(y, y_rep2)
 ```
 
 ```{r, prop-zero-2, message=FALSE}
