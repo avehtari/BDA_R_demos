@@ -69,7 +69,7 @@ ggplot(data = Tyr) +
                  color = 'black', binwidth = 1) +
   geom_vline(aes(xintercept = x), data = data.frame(x = Ty),
              color = 'red') +
-  labs(x = TeX('Number of changes in \\mathit{y} and \\mathit{y}^{\\mathrm{rep}}'),
+  labs(x = TeX(r"(Number of changes in $\textit{y}$ and  $\textit{y}^{ \textrm{rep}}$)"),
        y = '', title = title1) +
   scale_y_continuous(breaks=NULL)
 ```
