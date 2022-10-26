@@ -22,9 +22,9 @@ knitr::opts_chunk$set(cache = FALSE, echo = TRUE, comment=NA, fig.align="center"
 
 **Load packages**
 ```{r load-packages, message=FALSE, warning=FALSE}
-library("rstan")
-library("ggplot2")
-library("bayesplot")
+library(rstan)
+library(ggplot2)
+library(bayesplot)
 theme_set(bayesplot::theme_default(base_family = "sans"))
 library(loo)
 library(rprojroot)
@@ -71,7 +71,7 @@ writeLines(readLines(code_poisson))
 
 ```{r, fit}
 fit <- stan(file = code_poisson, data = c("y", "N"), refresh = 0)
-monitor(fit)
+monitor(as.array(fit)[,,c("lambda","lp__")])
 ```
 
 ## Look at posterior distribution of lambda
