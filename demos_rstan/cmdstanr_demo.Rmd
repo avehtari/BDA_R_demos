@@ -397,8 +397,8 @@ We can use leave-one-out cross-validation to compare the expected predictive per
 
 ```{r }
 # At this moment there is not yet method for cmdstanr fit, so we use this helper
-loocmd <- function(fit) {
-  loo(fit$draws("log_lik"), r_eff=relative_eff(fit$draws("log_lik")))
+loocmd <- function(fit, ...) {
+  loo(fit$draws("log_lik"), r_eff=relative_eff(fit$draws("log_lik")), ...)
 }
 loo_lin_std <- loocmd(fit_lin_std)
 loo_lin_std_t <- loocmd(fit_lin_std_t)

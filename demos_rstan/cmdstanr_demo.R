@@ -336,8 +336,8 @@ grid.arrange(pfit, phist, nrow = 2)
 #' 
 #' We can use leave-one-out cross-validation to compare the expected predictive performance. For the following lines to work, the log-likelihood needs to be evaluated in the stan code. For an example, see lin.stan and [Computing approximate leave-one-out cross-validation usig PSIS-LOO](http://mc-stan.org/loo/articles/loo2-with-rstan.html).
 # At this moment there is not yet method for cmdstanr fit, so we use this helper
-loocmd <- function(fit) {
-  loo(fit$draws("log_lik"), r_eff=relative_eff(fit$draws("log_lik")))
+loocmd <- function(fit, ...) {
+  loo(fit$draws("log_lik"), r_eff=relative_eff(fit$draws("log_lik")), ...)
 }
 loo_lin_std <- loocmd(fit_lin_std)
 loo_lin_std_t <- loocmd(fit_lin_std_t)
