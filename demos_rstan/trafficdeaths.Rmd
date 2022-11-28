@@ -179,7 +179,7 @@ pi_gp <- ppc_loo_intervals(deaths$deaths,
                     psis_object=loo_gp$psis_object)+
   labs(title='PPC-LOO GP model')
 
-(pi_lin+pi_gp)
+pi_lin/pi_gp
 ```
 
 There is a small difference in favor of GP model.
