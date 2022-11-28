@@ -63,13 +63,6 @@ deaths |>
   labs(y = 'Traffic deaths', x= "Year") +
   guides(linetype = "none")
 
-deaths |>
-  ggplot(aes(x=year, y=deaths)) +
-  geom_line() +
-  labs(y = 'Traffic deaths', x= "Year") +
-  guides(linetype = "none")
-
-
 #' # Poisson regression model
 #' 
 #' The number of deaths is count data, so we use Poisson observation
@@ -170,23 +163,12 @@ pi_lin <- ppc_loo_intervals(deaths$deaths,
                     psis_object=loo_lin$psis_object)+
   labs(title='PPC-LOO linear model')
 
-pq_lin <- ppc_loo_pit_qq(deaths$deaths,
-                    y_predict_lin[,1:29],
-                    lw=weights(loo_lin$psis_object))+
-  labs(title='PPC-LOO-PIT linear model')
-
 pi_gp <- ppc_loo_intervals(deaths$deaths,
                     y_predict_gp[,1:29],
                     psis_object=loo_gp$psis_object)+
   labs(title='PPC-LOO GP model')
 
-pq_gp <- ppc_loo_pit_qq(deaths$deaths,
-                    y_predict_gp[,1:29],
-                    lw=weights(loo_gp$psis_object))+
-  labs(title='PPC-LOO-PIT GP model')
-
-
-(pi_lin+pq_lin+pi_gp+pq_gp)
+(pi_lin+pi_gp)
 
 #' There is a small difference in favor of GP model.
 
