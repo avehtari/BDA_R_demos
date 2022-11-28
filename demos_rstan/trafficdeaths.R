@@ -80,8 +80,6 @@ deaths |>
 fit_lin <- stan_glm(deaths ~ year, data=deaths, family=poisson,
  	            refresh=1000, iter=1000, chains=4, seed=583829, refresh=0)
 
-#+  comment=NA
-monitor(fit_lin$stanfit)
 
 #' ESS's and Rhat's are ok (see, e.g., [RStan
 #' workflow](http://mc-stan.org/users/documentation/case-studies/rstan_workflow.html)). Let's
@@ -107,7 +105,6 @@ pfit <- ggplot() +
 fit_gam <- stan_gamm4(deaths ~ year + s(year), data=deaths,
                       family=poisson, adapt_delta=0.999, 
                       refresh=1000, iter=2000, chain=4, seed=583829, refresh=0)
-monitor(fit_gam$stanfit)
 
 #' ESS is clearly smaller than for the linear model, but Rhat's are ok.
 #' 
