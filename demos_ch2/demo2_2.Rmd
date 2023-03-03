@@ -60,7 +60,7 @@ helperf <- function(n, apr, a, b, df)
 df2 <- lapply(n, helperf, apr, a, b, df1) %>%
   do.call(rbind, args = .) %>%
   pivot_longer(!c(theta, n), names_to = "grp", values_to = "p") %>%
-  mutate(grp = factor(grp, labels=c('Posterior with unif prior', 'Prior', 'Posterior')))
+  mutate(grp = factor(grp, labels=c('Posterior','Prior','Posterior with unif prior')))
 # add correct labels for plotting
 df2$title <- factor(paste0('alpha/(alpha+beta)=0.488, alpha+beta=',df2$n))
 ```
