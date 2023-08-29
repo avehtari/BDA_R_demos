@@ -194,7 +194,7 @@ mcmc_hist(draws_bin2, pars='oddsratio')
 #' # Linear Gaussian model
 #' 
 #' The following file has Kilpisjärvi summer month temperatures 1952-2013:
-data_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
+data_kilpis <- read.delim('~/BDA_R_demos/demos_rstan/kilpisjarvi-summer-temp.csv', sep = ';')
 data_lin <-data.frame(year = data_kilpis$year,
                    temp = data_kilpis[,5])
 
@@ -284,7 +284,7 @@ loo_compare(loo1, loo2)
 #' # Comparison of k groups with hierarchical models
 #' 
 #' Let's compare the temperatures in three summer months.
-data_kilpis <- read.delim('kilpisjarvi-summer-temp.csv', sep = ';')
+data_kilpis <- read.delim('~/BDA_R_demos/demos_rstan/kilpisjarvi-summer-temp.csv', sep = ';')
 data_grp <- data.frame(month = rep(6:8, nrow(data_kilpis)),
               temp = c(t(data_kilpis[,2:4])))
 
