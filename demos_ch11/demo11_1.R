@@ -127,7 +127,7 @@ ggplot() +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' ### Convergence diagnostics
-summarise_draws(dfs)
+summarise_draws(dfs, Rhat=rhat_basic, ESS=ess_basic)
 neff <- apply(dfs, 2, ess_basic)
 # both theta have own neff, but for plotting these are so close to each
 # other, so that single relative efficiency value is used
@@ -295,7 +295,7 @@ ggplot() +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' ### Convergence diagnostics
-summarise_draws(dfs)
+summarise_draws(dfs, Rhat=rhat_basic, ESS=ess_basic)
 neff <- apply(dfs, 2, ess_basic)
 # both theta have own neff, but for plotting these are so close to each
 # other, so that single relative efficiency value is used

@@ -131,7 +131,7 @@ ggplot() +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' ### Convergence diagnostics
-summarise_draws(dfs)
+summarise_draws(dfs, Rhat=rhat_basic, ESS=ess_basic)
 neff <- apply(dfs, 2, ess_basic)
 # both theta have own neff, but for plotting these are so close to each
 # other, so that single relative efficiency value is used
@@ -302,7 +302,7 @@ ggplot() +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
 #' ### Convergence diagnostics
-summarise_draws(dfs)
+summarise_draws(dfs, Rhat=rhat_basic, ESS=ess_basic)
 neff <- apply(dfs, 2, ess_basic)
 # both theta have own neff, but for plotting these are so close to each
 # other, so that single relative efficiency value is used
@@ -373,6 +373,7 @@ tt[1,] <- c(t1, t2)    # Save starting point
 # For demonstration load pre-computed values
 # Replace this with your algorithm!
 # tt is a M x 2 array, with M draws of both theta_1 and theta_2
+# See in the end how to manipulate R arrays for easy convergence diagnostics
 load(root("demos_ch11","demo11_2c.RData"))
 
 #' The rest is for illustration
