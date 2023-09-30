@@ -8,6 +8,9 @@
 #'     code_download: true
 #' ---
 
+#+ setup, message=FALSE, error=FALSE, warning=FALSE
+library(posterior)
+
 #' ## Use of posterior package for convergence diagnostics
 #' 
 

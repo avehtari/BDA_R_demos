@@ -7,6 +7,11 @@ output:
     theme: readable
     code_download: true
 ---
+
+```{r setup, message=FALSE, error=FALSE, warning=FALSE}
+library(posterior)
+```
+
 ## Use of posterior package for convergence diagnostics
 
 In the Metropolis assignment it is likely that you have used a for
