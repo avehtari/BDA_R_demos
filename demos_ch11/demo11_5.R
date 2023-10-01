@@ -10,6 +10,8 @@
 
 #+ setup, message=FALSE, error=FALSE, warning=FALSE
 library(posterior)
+library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
 
 #' ## Use of posterior package for convergence diagnostics
 #' 
