@@ -10,6 +10,8 @@ output:
 
 ```{r setup, message=FALSE, error=FALSE, warning=FALSE}
 library(posterior)
+library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
 ```
 
 ## Use of posterior package for convergence diagnostics
@@ -47,6 +49,14 @@ lecture we can use additionl arguments
 summarise_draws(thetas, Rhat=rhat_basic, ESS=ess_basic)
 ```
 
+Compute mean and 5%- and 95%-quantiles and corresponding MCSE's
+
+```{r }
+summarise_draws(thetas, mean, mcse_mean,
+                ~quantile(.x, probs = c(0.05, 0.95)),
+                ~mcse_quantile(.x, probs = c(0.05, 0.95)))
+```
+
 summarise_draws() function coerced the R matrix to a posterior
 object behind the scenes, but we can also convert it explicitlu to
 draws object that is better aware of number of iterations and
@@ -67,8 +77,8 @@ D <- 2 # number of parameters
 # 3-D array with dimensions ‘"iteration"’, ‘"chain"’, and ‘"variable"’
 thetas <- array(dim=c(N,M,D))
 # Fill the array
-for (n in 1:N) {
-  for (m in 1:M) {
+for (m in 1:M) { # loop over chains
+  for (n in 1:N) { # loop over iterations
     thetas[n,m,] <- rnorm(n=2, mean=0, sd=1)
   }
 }
@@ -88,6 +98,14 @@ lecture we can use additionl arguments
 summarise_draws(thetas, Rhat=rhat_basic, ESS=ess_basic)
 ```
 
+Compute mean and 5%- and 95%-quantiles and corresponding MCSE's
+
+```{r }
+summarise_draws(thetas, mean, mcse_mean,
+                ~quantile(.x, probs = c(0.05, 0.95)),
+                ~mcse_quantile(.x, probs = c(0.05, 0.95)))
+```
+
 summarise_draws() function coerced the R 3-D array to a posterior
 object behind the scenes, but we can also convert it explicitlu to
 draws object that is better aware of number of iterations and
@@ -97,5 +115,59 @@ posterior objects easier than plain R matrix and array types.
 
 ```{r }
 thetas <- as_draws_df(thetas)
+variables(thetas) <- c("theta1","theta2")
+```
+
+bayesplot package provides Some useful plots to analyse your MCMC
+draws.  You don't need to include all of these in your assignment
+or project reports, but they are shown as seeing the plo for your
+own Metropolis algorithm helps to gain better understanding.
+
+Trace plots
+
+
+```{r }
+mcmc_trace(thetas)
+```
+
+
+Autocorrelation plots
+
+
+```{r }
+mcmc_acf(thetas)
+```
+
+
+Density plots with separate density for each chain
+
+
+```{r }
+mcmc_dens_overlay(thetas)
+```
+
+
+Density plots using all chains
+
+
+```{r }
+mcmc_dens(thetas)
+```
+
+
+Density plots with median and 50% central interval (see ?mcmc_areas
+for more options)
+
+
+```{r }
+mcmc_areas(thetas)
+```
+
+
+Scatter plots and histograms (works also for more than two variables)
+
+
+```{r }
+mcmc_pairs(thetas)
 ```
 
