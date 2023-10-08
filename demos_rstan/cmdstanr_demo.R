@@ -26,6 +26,7 @@ library(cmdstanr)
 # '/coursedata/cmdstan'
 options(mc.cores = 1)
 library(posterior)
+options(posterior.num_args=list(sigfig=2)) # by default summaries with 2 significant digits
 library(loo)
 library(tidyr)
 library(dplyr)
@@ -56,19 +57,19 @@ writeLines(readLines(code_bern))
 
 
 #' Sample form the posterior and show the summary
-#+  results='hide'
+#+ results='hide'
 mod_bern <- cmdstan_model(stan_file = code_bern)
 fit_bern <- mod_bern$sample(data = data_bern, seed = SEED, refresh=1000)
 
 fit_bern$summary()
 
 #' Plot a histogram of the posterior draws with bayesplot (uses ggplot)
-draws <- fit_bern$draws()
+draws <- fit_bern$draws(format = "df")
 mcmc_hist(draws, pars='theta') + xlim(c(0,1))
 
 #' Plot a dots plot of the posterior draws with ggplot + ggdist
 #+ warning=FALSE
-draws %>% as_draws_df() %>%
+draws |>
   ggplot(aes(x=theta)) + 
   stat_dotsinterval() + 
   xlim(c(0,1))
@@ -85,24 +86,26 @@ writeLines(readLines(code_binom))
 
 
 #' Sample from the posterior and plot the posterior. The histogram should look similar as in the Bernoulli case.
-#+  results='hide'
+#' 
+#+ results='hide'
 mod_bin <- cmdstan_model(stan_file = code_binom)
 fit_bin <- mod_bin$sample(data = data_bin, seed = SEED, refresh=1000)
 
 fit_bin$summary()
 
-draws <- fit_bin$draws()
+draws <- fit_bin$draws(format = "df")
 mcmc_hist(draws, pars = 'theta') + xlim(c(0,1))
 
 
 #' Re-run the model with a new data. The compiled Stan program is re-used making the re-use faster.
-#+  results='hide'
+#' 
+#+ results='hide'
 data_bin <- list(N = 100, y = 70)
 fit_bin <- mod_bin$sample(data = data_bin, seed = SEED, refresh=1000)
 
 fit_bin$summary()
 
-draws <- fit_bin$draws()
+draws <- fit_bin$draws(format = "df")
 mcmc_hist(draws, pars = 'theta', binwidth = 0.01) + xlim(c(0,1))
 
 
@@ -122,15 +125,15 @@ writeLines(readLines(code_binomb))
 #' Here we have used Gaussian prior in the unconstrained space, which produces close to uniform prior for theta.
 #' 
 #' Sample from the posterior and plot the posterior. The histogram should look similar as with the previous models.
-
-#+  results='hide'
+#' 
+#+ results='hide'
 data_bin <- list(N = 100, y = 70)
 mod_binb <- cmdstan_model(stan_file = code_binomb)
 fit_binb <- mod_bin$sample(data = data_bin, seed = SEED, refresh=1000)
 
 fit_binb$summary()
 
-draws <- fit_binb$draws()
+draws <- fit_binb$draws(format = "df")
 mcmc_hist(draws, pars = 'theta', binwidth = 0.01) + xlim(c(0,1))
 
 
@@ -153,7 +156,7 @@ writeLines(readLines(code_binom2))
 
 
 #' Sample from the posterior and plot the posterior
-#+  results='hide'
+#+ results='hide'
 mod_bin2 <- cmdstan_model(stan_file = code_binom2)
 fit_bin2 <- mod_bin2$sample(data = data_bin2, seed = SEED, refresh=1000)
 
@@ -161,19 +164,25 @@ fit_bin2$summary()
 
 #' Histogram
 #+  warning=FALSE
-draws <- fit_bin2$draws()
+draws <- fit_bin2$draws(format = "df")
 mcmc_hist(draws, pars = 'oddsratio') +
   geom_vline(xintercept = 1) +
   scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))
 
 #' Dots plot with median and 66% and 95% intervals
 #+ warning=FALSE
-draws %>% as_draws_df() %>%
+draws |>
   ggplot(aes(x=oddsratio)) + 
-    stat_dotsinterval() + 
+    geom_dotsinterval() + 
     geom_vline(xintercept = 1) +
     scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))+
     labs(x='Odds ratio', y='')
+
+#' Probability (and corresponding MCSE) that oddsratio<1
+draws |>
+  mutate_variables(p_oddsratio_lt_1 = as.numeric(oddsratio<1)) |>
+  subset_draws("p_oddsratio_lt_1") |>
+  summarise_draws(prob=mean, MCSE=mcse_mean)
 
 #' # Linear Gaussian model
 #' 
@@ -212,35 +221,40 @@ data_lin_priors <- c(list(
 
 
 #' Run Stan
-#+  results='hide'
+#+ results='hide'
 mod_lin <- cmdstan_model(stan_file = code_lin)
 fit_lin <- mod_lin$sample(data = data_lin_priors, seed = SEED, refresh=1000)
 
 #' Stan gives a warning: There were X transitions after warmup that exceeded the maximum treedepth. 
 #' 
-#' We can check the diagnostics as follows
+#' We can check the generic convergence diagnostics as follows
 fit_lin$summary()
 
-#' The following diagnostics are explained in [CmdStan User's Guide](https://mc-stan.org/docs/cmdstan-guide/diagnose.html).
+#' We can check the HMC specific diagnostics as follows
 #+  message=TRUE
-fit_lin$cmdstan_diagnose()
+fit_lin$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
+
+#' The high number of max treedepth exceedence is due to high posterior dependency,
+#' which in this case reduces efficiency, but doesn't invalidate the results
+draws_lin <- fit_lin$draws(format = "df")
+draws_lin |>
+  mcmc_scatter(pars=c("alpha","beta"))
 
 #' 
 #' Compute the probability that the summer temperature is increasing.
 #+ warning=FALSE
-draws_lin <- as_draws_df(fit_lin$draws())
 mean(draws_lin[,"beta"]>0) # probability that beta > 0
 
 
 #' Plot the data, the model fit and prediction for year 2016.
 #+ warning=FALSE
-mu <- draws_lin %>%
-  as_draws_df() %>%
-  as_tibble() %>%
-  select(starts_with("mu")) %>%
-  apply(2, quantile, c(0.05, 0.5, 0.95)) %>%
-  t() %>% 
-  data.frame(x = data_lin$x, .)  %>% 
+mu <- draws_lin |>
+  as_draws_df() |>
+  as_tibble() |>
+  select(starts_with("mu")) |>
+  apply(2, quantile, c(0.05, 0.5, 0.95)) |>
+  t() |> 
+  data.frame(x = data_lin$x, .)  |> 
   gather(pct, y, -x)
 
 pfit <- ggplot() +
@@ -261,7 +275,7 @@ code_lin_std <- root("demos_rstan", "lin_std.stan")
 writeLines(readLines(code_lin_std))
 
 
-#+  results='hide'
+#+ results='hide'
 mod_lin_std <- cmdstan_model(stan_file = code_lin_std)
 fit_lin_std <- mod_lin_std$sample(data = data_lin, seed = SEED, refresh=1000)
 
@@ -269,14 +283,19 @@ fit_lin_std <- mod_lin_std$sample(data = data_lin, seed = SEED, refresh=1000)
 
 #+  message=TRUE
 fit_lin_std$summary()
-fit_lin_std$cmdstan_diagnose()
+fit_lin_std$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 
-#' We see that there are no warnings by diagnostics and ESS's are higher than with the previous case with non-standardized data.
+#' We see that there are no warnings by diagnostics and ESS's are higher than with the previous case with non-standardized data. The posterior has no high dependency.
+#'
+draws_lin_std <- fit_lin_std$draws(format = "df")
+draws_lin_std |>
+  mcmc_scatter(pars=c("alpha","beta"))
+
 #' 
 #' Next we check that we get similar probability for beta>0.
 #+ warning=FALSE
-draws_lin_std <- as_draws_df(fit_lin_std$draws())
+draws_lin_std <- fit_lin_std$draws(format = "df")
 mean(draws_lin_std[,"beta"]>0) # probability that beta > 0
 
 
@@ -288,7 +307,7 @@ code_lin_std_t <- root("demos_rstan", "lin_std_t.stan")
 writeLines(readLines(code_lin_std_t))
 
 
-#+  results='hide'
+#+ results='hide'
 mod_lin_std_t <- cmdstan_model(stan_file = code_lin_std_t)
 fit_lin_std_t <- mod_lin_std_t$sample(data = data_lin, seed = SEED, refresh=1000)
 
@@ -297,14 +316,14 @@ fit_lin_std_t <- mod_lin_std_t$sample(data = data_lin, seed = SEED, refresh=1000
 #' Let's examine further diagnostics.
 #+  message=TRUE
 fit_lin_std_t$summary()
-fit_lin_std_t$cmdstan_diagnose()
+fit_lin_std_t$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 
 #' We get similar diagnostics as for the linear Gaussian model with non-standardised data.
 #' 
 #' Compute the probability that the summer temperature is increasing.
 #+ warning=FALSE
-draws_lin_std_t <- as_draws_df(fit_lin_std_t$draws())
+draws_lin_std_t <- fit_lin_std_t$draws(format = "df")
 mean(draws_lin_std_t[,"beta"]>0) # probability that beta > 0
 
 #' We get similar probability as with Gaussian obervation model.
@@ -312,13 +331,12 @@ mean(draws_lin_std_t[,"beta"]>0) # probability that beta > 0
 #' 
 #' Plot data and the model fit
 #+ warning=FALSE
-mu <- draws_lin_std_t %>%
-  as_draws_df() %>%
-  as_tibble() %>%
-  select(starts_with("mu[")) %>%
-  apply(2, quantile, c(0.05, 0.5, 0.95)) %>%
-  t() %>% 
-  data.frame(x = data_lin$x, .)  %>% 
+mu <- draws_lin_std_t |>
+  as_tibble() |>
+  select(starts_with("mu[")) |>
+  apply(2, quantile, c(0.05, 0.5, 0.95)) |>
+  t() |> 
+  data.frame(x = data_lin$x, .)  |> 
   gather(pct, y, -x)
 
 pfit <- ggplot() +
@@ -361,13 +379,12 @@ writeLines(readLines(code_grp_aov))
 
 
 #' Fit the model
-#+  results='hide'
+#+ results='hide'
 mod_grp <- cmdstan_model(stan_file = code_grp_aov)
 fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000)
 
 fit_grp$summary()
-fit_grp$cmdstan_diagnose()
-
+fit_grp$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 #' ## Common variance and hierarchical prior for mean.
 #' 
@@ -378,13 +395,12 @@ writeLines(readLines(code_grp_prior_mean))
 
 
 #' Fit the model
-#+  results='hide'
+#+ results='hide'
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean)
 fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000)
 
 fit_grp$summary()
-fit_grp$cmdstan_diagnose()
-
+fit_grp$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 #' We got a small number of divergences, so we increase
 #' `adapt_delta=0.95`. Note that thisis useful only in case of small
@@ -392,13 +408,13 @@ fit_grp$cmdstan_diagnose()
 #' usually make sense, and in such cases there is need to investigate the
 #' identifiability or parameter transformations.
 
-#+  results='hide'
+#+ results='hide'
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean)
 fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000, adapt_delta=0.95)
 
 
 fit_grp$summary()
-fit_grp$cmdstan_diagnose()
+fit_grp$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 
 #' ## Unequal variance and hierarchical prior for mean and variance
@@ -407,12 +423,12 @@ code_grp_prior_mean_var <- root("demos_rstan", "grp_prior_mean_var.stan")
 writeLines(readLines(code_grp_prior_mean_var))
 
 #' Fit the model
-#+  results='hide'
+#+ results='hide'
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean_var)
 fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000)
 
 fit_grp$summary()
-fit_grp$cmdstan_diagnose()
+fit_grp$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 
 #' We got a small number of divergences, so we increase
@@ -421,21 +437,20 @@ fit_grp$cmdstan_diagnose()
 #' usually make sense, and in such cases there is need to investigate the
 #' identifiability or parameter transformations.
 
-#+  results='hide'
+#+ results='hide'
 mod_grp <- cmdstan_model(stan_file = code_grp_prior_mean_var)
 fit_grp <- mod_grp$sample(data = data_grp, seed = SEED, refresh=1000, adapt_delta=0.95);
 
 
 fit_grp$summary()
-fit_grp$cmdstan_diagnose()
+fit_grp$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 
 #' Plot the results
 #+ warning=FALSE
-temps <- fit_grp$draws() %>%
-  as_draws_df() %>%
-  as_tibble() %>%
-  select(starts_with("mu[")) %>%
+temps <- fit_grp$draws(format = "df") |>
+  as_tibble() |>
+  select(starts_with("mu[")) |>
   setNames(c('June','July','August'))
 mcmc_areas(temps) + xlab('Temperature')
 
