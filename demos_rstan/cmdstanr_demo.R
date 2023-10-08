@@ -253,7 +253,7 @@ mu <- draws_lin |>
   as_tibble() |>
   select(starts_with("mu")) |>
   apply(2, quantile, c(0.05, 0.5, 0.95)) |>
-  t() |> 
+  t() %>%
   data.frame(x = data_lin$x, .)  |> 
   gather(pct, y, -x)
 
@@ -335,7 +335,7 @@ mu <- draws_lin_std_t |>
   as_tibble() |>
   select(starts_with("mu[")) |>
   apply(2, quantile, c(0.05, 0.5, 0.95)) |>
-  t() |> 
+  t() %>%
   data.frame(x = data_lin$x, .)  |> 
   gather(pct, y, -x)
 
