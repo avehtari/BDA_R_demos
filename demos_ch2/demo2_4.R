@@ -12,7 +12,7 @@
 #' 
 #' Calculate the posterior distribution on a discrete grid of points by
 #' multiplying the likelihood and a non-conjugate prior at each point,
-#' and normalizing over the points. Simulate samples from the resulting
+#' and normalizing over the points. Simulate draws from the resulting
 #' non-standard posterior distribution using inverse cdf using the
 #' discrete grid.
 #' 
@@ -32,7 +32,7 @@ a <- 437
 b <- 543
 #' Evaluate densities at evenly spaced points between 0.1 and 1
 df1 <- data.frame(theta = seq(0.1, 1, 0.001))
-df1$con <- dbeta(df1$theta, a, b)
+df1$con <- dbeta(df1$theta, a+1, b+1)
 
 #' Compute the density of non-conjugate prior in discrete points, i.e. in a grid
 #' this non-conjugate prior is the same as in figure 2.4 in the book
@@ -46,11 +46,10 @@ pp[pi[3]:pi[2]] <- seq(1, pm, length.out = length(pi[3]:pi[2]))
 df1$nc_p <- pp / sum(pp)
 
 #' compute the un-normalized non-conjugate posterior in a grid
-po <- dbeta(df1$theta, a, b) * pp
+po <- dbinom(a, a+b, df1$theta) * pp
 
 #' normalize the posterior
 df1$nc_po <- po / sum(po)
-
 
 #' Plot posterior with uniform prior, non-conjugate
 #' prior and the corresponding non-conjugate posterior
@@ -89,7 +88,7 @@ invcdf <- function(r, df) df$theta[sum(df$cs_po < r) + 1]
 s <- sapply(r, invcdf, df1)
 
 #' Create three plots: p1 is the posterior, p2 is the cdf of the posterior
-#' and p3 is the histogram of posterior samples (drawn using inv-cdf)
+#' and p3 is the histogram of posterior draws (drawn using inv-cdf)
 p1 <- ggplot(data = df1) +
   geom_line(aes(theta, nc_po)) +
   coord_cartesian(xlim = c(0.35, 0.6)) +
@@ -103,7 +102,7 @@ p2 <- ggplot(data = df1) +
 p3 <- ggplot() +
   geom_histogram(aes(s), binwidth = 0.003) +
   coord_cartesian(xlim = c(0.35, 0.6)) +
-  labs(title = 'Histogram of posterior samples', x = '', y = '') +
+  labs(title = 'Histogram of posterior draws', x = '', y = '') +
   scale_y_continuous(breaks = NULL)
 # combine the plots
 grid.arrange(p1, p2, p3)
