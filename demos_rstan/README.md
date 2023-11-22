@@ -1,5 +1,7 @@
 # Links to html versions of demos
 
+If running the CMDStanR demos on Aalto Jupyter, please make sure to have specified the location for CMDStanR: set_cmdstan_path('/coursedata/cmdstan').
+
 - [rstan_demo: RStan demo](http://avehtari.github.io/BDA_R_demos/demos_rstan/rstan_demo.html)
 - [cmdstanr_demo: CmdStanR demo](http://avehtari.github.io/BDA_R_demos/demos_rstan/cmdstanr_demo.html)
 - [rstanarm_demo: RStanARM demo](http://avehtari.github.io/BDA_R_demos/demos_rstan/rstanarm_demo.html)

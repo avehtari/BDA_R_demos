@@ -7,7 +7,7 @@ Currently there are demos for BDA3 Chapters 2, 3, 4, 5, 6, 10, 11 and 12.
 Furthermore there are demos for
 [CmdStanR](https://github.com/stan-dev/cmdstanr),
 [RStan](https://github.com/stan-dev/rstan)
-[RStanARM](https://github.com/stan-dev/rstanarm).
+[RStanARM](https://github.com/stan-dev/rstanarm). When running the R-scripts from Aalto Jupyter notebook, please make sure to set the parent directory to "~/notebooks/BDA_R_demos".
 
 The initial demos were originally written for Matlab by [Aki
 Vehtari](http://users.aalto.fi/~ave/) and translated to R by [Markus

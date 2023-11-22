@@ -20,7 +20,7 @@ library(gridExtra)
 library(tidyr)
 library(latex2exp)
 library(rprojroot)
-root<-has_file(".BDA_R_demos_root")$make_fix_file()
+root<-has_file(".BDA_R_demos_root")$make_fix_file() # Make sure to set parent directory to ~/notebooks/BDA_R_demos
 
 #' Data 
 y <- c(28,8,-3,7,-1,1,18,12)
@@ -81,7 +81,7 @@ plot_margpost <-
   geom_line(aes(x = x, y = p), color='forestgreen') +
   labs(x = expression(tau), y = TeX('$p(\\tau | y)$'), title = title1) +
     scale_y_continuous(breaks = 0) +
-    xlim(c(0, 35))
+    xlim(c(0, 40))
 
 
 df_condmeans <- as.data.frame(t(tm)) %>%
@@ -93,7 +93,7 @@ yl <- c(-5, 40)
 title2 <- TeX('Conditional means E\\[$\\theta_j | \\tau , y $\\]')
 plot_condmeans <- ggplot(data = df_condmeans) +
   geom_line(aes(x = x, y = p, color = (school=='A'), group = school)) +
-  coord_cartesian(ylim = yl, xlim = c(0, 35)) +
+  coord_cartesian(ylim = yl, xlim = c(0, 40)) +
   labs(x = expression(tau), y = TeX('E\\[$\\theta_j | \\tau , y $\\]'), title = title2, color = '') +
   scale_color_manual(values = c('blue','red'), labels = labs1) +
   theme(legend.background = element_blank(), legend.position = c(0.8,0.9))
@@ -107,7 +107,7 @@ yl <- c(0, 25)
 title3 <- TeX('Conditional standard deviations sd\\[$\\theta_j | \\tau , y $\\]')
 plot_condsds <- ggplot(data = df_condsds) +
   geom_line(aes(x = x, y = p, color = (school=='A'), group = school)) +
-  coord_cartesian(ylim = yl, xlim = c(0,35)) +
+  coord_cartesian(ylim = yl, xlim = c(0,40)) +
   labs(x = expression(tau), y = TeX('sd\\[$\\theta_j | \\tau , y $\\]'), title = title3, color = '') +
   scale_color_manual(values = c('blue','red'), labels = labs1) +
   theme(legend.background = element_blank(), legend.position = c(0.8,0.9))

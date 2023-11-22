@@ -69,7 +69,7 @@ tt[1,] <- c(t1, t2)    # Save starting point
 # For demonstration load pre-computed values
 # Replace this with your algorithm!
 # tt is a M x 2 array, with M samples of both theta_1 and theta_2
-load(root("demos_ch11","demo12_1b.RData"))
+load(root("demos_ch12","demo12_1b.RData"))
 # Here we have intentionally used a very small step size for smooth
 # simulations, but for more efficient simulations larger step size
 # could be used
