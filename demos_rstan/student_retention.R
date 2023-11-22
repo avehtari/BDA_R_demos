@@ -7,7 +7,7 @@
 #'     fig_caption: yes
 #'     toc: TRUE
 #'     toc_depth: 2
-#'     number_sections: TRUE
+#'     number_sections: FALSE
 #'     toc_float:
 #'       smooth_scroll: FALSE
 #'     theme: readable
@@ -17,7 +17,7 @@
 #+ setup, include=FALSE
 knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, out.width='95%')
 
-#' ## Introduction
+#' # Introduction
 #'
 #' This includes the code used to create the models and plots for
 #' student retention data used as an example in several BDA course
@@ -39,7 +39,7 @@ library(khroma)
 library(RColorBrewer)
 theme_set(bayesplot::theme_default(base_family = "sans", base_size=16))
 
-#' ## Data
+#' # Data
 #'
 #' Since 2018, there have been 9 assignments in BDA course.  Data are
 #' the number of students who submitted each assignment. As the course
@@ -142,23 +142,28 @@ ggplot(tb, aes(x=assignment, y=propstudents*100, group=year, color=as.factor(yea
   scale_color_bright()+
   annotate(geom="text", x=rep(9.9, 5), y=c(69, 61, 66, 63.5, 72), label=c(2018:2022), size=5, color = color("bright")(5))
 
-#' ## Models
+#' # Models
 #' 
 #' Latent hierarchical linear model + binomial observation model
 # save_pars is used for later moment matching
+#+ results='hide'
 fit4 <- brm(nstudents | trials(nstudents1) ~ assignment + (assignment | year), family=binomial(), data=filter(tb, assignment>1), control = list(adapt_delta = 0.95), save_pars=save_pars(all=TRUE), seed=7253)
 #' First with plain PSIS-LOO, and we see some warnings
 fit4 <- add_criterion(fit4, 'loo', save_psis=TRUE, moment_match=FALSE, overwrite=TRUE)
+#+
 loo(fit4)
-#' PSIS-LOO + moment matching
+#' PSIS-LOO + moment matching. There is still one khat>0.7, which we
+#' could fix with reloo=TRUE, but skip that now.
 # overwrite is needed to force LOO recomputation
 fit4 <- add_criterion(fit4, 'loo', save_psis=TRUE, moment_match=TRUE, overwrite=TRUE)
 loo(fit4)
 
 #' Latent spline + hierarchical linear model with binomial observation model
+#+ results='hide'
 fit6 <- brm(nstudents | trials(nstudents1) ~ s(assignment, k=4) + (assignment | year), family=binomial(), data=filter(tb, assignment>1), control = list(adapt_delta = 0.95), save_pars=save_pars(all=TRUE), seed=7253)
 #' First with plain PSIS-LOO, and we see some warnings
 fit6 <- add_criterion(fit6, 'loo', save_psis=TRUE, moment_match=FALSE, overwrite=TRUE)
+#+
 loo(fit6)
 #' PSIS-LOO + moment matching
 # overwrite is needed to force LOO recomputation
@@ -168,7 +173,7 @@ loo(fit6)
 #' Compare models
 loo_compare(loo(fit4), loo(fit6))
 
-#' ## Model predictions
+#' # Model predictions
 #' 
 #' Plot intervals for assignment 9 proportion estimates
 assign9linpred<-rvar(posterior_linpred(fit6, newdata=filter(tb,assignment==9), trandform=TRUE))
@@ -218,6 +223,7 @@ tb2 |>
   scale_x_continuous(breaks=1:9, lim=c(1,10.2))
 
 #' Update the posterior with 2023 data
+#+ results='hide'
 fit6b <- update(fit6, newdata=filter(tb3, assignment>1))
 
 #' Plot model prediction of proportions for 2018-2022 after observing
@@ -240,7 +246,7 @@ posterior_linpred(fit6, allow_new_levels=TRUE,
                   transform = TRUE) |>
   quantile(c(0.05,0.95))
 
-#' ## PPC
+#' # PPC
 #'
 #' PPC density overlays
 pp_check(fit4, ndraws=20)+
@@ -264,7 +270,7 @@ pp_check(fit6, type = "ribbon_grouped", group="year",
 pp_check(fit4, type = "intervals")
 pp_check(fit6, type = "intervals")
 
-#' PPC LOO intervals
+#' PPC LOO intervals. We get LOO warnings, but in this case they don't matter.
 pp_check(fit4, type = "loo_intervals")
 pp_check(fit6, type = "loo_intervals")
 
