@@ -133,7 +133,7 @@ mcmc_hist(draws, pars='theta') +
 prior_mean <- 0
 prior_sd <- 1
 prior_draws <- data.frame(theta = plogis(rnorm(20000, prior_mean, prior_sd)))
-mcmc_hist(prior_draw)
+mcmc_hist(prior_draws)
 
 #' Binomial model with the same data
 data_bin <- data.frame(N = c(10), y = c(7))
@@ -522,11 +522,13 @@ posterior_predict(fit_hier, newdata=data.frame(machine=1:7, quality=rep(NA,7)),
   mcmc_areas()
 
 #' 
-#' # Hierarchical model
+#' # Hierarchical binomial model
 #'
-#' 
+#' [Sorafenib Toxicity Dataset in `metadat` R package](https://wviechtb.github.io/metadat/reference/dat.ursino2021.html)
+#' includes results frm 13 studies investigating the occurrence of
+#' dose limiting toxicities (DLTs) at different doses of Sorafenib.
 #'
-
+#' Load data
 load(url('https://github.com/wviechtb/metadat/raw/master/data/dat.ursino2021.rda'))
 head(dat.ursino2021)
 
@@ -561,7 +563,7 @@ mcmc_areas(as_draws_df(fit_hier), regex_pars='r_study\\[.*Intercept')
 #' There are no differences in slopes.
 mcmc_areas(as_draws_df(fit_hier), regex_pars='r_study\\[.*dose')
 #'
-#' The coefficient for the dose is clearly way from 0
+#' The coefficient for the dose is clearly larger than 0
 mcmc_areas(as_draws_df(fit_hier), regex_pars='b_dose') +
   geom_vline(xintercept=0, linetype='dashed') +
   xlim(c(0,0.01))
