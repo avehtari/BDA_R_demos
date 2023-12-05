@@ -83,10 +83,9 @@ mcmc_hist(draws, pars='theta') +
 #' probability. Visualize the prior by drawing samples from it
 prior_mean <- 0
 prior_sd <- 1
-prior_intercept <- normal(location = prior_mean, scale = prior_sd)
-prior_samples <- data.frame(
+prior_draws <- data.frame(
                  theta = plogis(rnorm(20000, prior_mean, prior_sd)))
-mcmc_hist(prior_samples) +
+mcmc_hist(prior_draws) +
   xlim(c(0,1))
 
 #+ results='hide'
@@ -133,9 +132,8 @@ mcmc_hist(draws, pars='theta') +
 #' Visualize the prior by drawing samples from it
 prior_mean <- 0
 prior_sd <- 1
-prior_samples <- data.frame(
-                 theta = plogis(rnorm(20000, prior_mean, prior_sd)))
-mcmc_hist(prior_samples)
+prior_draws <- data.frame(theta = plogis(rnorm(20000, prior_mean, prior_sd)))
+mcmc_hist(prior_draw)
 
 #' Binomial model with the same data
 data_bin <- data.frame(N = c(10), y = c(7))
