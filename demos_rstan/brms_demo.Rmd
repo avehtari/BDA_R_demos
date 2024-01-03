@@ -1074,7 +1074,7 @@ powerscale_sensitivity(fit_hier, prediction = \(x, ...) machine_mean, num_args=l
 # Hierarchical binomial model
 
 [Sorafenib Toxicity Dataset in `metadat` R package](https://wviechtb.github.io/metadat/reference/dat.ursino2021.html)
-includes results frm 13 studies investigating the occurrence of
+includes results from 13 studies investigating the occurrence of
 dose limiting toxicities (DLTs) at different doses of Sorafenib.
 
 Load data
@@ -1252,6 +1252,169 @@ Posterior predictive checking showing the observed and predicted number of event
 ```{r}
 pp_check(fit_hier, type = "ribbon_grouped", group="study")
 ```
+
+
+# Hierarchical binomial model
+
+[Studies on Pharmacologic Treatments for Chronic Obstructive
+Pulmonary
+Disease](https://wviechtb.github.io/metadat/reference/dat.baker2009.html)
+includes results from 39 trials examining pharmacologic treatments
+for chronic obstructive pulmonary disease (COPD).
+
+Load data
+
+```{r}
+load(url('https://github.com/wviechtb/metadat/raw/master/data/dat.baker2009.rda'))
+head(dat.baker2009)
+# force character strings to factors for easier ploting
+dat.baker2009 <- dat.baker2009 |>
+  mutate(study = factor(study),
+         treatment = factor(treatment),
+         id = factor(id))
+```
+
+The first model is pooling the information over studies, but estimating separate
+theta for each treatment (including placebo).
+
+```{r results='hide'}
+fit_pooled <- brm(exac | trials(total) ~ 0 + treatment,
+                  prior = prior(student_t(7, 0, 1.5), class='b'),
+                  family=binomial(), data=dat.baker2009)
+```
+
+Check the summary of the posterior and convergence
+
+```{r}
+fit_pooled
+```
+
+Treatment effect posteriors
+
+```{r}
+fit_pooled |>
+  as_draws_df() |>
+  subset_draws(variable='b_', regex=TRUE) |>
+  set_variables(paste0('b_treatment[', levels(factor(dat.baker2009$treatment)), ']')) |>
+  as_draws_rvars() |>
+  spread_rvars(b_treatment[treatment]) |>
+  mutate(theta_treatment = rfun(plogis)(b_treatment)) |>
+  ggplot(aes(xdist=theta_treatment, y=treatment)) +
+  stat_halfeye() +
+  labs(x='theta', y='Treatment', title='Pooled over studies, separate over treatments')  
+```
+
+Treatment effect odds-ratio posteriors
+
+```{r}
+theta <- fit_pooled |>
+  as_draws_df() |>
+  subset_draws(variable='b_', regex=TRUE) |>
+  set_variables(paste0('b_treatment[', levels(factor(dat.baker2009$treatment)), ']')) |>
+  as_draws_rvars() |>
+  spread_rvars(b_treatment[treatment]) |>
+  mutate(theta_treatment = rfun(plogis)(b_treatment))
+theta_placebo <- filter(theta,treatment=='Placebo')$theta_treatment[[1]]
+theta |>
+  mutate(treatment_oddsratio = (theta_treatment/(1-theta_treatment))/(theta_placebo/(1-theta_placebo))) |>
+  filter(treatment != "Placebo") |>
+  ggplot(aes(xdist=treatment_oddsratio, y=treatment)) +
+  stat_halfeye() +
+  labs(x='Odds-ratio', y='Treatment', title='Pooled over studies, separate over treatments') +
+  geom_vline(xintercept=1, linetype='dashed')
+```
+
+We see a big variation between treatments and two treatments seem
+to be harmful, which is suspicious. Looking at the data we see that
+not all studies included all treatments, and thus if some of the
+studies had more events, then the above estimates can be wrong.
+
+The second model uses a hiearchical model both for treatment
+effects and study effects.
+
+```{r results='hide'}
+fit_hier <- brm(exac | trials(total) ~ (1 | treatment) + (1 | study),
+                family=binomial(), data=dat.baker2009)
+```
+
+Check the summary of the posterior and convergence
+
+```{r}
+fit_hier
+```
+
+LOO-CV comparison
+
+```{r}
+loo_compare(loo(fit_pooled), loo(fit_hier))
+```
+
+We get warnings about Pareto k's > 0.7 in PSIS-LOO, but as the
+difference between the models is huge, we can be confident that the
+order would the same if we fixed the computation, and the
+hierarchical model is much better and there is high variation
+between studies. Clearly there are many highly influential
+observations.
+
+Treatment effect posteriors have now much less variation.
+
+```{r}
+fit_hier |>
+  spread_rvars(b_Intercept, r_treatment[treatment,]) |>
+  mutate(theta_treatment = rfun(plogis)(b_Intercept + r_treatment)) |>
+  ggplot(aes(xdist=theta_treatment, y=treatment)) +
+  stat_halfeye() +
+  labs(x='theta', y='Treatment', title='Hierarchical over studies, hierarchical over treatments')  
+```
+
+Study effect posteriors show the expected high variation
+
+```{r}
+fit_hier |>
+  spread_rvars(b_Intercept, r_study[study,]) |>
+  mutate(theta_study = rfun(plogis)(b_Intercept + r_study)) |>
+  ggplot(aes(xdist=theta_study, y=study)) +
+  stat_halfeye() +
+  labs(x='theta', y='Study', title='Hierarchical over studies, hierarchical over treatments')  
+```
+
+Treatment effect odds-ratio posteriors
+
+```{r}
+theta <- fit_hier |>
+  spread_rvars(b_Intercept, r_treatment[treatment,]) |>
+  mutate(theta_treatment = rfun(plogis)(b_Intercept + r_treatment))
+theta_placebo <- filter(theta,treatment=='Placebo')$theta_treatment[[1]]
+theta |>
+  mutate(treatment_oddsratio = (theta_treatment/(1-theta_treatment))/(theta_placebo/(1-theta_placebo))) |>
+  filter(treatment != "Placebo") |>
+  ggplot(aes(xdist=treatment_oddsratio, y=treatment)) +
+  stat_halfeye() +
+  labs(x='Odds-ratio', y='Treatment', title='Hierarchical over studies, hierarchical over treatments') +
+  geom_vline(xintercept=1, linetype='dashed')
+```
+
+Treatment effect odds-ratios look now more reasonable. As now all
+treatments were compared to placebo, there is less overlap in the
+distributions as when looking at the thetas, as all thetas include
+similar uncertainty about the overall theta due to high variation
+between studies.
+The third model includes interaction so that the treatment can depend on study.
+
+```{r results='hide'}
+fit_hier2 <- brm(exac | trials(total) ~ (1 | treatment) + (treatment | study),
+                family=binomial(), data=dat.baker2009, control=list(adapt_delta=0.9))
+```
+
+LOO comparison shows
+
+```{r}
+loo_compare(loo(fit_hier), loo(fit_hier2))
+```
+
+We get warnings about Pareto k's > 0.7 in PSIS-LOO, but as the
+models are similar, and the difference is small, we can be
+relatively confident that the more complex model is not better.
 
 <br />
 
