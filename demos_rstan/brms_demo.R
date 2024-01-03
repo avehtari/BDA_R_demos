@@ -24,6 +24,8 @@ knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, com
 library(tidyr)
 library(dplyr)
 library(tibble)
+library(pillar)
+library(stringr)
 library(brms)
 options(brms.backend = "cmdstanr", mc.cores = 2)
 library(posterior)
@@ -108,7 +110,7 @@ mcmc_hist(draws, pars='theta') +
 #' likelihood. Focus on theta which is the quantity of interest.
 theta <- draws |>
   subset_draws(variable='theta')
-powerscale_sensitivity(fit_bin, prediction = \(x, ...) theta, num_args=list(digits=2)
+powerscale_sensitivity(fit_bern, prediction = \(x, ...) theta, num_args=list(digits=2)
                        )$sensitivity |>
                          filter(variable=='theta') |>
                          mutate(across(where(is.double),  ~num(.x, digits=2)))
@@ -700,7 +702,7 @@ temp_diff |>
 #' Make prior sensitivity analysis by powerscaling both prior and
 #' likelihood with focus on average summer temperature increase from
 #' 1952 to 2022.
-powerscale_sensitivity(fit_lin_hs, prediction = \(x, ...) temp_diff, num_args=list(digits=2)
+powerscale_sensitivity(fit_spline_h, prediction = \(x, ...) temp_diff, num_args=list(digits=2)
                        )$sensitivity |>
                          filter(variable=='temp_diff') |>
                          mutate(across(where(is.double),  ~num(.x, digits=2)))
