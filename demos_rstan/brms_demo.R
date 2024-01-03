@@ -535,13 +535,18 @@ data_lin |>
   theme(legend.position="none")+
   scale_x_continuous(breaks=seq(1950,2030,by=10))
 
+#' LOO-PIT check is good for checking whether the normal distribution
+#' is well describing the variation. LOO-PIT ploty looks good.
+pp_check(fit_lin, type='loo_pit_qq', ndraws=4000)
+
 #' # Linear Student's $t$ model
 #' 
 #' The temperatures used in the above analyses are averages over three
 #' months, which makes it more likely that they are normally
 #' distributed, but there can be extreme events in the feather and we
 #' can check whether more robust Student's $t$ observation model would
-#' give different results.
+#' give different results (although LOO-PIT check did already indicate
+#' that the normal would be good).
 #' 
 #+  results='hide'
 fit_lin_t <- brm(temp ~ year, data = data_lin, family = student(),
@@ -1000,12 +1005,24 @@ theta |>
   labs(x='Odds-ratio', y='Treatment', title='Pooled over studies, separate over treatments') +
   geom_vline(xintercept=1, linetype='dashed')
 
-
 #' We see a big variation between treatments and two treatments seem
 #' to be harmful, which is suspicious. Looking at the data we see that
 #' not all studies included all treatments, and thus if some of the
 #' studies had more events, then the above estimates can be wrong.
 #' 
+
+#' Posterior predictive checking with kernel density estimates for the
+#' data and 10 posterior predictive replicates shows clear discrepancy.
+pp_check(fit_pooled, type='dens_overlay')
+
+#' Posterior predictive checking with PIT values and ECDF difference
+#' plot with envelope shows clear discrepancy.
+pp_check(fit_pooled, type='pit_ecdf', ndraws=4000)
+
+#' Posterior predictive checking with LOO-PIT values show clear discrepancy.
+pp_check(fit_pooled, type='loo_pit_qq', ndraws=4000) +
+  geom_abline() +
+  ylim(c(0,1))
 
 #' The second model uses a hiearchical model both for treatment
 #' effects and study effects.
@@ -1026,6 +1043,23 @@ loo_compare(loo(fit_pooled), loo(fit_hier))
 #' between studies. Clearly there are many highly influential
 #' observations.
 #'
+#' Posterior predictive checking with kernel density estimates for the
+#' data and 10 posterior predictive replicates looks good (although
+#' with this many parameters, this check is likely to be optimistic).
+pp_check(fit_hier, type='dens_overlay')
+
+#' Posterior predictive checking with PIT values and ECDF difference
+#' plot with envelope looks good (although with this many parameters,
+#' this check is likely to be optimistic).
+pp_check(fit_hier, type='pit_ecdf', ndraws=4000)
+
+#' Posterior predictive checking with LOO-PIT values look good
+#' (alhough as there are Pareto-khat warnings, it is possible that
+#' this diagnostic is optimistic).
+pp_check(fit_hier, type='loo_pit_qq', ndraws=4000) +
+  geom_abline() +
+  ylim(c(0,1))
+
 #' Treatment effect posteriors have now much less variation.
 fit_hier |>
   spread_rvars(b_Intercept, r_treatment[treatment,]) |>
@@ -1034,7 +1068,7 @@ fit_hier |>
   stat_halfeye() +
   labs(x='theta', y='Treatment', title='Hierarchical over studies, hierarchical over treatments')  
 
-#' Study effect posteriors show the expected high variation
+#' Study effect posteriors show the expected high variation.
 fit_hier |>
   spread_rvars(b_Intercept, r_study[study,]) |>
   mutate(theta_study = rfun(plogis)(b_Intercept + r_study)) |>
@@ -1060,6 +1094,8 @@ theta |>
 #' distributions as when looking at the thetas, as all thetas include
 #' similar uncertainty about the overall theta due to high variation
 #' between studies.
+
+
 
 #' The third model includes interaction so that the treatment can depend on study.
 #+ results='hide'
