@@ -1339,7 +1339,7 @@ Miller study has slightly higher intercept (leading to higher theta).
 There are no clear differences in slopes.
 
 ```{r}
-mcmc_areas(as_draws_df(fit_hier), regex_pars='r_study\\[.*doseg') +
+mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*doseg') +
   labs(title='Hierarchical model 2')
 ```
 

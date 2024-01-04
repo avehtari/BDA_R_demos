@@ -1013,7 +1013,7 @@ plot_posterior_hier2 <- mcmc_areas(as_draws_df(fit_hier2), regex_pars='b_doseg')
   
 #'
 #' There are no clear differences in slopes.
-mcmc_areas(as_draws_df(fit_hier), regex_pars='r_study\\[.*doseg') +
+mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*doseg') +
   labs(title='Hierarchical model 2')
 #'
 
