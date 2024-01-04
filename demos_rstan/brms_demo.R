@@ -82,7 +82,7 @@ fit_bern <- brm(y ~ 1, family = bernoulli(), data = data_bern,
                 prior = prior(student_t(7, 0, 1.5), class='Intercept'),
                 seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and convergence
+#' Check the summary of the posterior and inference diagnostics.
 fit_bern
 
 #' Extract the posterior draws
@@ -136,7 +136,7 @@ fit_bin <- brm(y | trials(N) ~ 1, family = binomial(), data = data_bin,
                prior = prior(student_t(7, 0,1.5), class='Intercept'),
                seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and convergence
+#' Check the summary of the posterior and inference diagnostics.
 fit_bin
 
 #' The diagnostic indicates prior-data conflict, that is, both prior
@@ -172,7 +172,7 @@ mcmc_hist(draws, pars='theta') +
 data_bin <- data.frame(N = c(5), y = c(4))
 fit_bin <- update(fit_bin, newdata = data_bin)
 
-#' Check the summary of the posterior and convergence
+#' Check the summary of the posterior and inference diagnostics.
 fit_bin
 
 #' Extract the posterior draws
@@ -232,12 +232,12 @@ fit_bin2 <- brm(y | trials(N) ~ 0 + grp2, family = binomial(), data = data_bin2,
                 prior = prior(student_t(7, 0,1.5), class='b'),
                 seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and convergence. brms is using
+#' Check the summary of the posterior and inference diagnostics. brms is using
 #' the first factor level `control` as the baseline and thus reports
 #' the coefficient (population-level effect) for `treatment` (shown s
 #' `grp2treatment`)
 
-#' Check the summary of the posterior and convergence. With `~ 0 +
+#' Check the summary of the posterior and inference diagnostics. With `~ 0 +
 #' grp2` there is no `Intercept` and \beta_\mathrm{control} and
 #' \beta_\mathrm{treatment} are presented as `grp2control` and
 #' `grp2treatment`.
@@ -340,7 +340,7 @@ fit_bin2 <- brm(y | trials(N) ~ 1 + (1 | grp2), family = binomial(), data = data
                 seed = SEED, refresh = 0, control=list(adapt_delta=0.99))
 
 
-#' Check the summary of the posterior and convergence. The summary
+#' Check the summary of the posterior and inference diagnostics. The summary
 #' reports that there are Group-Level Effects: `~grp2` with 2 levels
 #' (control and treatment), with `sd(Intercept)` denoting
 #' $\sigma_\mathrm{grp}$. In addition, the summary lists
@@ -399,7 +399,7 @@ data_lin |>
 fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
                seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and convergence.
+#' Check the summary of the posterior and inference diagnostics.
 fit_lin
 
 #' Convergence diagnostics look good. We see that posterior mean of
@@ -449,7 +449,7 @@ fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
                prior = prior(student_t(3, 0, 0.03), class='b'),
                seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and convergence
+#' Check the summary of the posterior and inference diagnostics.
 fit_lin
 
 #' Make prior sensitivity analysis by powerscaling both prior and likelihood.
@@ -535,8 +535,14 @@ data_lin |>
   theme(legend.position="none")+
   scale_x_continuous(breaks=seq(1950,2030,by=10))
 
+#' Posterior predictive check with density overlays examines the whole
+#' temperature distribution
+pp_check(fit_lin, type='dens_overlay', ndraws=20)
+
 #' LOO-PIT check is good for checking whether the normal distribution
-#' is well describing the variation. LOO-PIT ploty looks good.
+#' is well describing the variation as it is examines the calibration
+#' of LOO predictive distributions conditonally on each year. LOO-PIT
+#' ploty looks good.
 pp_check(fit_lin, type='loo_pit_qq', ndraws=4000)
 
 #' # Linear Student's $t$ model
@@ -553,7 +559,7 @@ fit_lin_t <- brm(temp ~ year, data = data_lin, family = student(),
                  prior = prior(student_t(3, 0, 0.03), class='b'),
                  seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and convergence. The b_year
+#' Check the summary of the posterior and inference diagnostics. The b_year
 #' posterior looks similar as before and the posterior for degrees of
 #' freedom `nu` has most of the posterior mass for quite large values
 #' indicating there is no strong support for thick tailed variation in
@@ -582,7 +588,7 @@ fit_lin_h <- brm(bf(temp ~ year,
                  prior = prior(student_t(3, 0, 0.03), class='b'),
                  seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and convergence. The b_year
+#' Check the summary of the posterior and inference diagnostics. The b_year
 #' posterior looks similar as before. The posterior for sigma_year
 #' looks like having mosst of the ma for negative values, indicating
 #' decrease in temperature variation around the mean.
@@ -642,7 +648,7 @@ fit_spline_h <- brm(bf(temp ~ s(year),
 #' small data, this is not an issue.
 fit_spline_h <- update(fit_spline_h, control = list(adapt_delta=0.999))
 
-#' Check the summary of the posterior and convergence. We're not
+#' Check the summary of the posterior and inference diagnostics. We're not
 #' anymore able to make interpretation of the temperature increase
 #' based on this summary. For splines, we see prior scales `sds` for
 #' the spline coefficients.
@@ -743,7 +749,7 @@ factory
 #+ results='hide'
 fit_pooled <- brm(quality ~ 1, data = factory, refresh=0)
 
-#' Check the summary of the posterior and convergence.
+#' Check the summary of the posterior and inference diagnostics.
 fit_pooled
 
 #' ## Separate model
@@ -755,7 +761,7 @@ fit_separate <- brm(bf(quality ~ 0 + machine,
                        sigma ~ 0 + machine),
                     data = factory, refresh=0)
 
-#' Check the summary of the posterior and convergence.
+#' Check the summary of the posterior and inference diagnostics.
 fit_separate
 
 #' # Common variance hierarchical model (ANOVA)
@@ -763,7 +769,7 @@ fit_separate
 fit_hier <- brm(quality ~ 1 + (1 | machine),
                 data = factory, refresh = 0)
 
-#' Check the summary of the posterior and convergence.
+#' Check the summary of the posterior and inference diagnostics.
 fit_hier
 
 #' LOO comparison shows the hierarchical model is the best. The
@@ -829,6 +835,30 @@ powerscale_sensitivity(fit_hier, prediction = \(x, ...) machine_mean, num_args=l
 load(url('https://github.com/wviechtb/metadat/raw/master/data/dat.ursino2021.rda'))
 head(dat.ursino2021)
 
+#' Number of patients per study
+dat.ursino2021 |>
+  group_by(study) |>
+  summarise(N = sum(total)) |>
+  ggplot(aes(x=N, y=study)) +
+  geom_col(fill=4) +
+  labs(x='Number of patients per study', y='Study')
+
+#' Distribution of doses
+dat.ursino2021 |>
+  ggplot(aes(x=dose)) +
+  geom_histogram(breaks=seq(50,1050,by=100), fill=4, colour=1) +
+  labs(x='Dose (mg)', y='Count') +
+  scale_x_continuous(breaks=seq(100,1000,by=100))
+
+#' Each study is using $2--6$ different dose levels. Three studies
+#' that include only two dose levels are likelly to provide weak
+#' information on slope.
+crosstab <- with(dat.ursino2021,table(dose,study))
+data.frame(count=colSums(crosstab), study=colnames(crosstab)) |>
+  ggplot(aes(x=count, y=study)) +
+  geom_col(fill=4) +
+  labs(x='Number of dose levels per study', y='Study')
+
 #' Pooled model assumes all studies have the same dose effect
 #' (reminder: `~ dose` is equivalent to `~ 1 + dose`)
 #+ results='hide'
@@ -837,7 +867,7 @@ fit_pooled <- brm(events | trials(total) ~ dose,
                             prior(normal(0, 1), class='b')),
                   family=binomial(), data=dat.ursino2021)
 
-#' Check the summary of the posterior and convergence
+#' Check the summary of the posterior and inference diagnostics.
 fit_pooled
 
 #' Dose coefficient seems to be very small. Looking at the posterior,
@@ -861,82 +891,171 @@ fit_pooled <- brm(events | trials(total) ~ doseg,
                             prior(normal(0, 1), class='b')),
                   family=binomial(), data=dat.ursino2021)
 
-#' Check the summary of the posterior and convergence.
+#' Check the summary of the posterior and inference diagnostics.
 fit_pooled
 
 #' Now it is easier to interpret the presented values. 
 
 #' Separate model assumes all studies have different dose effect.
 #' It would be a bit complicated to set a different prior on study specific
-#' intercepts and other coefficients, so we use the ame prior for all.
+#' intercepts and other coefficients, so we use the same prior for all.
 #+ results='hide'
 fit_separate <- brm(events | trials(total) ~ 0 + study + doseg:study,
                     prior=prior(student_t(7, 0, 1.5), class='b'),
                     family=binomial(), data=dat.ursino2021)
 
-#' Check the summary of the posterior and convergence.
+#' Check the summary of the posterior and inference diagnostics.
 fit_separate
 
-#' Hierarchical model assumes common mean effect and variation around with normal population prior
-#' (reminder: `~ doseg + (doseg | study)` is equivalent to `~ 1 + doseg + (1 + doseg | study)`)
+#' We build two different hierarchical models. The first one has
+#' hierarchical model for the intercept, that is, each study has a
+#' parameter telling how much that study differs from the common
+#' population intercept.
 #+ results='hide'
-fit_hier <- brm(events | trials(total) ~ doseg + (doseg | study),
+fit_hier1 <- brm(events | trials(total) ~ doseg + (1 | study),
                     prior=c(prior(student_t(7, 0, 1.5), class='Intercept'),
                             prior(normal(0, 1), class='b')),
                 family=binomial(), data=dat.ursino2021)
 
-#' We seem some divergences and repeat with higher adapt_delta
+#' The second hierarchical model assumes that also the slope can vary
+#' between the studies.
 #+ results='hide'
-fit_hier <- update(fit_hier, control=list(adapt_delta=0.99))
+fit_hier2 <- brm(events | trials(total) ~ doseg + (doseg | study),
+                    prior=c(prior(student_t(7, 0, 1.5), class='Intercept'),
+                            prior(normal(0, 1), class='b')),
+                family=binomial(), data=dat.ursino2021)
+
+#' We seem some divergences due to highly varying posterior
+#' curvature. We repeat the sampling with higher adapt_delta, which
+#' adjust the step size to be smaller. Higher adapt_delta makes the
+#' computation slower, but that is not an issue in this case. If you
+#' get divergences with `adapt_delta=0.99`, it is likely that even
+#' larger values don't help, and you need to consider different
+#' parameterisation, different model, or more informative priors.
+#+ results='hide'
+fit_hier2 <- update(fit_hier2, control=list(adapt_delta=0.99))
 
 #' LOO-CV comparison
-loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier))
+loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier1), loo(fit_hier2))
 
-#' We get warnings about Pareto k's > 0.7 in PSIS-LOO for separate
-#' model, but as in that case the LOO-CV estimate is usually
+#' We get warnings about several Pareto k's > 0.7 in PSIS-LOO for
+#' separate model, but as in that case the LOO-CV estimate is usually
 #' overoptimistic and the separate model is the worst, there is no
-#' need to use more accurate computation.
+#' need to use more accurate computation for the separate model.
 #'
-#' Hierarchical model has better elpd than the pooled, but difference
-#' is negligible. However, when we look at the study specific
-#' parameters, we see that the Miller study has higher intercept (more
-#' events).
-mcmc_areas(as_draws_df(fit_hier), regex_pars='r_study\\[.*Intercept')
-#'
-#' There are no differences in slopes.
-mcmc_areas(as_draws_df(fit_hier), regex_pars='r_study\\[.*doseg')
-#'
-#' The population level coefficient for the dose is clearly larger than 0
-mcmc_areas(as_draws_df(fit_hier), regex_pars='b_doseg') +
-  geom_vline(xintercept=0, linetype='dashed') +
-  xlim(c(0,1))
+#' We get warnings about a few Pareto k's > 0.7 in PSIS-LOO for both
+#' hierarchical models. We can improve the accuracy be running MCMC
+#' for these LOO folds. We use `add_criterion()` function to store the
+#' LOO computation results as they take a bit longer now. We get some
+#' divergences in case of the second hierarchical model, as leaving
+#' out an observation for a study that has only two dose levels is
+#' making the posterior having a difficult shape.
+fit_hier1 <- add_criterion(fit_hier1, criterion='loo', reloo=TRUE)
+fit_hier2 <- add_criterion(fit_hier2, criterion='loo', reloo=TRUE)
 
-#' Make prior sensitivity analysis by powerscaling both prior and likelihood.
-powerscale_sensitivity(fit_hier, variable='b_doseg'
+#' We repeat the LOO-CV comparison (without separate model). `loo()`
+#' function is useing the reults added to the fit objects.
+loo_compare(loo(fit_pooled), loo(fit_hier1), loo(fit_hier2))
+
+#' The results did not change much. The first hierarchical model is
+#' slightly better than other models, but for predictive purposes
+#' there is not much difference (there is high aleatoric uncertainty
+#' in the predictions). Adding hiearchical model for the slope,
+#' decrased the predictive performance and thus it is likely that
+#' there is not enough information about the variation in slopes
+#' between studies.
+#' 
+
+#' Posterior predictive checking showing the observed and predicted
+#' number of events. Rootgram uses square root of counts on y-axis for
+#' better scaling. Rootogram is useful for count data when the range
+#' of counts is small or moderate.
+pp_check(fit_pooled, type = "rootogram") +
+  labs(title='Pooled model')
+pp_check(fit_hier1, type = "rootogram") +
+  labs(title='Hierarchical model')
+pp_check(fit_hier2, type = "rootogram") +
+  labs(title='Hierarchical model')
+
+#' We see that the hierarchical models have higher probability for
+#' future counts that are bigger than maximum observed count and
+#' longer predictive distribution tail. This is natural as uncertainty
+#' in the variation between tudies increases predictive uncertainty,
+#' too, especially as the number of studies is relatively small.
+#' 
+
+#' The population level coefficient posterior given pooled model
+plot_posterior_pooled <- mcmc_areas(as_draws_df(fit_pooled), regex_pars='b_doseg') +
+  geom_vline(xintercept=0, linetype='dashed') +
+  labs(title='Pooled model')
+#' The population level coefficient posterior given hierarchical model 1
+plot_posterior_hier1 <- mcmc_areas(as_draws_df(fit_hier1), regex_pars='b_doseg') +
+  geom_vline(xintercept=0, linetype='dashed') +
+  labs(title='Hierarchical model 1')
+#' The population level coefficient posterior given hierarchical model 3
+plot_posterior_hier2 <- mcmc_areas(as_draws_df(fit_hier2), regex_pars='b_doseg') +
+  geom_vline(xintercept=0, linetype='dashed') +
+  labs(title='Hierarchical model 2')
+
+(plot_posterior_pooled / plot_posterior_hier1 / plot_posterior_hier2) * xlim(c(0,0.85))
+
+#' All models agree that the slope is very likely positive. The
+#' hierarchical models have more uncertainty, but also higher
+#' posterior mean.
+#' 
+
+#' When we look at the study specific parameters, we see that the
+#' Miller study has slightly higher intercept (leading to higher theta).
+(mcmc_areas(as_draws_df(fit_hier1), regex_pars='r_study\\[.*Intercept') +
+   labs(title='Hierarchical model 1')) +
+  (mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*Intercept') +
+     labs(title='Hierarchical model 2'))
+  
+#'
+#' There are no clear differences in slopes.
+mcmc_areas(as_draws_df(fit_hier), regex_pars='r_study\\[.*doseg') +
+  labs(title='Hierarchical model 2')
+#'
+
+#' Based on LOO comparison we could continue with any of the models,
+#' but if we want to take into account the unknown possible study
+#' variations, it is best to continue with the hierarchical model 2.
+#' We could reduce the uncertainty by spending some effort to elicit a
+#' more informative priors for the between study variation, by
+#' searching open study databses for similar studies. In this example,
+#' we skip that and continue with other parts of the workflow.
+#' 
+
+#' Make prior sensitivity analysis by powerscaling both prior and
+#' likelihood for hierarchical model focusing on the common population
+#' level intercept.
+powerscale_sensitivity(fit_hier2, variable='b_doseg'
                        )$sensitivity |>
                          mutate(across(where(is.double),  ~num(.x, digits=2)))
 
-#' The posterior for the probability of event given certain dose and a new study.
+#' The posterior for the probability of event given certain dose and a
+#' new study for hierarchical model 2.
 data.frame(study='new',
            doseg=seq(0.1,1,by=0.1),
            total=1) |>
-  add_linpred_draws(fit_hier, transform=TRUE, allow_new_levels=TRUE) |>
+  add_linpred_draws(fit_hier2, transform=TRUE, allow_new_levels=TRUE) |>
   ggplot(aes(x=doseg, y=.linpred)) +
   stat_lineribbon(.width = c(.95), alpha = 1/2, color=brewer.pal(5, "Blues")[[5]]) +
   scale_fill_brewer()+
-  labs(x= "Dose (g)", y = 'Probability of event') +
+  labs(x= "Dose (g)", y = 'Probability of event', title='Hierarchical model') +
   theme(legend.position="none") +
   geom_hline(yintercept=0) +
-  scale_x_continuous(breaks=seq(0.1,1,by=0.1))
+  scale_x_continuous(breaks=seq(0.1,1,by=0.1)) +
+  ylim(c(0,0.15))
 
-#' If plot individual posterior draws, we see that there is a lot of
+#' If we plot individual posterior draws, we see that there is a lot of
 #' uncertainty about the overall probability (explained by the
 #' variation in Intercept in different studies), but less uncertainty
 #' about the slope.
 data.frame(study='new',
            doseg=seq(0.1,1,by=0.1),
            total=1) |>
-  add_linpred_draws(fit_hier, transform=TRUE, allow_new_levels=TRUE, ndraws=100) |>
+  add_linpred_draws(fit_hier2, transform=TRUE, allow_new_levels=TRUE, ndraws=100) |>
   ggplot(aes(x=doseg, y=.linpred)) +
   geom_line(aes(group=.draw), alpha = 1/2, color = brewer.pal(5, "Blues")[[3]])+
   scale_fill_brewer()+
@@ -945,11 +1064,8 @@ data.frame(study='new',
   geom_hline(yintercept=0) +
   scale_x_continuous(breaks=seq(0.1,1,by=0.1))
 
-#' Posterior predictive checking showing the observed and predicted number of events.
-pp_check(fit_hier, type = "ribbon_grouped", group="study")
-
 #' 
-#' # Hierarchical binomial model
+#' # Hierarchical binomial model 2
 #'
 #' [Studies on Pharmacologic Treatments for Chronic Obstructive
 #' Pulmonary
@@ -959,12 +1075,42 @@ pp_check(fit_hier, type = "ribbon_grouped", group="study")
 #'
 #' Load data
 load(url('https://github.com/wviechtb/metadat/raw/master/data/dat.baker2009.rda'))
-head(dat.baker2009)
 # force character strings to factors for easier ploting
 dat.baker2009 <- dat.baker2009 |>
   mutate(study = factor(study),
          treatment = factor(treatment),
          id = factor(id))
+
+#' Look at six first lines of the data frame
+head(dat.baker2009)
+
+#' Total number of patients in each study varies a lot
+dat.baker2009 |>
+  group_by(study) |>
+  summarise(N = sum(total)) |>
+  ggplot(aes(x=N, y=study)) +
+  geom_col(fill=4) +
+  labs(x='Number of patients per study', y='Study')
+
+#' None of the treatments is included in every study, and each study includes
+#' $2--4$ treatments.
+crosstab <- with(dat.baker2009,table(study, treatment))
+#
+plot_treatments <- data.frame(number_of_studies=colSums(crosstab), treatment=colnames(crosstab)) |>
+  ggplot(aes(x=number_of_studies,y=treatment)) +
+  geom_col(fill=4) +
+  labs(x='Number of studies with a treatment X', y='Treatment') +
+  geom_vline(xintercept=nrow(crosstab), linetype='dashed') +
+  scale_x_continuous(breaks=c(0,10,20,30,39))
+#
+plot_studies <- data.frame(number_of_treatments=rowSums(crosstab), study=rownames(crosstab)) |>
+  ggplot(aes(x=number_of_treatments,y=study)) +
+  geom_col(fill=4) +
+  labs(x='Number of treatments in a study Y', y='Study') +
+  geom_vline(xintercept=ncol(crosstab), linetype='dashed') +
+  scale_x_continuous(breaks=c(0,2,4,6,8))
+#
+plot_treatments + plot_studies
 
 #' The first model is pooling the information over studies, but estimating separate
 #' theta for each treatment (including placebo).
@@ -973,7 +1119,7 @@ fit_pooled <- brm(exac | trials(total) ~ 0 + treatment,
                   prior = prior(student_t(7, 0, 1.5), class='b'),
                   family=binomial(), data=dat.baker2009)
 
-#' Check the summary of the posterior and convergence
+#' Check the summary of the posterior and inference diagnostics.
 fit_pooled
 
 #' Treatment effect posteriors
@@ -1011,8 +1157,11 @@ theta |>
 #' studies had more events, then the above estimates can be wrong.
 #' 
 
-#' Posterior predictive checking with kernel density estimates for the
-#' data and 10 posterior predictive replicates shows clear discrepancy.
+#' The target is discrete count, but as the range of counts is big, a
+#' rootogram would look messy, and density overlay plot is a better
+#' choice.  Posterior predictive checking with kernel density
+#' estimates for the data and 10 posterior predictive replicates shows
+#' clear discrepancy.
 pp_check(fit_pooled, type='dens_overlay')
 
 #' Posterior predictive checking with PIT values and ECDF difference
@@ -1030,7 +1179,7 @@ pp_check(fit_pooled, type='loo_pit_qq', ndraws=4000) +
 fit_hier <- brm(exac | trials(total) ~ (1 | treatment) + (1 | study),
                 family=binomial(), data=dat.baker2009)
 
-#' Check the summary of the posterior and convergence
+#' Check the summary of the posterior and inference diagnostics.
 fit_hier
 
 #' LOO-CV comparison
@@ -1094,8 +1243,6 @@ theta |>
 #' distributions as when looking at the thetas, as all thetas include
 #' similar uncertainty about the overall theta due to high variation
 #' between studies.
-
-
 
 #' The third model includes interaction so that the treatment can depend on study.
 #+ results='hide'
