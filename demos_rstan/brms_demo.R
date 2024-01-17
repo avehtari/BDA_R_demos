@@ -106,15 +106,29 @@ mcmc_hist(draws, pars='theta') +
   xlab('theta') +
   xlim(c(0,1))
 
-#' Make prior sensitivity analysis by powerscaling both prior and
-#' likelihood. Focus on theta which is the quantity of interest.
+#' Prior and likelihood sensitivity plot shows posterior density estimate
+#' depending on amount of power-scaling. Overlapping line indicate low
+#' sensitivity and wider gaps between line indicate greater sensitivity.
 theta <- draws |>
   subset_draws(variable='theta')
-powerscale_sensitivity(fit_bern, prediction = \(x, ...) theta, num_args=list(digits=2)
-                       )$sensitivity |>
+powerscale_sequence(fit_bern, prediction = \(x, ...) theta) |>
+  powerscale_plot_dens(variables='theta') +
+  # switch rows and cols
+  facet_grid(rows=vars(.data$variable),
+             cols=vars(.data$component)) +
+  # cleaning
+  ggtitle(NULL,NULL) +
+  labs(x='theta', y=NULL) +
+  scale_y_continuous(breaks=NULL) +
+  theme(axis.line.y=element_blank(),
+        strip.text.y=element_blank()) +
+  xlim(c(0,1))
+
+#' We can summarise the prior and likelihood sensitivity using
+#' cumulative Jensen-Shannon distance.
+powerscale_sensitivity(fit_bern, prediction = \(x, ...) theta)$sensitivity |>
                          filter(variable=='theta') |>
                          mutate(across(where(is.double),  ~num(.x, digits=2)))
-
 
 #'
 #' # Binomial model
@@ -207,7 +221,9 @@ mcmc_hist(draws, pars='theta') +
 #' 
 #' Data, where `grp2` is an indicator variable defined as a factor
 #' type, which is useful for categorical variables.
-data_bin2 <- data.frame(N = c(674, 680), y = c(39,22), grp2 = factor(c('control','treatment')))
+data_bin2 <- data.frame(N = c(674, 680),
+                        y = c(39,22),
+                        grp2 = factor(c('control','treatment')))
 
 #' To analyse whether the treatment is useful, we can use Binomial
 #' model for both groups and compute odds-ratio. To recreate the model
@@ -268,7 +284,7 @@ draws_bin2 |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975)))
 
 
-#' Make prior sensitivity analysis by powerscaling both prior and
+#' Make prior sensitivity analysis by power-scaling both prior and
 #' likelihood.  Focus on oddsratio which is the quantity of
 #' interest. We see that the likelihood is much more informative than
 #' the prior, and we would expect to see a different posterior only
@@ -276,6 +292,25 @@ draws_bin2 |>
 #' experiments).
 oddsratio <- draws_bin2 |>
   subset_draws(variable='oddsratio')
+#' Prior and likelihood sensitivity plot shows posterior density estimate
+#' depending on amount of power-scaling. Overlapping line indicate low
+#' sensitivity and wider gaps between line indicate greater sensitivity.
+powerscale_sequence(fit_bin2, prediction = \(x, ...) oddsratio) |>
+  powerscale_plot_dens(variables='oddsratio') +
+  # switch rows and cols
+  facet_grid(rows=vars(.data$variable),
+             cols=vars(.data$component)) +
+  # cleaning
+  ggtitle(NULL,NULL) +
+  labs(x='Odds-ratio', y=NULL) +
+  scale_y_continuous(breaks=NULL) +
+  theme(axis.line.y=element_blank(),
+        strip.text.y=element_blank()) +
+  # reference line
+  geom_vline(xintercept=1, linetype='dashed')
+
+#' We can summarise the prior and likelihood sensitivity using
+#' cumulative Jensen-Shannon distance.
 powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio, num_args=list(digits=2)
                        )$sensitivity |>
                          filter(variable=='oddsratio') |>
@@ -452,7 +487,7 @@ fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
 #' Check the summary of the posterior and inference diagnostics.
 fit_lin
 
-#' Make prior sensitivity analysis by powerscaling both prior and likelihood.
+#' Make prior sensitivity analysis by power-scaling both prior and likelihood.
 powerscale_sensitivity(fit_lin)$sensitivity |>
                                 mutate(across(where(is.double),  ~num(.x, digits=2)))
 
@@ -619,7 +654,7 @@ data_lin |>
   theme(legend.position="none")+
   scale_x_continuous(breaks=seq(1950,2030,by=10))
 
-#' Make prior sensitivity analysis by powerscaling both prior and likelihood.
+#' Make prior sensitivity analysis by power-scaling both prior and likelihood.
 powerscale_sensitivity(fit_lin_h)$sensitivity |>
                                 mutate(across(where(is.double),  ~num(.x, digits=2)))
 
@@ -710,7 +745,7 @@ temp_diff |>
                   ~mcse_quantile(.x, probs = c(0.025, 0.975)),
                   .num_args = list(digits = 2, notation = "dec"))
 
-#' Make prior sensitivity analysis by powerscaling both prior and
+#' Make prior sensitivity analysis by power-scaling both prior and
 #' likelihood with focus on average summer temperature increase from
 #' 1952 to 2022.
 powerscale_sensitivity(fit_spline_h, prediction = \(x, ...) temp_diff, num_args=list(digits=2)
@@ -811,7 +846,7 @@ pp <- fit_pooled |>
 
 (pp / ps / ph) * xlim(c(50,140))
 
-#' Make prior sensitivity analysis by powerscaling both prior and
+#' Make prior sensitivity analysis by power-scaling both prior and
 #' likelihood with focus on mean quality of each machine. We see no
 #' prior sensitivity.
 machine_mean <- fit_hier |>
@@ -882,7 +917,7 @@ fit_pooled |>
 #' closer to unit range. In this case it is natural to use g instead
 #' of mg.
 dat.ursino2021 <- dat.ursino2021 |>
-  mutate(doseg = dose/100)
+  mutate(doseg = dose/1000)
 
 #' Fit the pooled model again uing `doseg`
 #+ results='hide'
@@ -997,7 +1032,7 @@ plot_posterior_hier2 <- mcmc_areas(as_draws_df(fit_hier2), regex_pars='b_doseg')
   geom_vline(xintercept=0, linetype='dashed') +
   labs(title='Hierarchical model 2')
 
-(plot_posterior_pooled / plot_posterior_hier1 / plot_posterior_hier2) * xlim(c(0,0.85))
+(plot_posterior_pooled / plot_posterior_hier1 / plot_posterior_hier2) * xlim(c(0,8.5))
 
 #' All models agree that the slope is very likely positive. The
 #' hierarchical models have more uncertainty, but also higher
@@ -1007,7 +1042,7 @@ plot_posterior_hier2 <- mcmc_areas(as_draws_df(fit_hier2), regex_pars='b_doseg')
 #' When we look at the study specific parameters, we see that the
 #' Miller study has slightly higher intercept (leading to higher theta).
 (mcmc_areas(as_draws_df(fit_hier1), regex_pars='r_study\\[.*Intercept') +
-   labs(title='Hierarchical model 1')) +
+   labs(title='Hierarchical model 1')) /
   (mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*Intercept') +
      labs(title='Hierarchical model 2'))
   
@@ -1026,9 +1061,22 @@ mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*doseg') +
 #' we skip that and continue with other parts of the workflow.
 #' 
 
-#' Make prior sensitivity analysis by powerscaling both prior and
-#' likelihood for hierarchical model focusing on the common population
-#' level intercept.
+fit_hier2 |>
+  powerscale_sequence() |>
+  powerscale_plot_dens(variables='b_doseg') +
+  # switch rows and cols
+  facet_grid(rows=vars(.data$variable),
+             cols=vars(.data$component)) +
+  # cleaning
+  ggtitle(NULL,NULL) +
+  labs(x='Dose (g) coefficient', y=NULL) +
+  scale_y_continuous(breaks=NULL) +
+  theme(axis.line.y=element_blank(),
+        strip.text.y=element_blank())
+
+#' Summarise the prior and likelihood sensitivity using cumulative
+#' Jensen-Shannon distance focusing on the common population level
+#' intercept.
 powerscale_sensitivity(fit_hier2, variable='b_doseg'
                        )$sensitivity |>
                          mutate(across(where(is.double),  ~num(.x, digits=2)))
