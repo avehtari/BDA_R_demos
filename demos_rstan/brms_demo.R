@@ -424,7 +424,7 @@ data_lin |>
 #' coefficients.
 #' 
 #' Formula `temp ~ year` corresponds to model $\mathrm{temp} ~
-#' \mathrm{normal}(\alpha + \beta \times \mathrm{temp}, \sigma).  The
+#' \mathrm{normal}(\alpha + \beta \times \mathrm{temp}, \sigma)$.  The
 #' model could also be defined as `temp ~ 1 + year` which explicitly
 #' shows the intercept ($\alpha$) part. Using the variable names
 #' `brms` uses the model can be written also as `temp ~
@@ -895,7 +895,8 @@ data.frame(count=colSums(crosstab), study=colnames(crosstab)) |>
   labs(x='Number of dose levels per study', y='Study')
 
 #' Pooled model assumes all studies have the same dose effect
-#' (reminder: `~ dose` is equivalent to `~ 1 + dose`)
+#' (reminder: `~ dose` is equivalent to `~ 1 + dose`).
+#' We use similar priors as in earlier binomial models.
 #+ results='hide'
 fit_pooled <- brm(events | trials(total) ~ dose,
                   prior = c(prior(student_t(7, 0, 1.5), class='Intercept'),
@@ -929,14 +930,105 @@ fit_pooled <- brm(events | trials(total) ~ doseg,
 #' Check the summary of the posterior and inference diagnostics.
 fit_pooled
 
-#' Now it is easier to interpret the presented values. 
+#' Now it is easier to interpret the presented values.
+#'
+#' Prior and likelihood sensitivity plot shows posterior density estimate
+#' depending on amount of power-scaling. Overlapping line indicate low
+#' sensitivity and wider gaps between line indicate greater sensitivity.
+fit_pooled |>
+  powerscale_sequence() |>
+  powerscale_plot_dens(variables='b_doseg') +
+  # switch rows and cols
+  facet_grid(rows=vars(.data$variable),
+             cols=vars(.data$component)) +
+  # cleaning
+  ggtitle(NULL,NULL) +
+  labs(x='Dose (g) coefficient', y=NULL) +
+  scale_y_continuous(breaks=NULL) +
+  theme(axis.line.y=element_blank(),
+        strip.text.y=element_blank())
+
+#' We see a strong prior prior sensitivity.
+#'
+#' Powerscaling with cumulative Jensen-Shannon distance diagnostic
+#' indicates prior-data conflict.
+powerscale_sensitivity(fit_pooled, variable='b_doseg'
+                       )$sensitivity |>
+                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+
+#' Comparing the posterior of `b_doesg` (90\%-interval [1.3, 3.6]) to
+#' the prior normal(0,1), we see that when we scaled the covariate, we
+#' forgot to check that the prior still makes sense.
+#'
+#' We make prior predictive checking by fixing the intercept=0 (or
+#' otherwise prior variation from the intercept would hide the prior
+#' variation from the `b_doseg` and centering the covariate (this is
+#' what `brms` does by default).
+data.frame(theta=plogis(sample(with(dat.ursino2021, doseg - mean(doseg)),
+                               4000,replace=TRUE) *
+                          rnorm(4000, mean=0, sd=1))) |>
+  ggplot(aes(x=theta)) +
+  stat_slab() +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  ylab('') +
+  theme(axis.line.y=element_blank())
+
+#' We see that the prior is very informative (here the width of the
+#' prior matters, as the location would be based on the intercept.
+#'
+#' We could have made the prior predictive checking earlier, but here
+#' we intentionally wanted to illustrate how `priorsense` can catch
+#' prior problems.
+#' 
+#' Checking that sd of `doseg` is about 1/5, 
+sd(dat.ursino2021$doseg) |> round(2)
+#' We adujst the prior to be normal(0, 5), so that expected sd of
+#' `doseg * b_doseg` is about 5. Prior predictive checking looks better now.
+data.frame(theta=plogis(sample(with(dat.ursino2021, doseg - mean(doseg)),
+                               4000,replace=TRUE) *
+                          rnorm(4000, mean=0, sd=5))) |>
+  ggplot(aes(x=theta)) +
+  stat_slab() +
+  xlim(c(0,1)) +
+  scale_y_continuous(breaks=NULL) +
+  ylab('') +
+  theme(axis.line.y=element_blank())
+
+#' The narrower part in the prior distribution is due to the data
+#' having more small doses than large doses.
+#'
+#' We refit the model with the wider prior.
+fit_pooled <- brm(events | trials(total) ~ doseg,
+                  prior = c(prior(student_t(7, 0, 1.5), class='Intercept'),
+                            prior(normal(0, 5), class='b')),
+                  family=binomial(), data=dat.ursino2021)
+fitp_pooled <- update(fit_pooled, sample_prior='only')
+
+#' And the prior-data conflict has gone.
+fit_pooled |>
+  powerscale_sequence() |>
+  powerscale_plot_dens(variables='b_doseg') +
+  # switch rows and cols
+  facet_grid(rows=vars(.data$variable),
+             cols=vars(.data$component)) +
+  # cleaning
+  ggtitle(NULL,NULL) +
+  labs(x='Dose (g) coefficient', y=NULL) +
+  scale_y_continuous(breaks=NULL) +
+  theme(axis.line.y=element_blank(),
+        strip.text.y=element_blank())
+
+powerscale_sensitivity(fit_pooled, variable='b_doseg'
+                       )$sensitivity |>
+                         mutate(across(where(is.double),  ~num(.x, digits=2)))
 
 #' Separate model assumes all studies have different dose effect.
 #' It would be a bit complicated to set a different prior on study specific
 #' intercepts and other coefficients, so we use the same prior for all.
 #+ results='hide'
 fit_separate <- brm(events | trials(total) ~ 0 + study + doseg:study,
-                    prior=prior(student_t(7, 0, 1.5), class='b'),
+                    prior=prior(student_t(7, 0, 5), class='b'),
                     family=binomial(), data=dat.ursino2021)
 
 #' Check the summary of the posterior and inference diagnostics.
@@ -948,16 +1040,16 @@ fit_separate
 #' population intercept.
 #+ results='hide'
 fit_hier1 <- brm(events | trials(total) ~ doseg + (1 | study),
-                    prior=c(prior(student_t(7, 0, 1.5), class='Intercept'),
-                            prior(normal(0, 1), class='b')),
+                    prior=c(prior(student_t(7, 0, 3), class='Intercept'),
+                            prior(normal(0, 5), class='b')),
                 family=binomial(), data=dat.ursino2021)
 
 #' The second hierarchical model assumes that also the slope can vary
 #' between the studies.
 #+ results='hide'
 fit_hier2 <- brm(events | trials(total) ~ doseg + (doseg | study),
-                    prior=c(prior(student_t(7, 0, 1.5), class='Intercept'),
-                            prior(normal(0, 1), class='b')),
+                    prior=c(prior(student_t(7, 0, 10), class='Intercept'),
+                            prior(normal(0, 5), class='b')),
                 family=binomial(), data=dat.ursino2021)
 
 #' We seem some divergences due to highly varying posterior
@@ -1008,9 +1100,9 @@ loo_compare(loo(fit_pooled), loo(fit_hier1), loo(fit_hier2))
 pp_check(fit_pooled, type = "rootogram") +
   labs(title='Pooled model')
 pp_check(fit_hier1, type = "rootogram") +
-  labs(title='Hierarchical model')
+  labs(title='Hierarchical model 1')
 pp_check(fit_hier2, type = "rootogram") +
-  labs(title='Hierarchical model')
+  labs(title='Hierarchical model 2')
 
 #' We see that the hierarchical models have higher probability for
 #' future counts that are bigger than maximum observed count and
@@ -1052,25 +1144,48 @@ mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*doseg') +
   labs(title='Hierarchical model 2')
 #'
 
-#' Based on LOO comparison we could continue with any of the models,
-#' but if we want to take into account the unknown possible study
-#' variations, it is best to continue with a hierarchical model.
-#' We continuw with the hierarchical model 1.
+#' Based on LOO comparison we could continue with any of the models
+#' except the separate one, but if we want to take into account the
+#' unknown possible study variations, it is best to continue with the
+#' hierarchical model 2.  We could reduce the uncertainty by spending
+#' some effort to elicit a more informative priors for the between
+#' study variation, by searching open study databses for similar
+#' studies. In this example, we skip that and continue with other
+#' parts of the workflow.
 
+#' We check the prior sensitivity in hierarchical model 2
+fit_hier2 |>
+  powerscale_sequence() |>
+  powerscale_plot_dens(variables='b_doseg') +
+  # switch rows and cols
+  facet_grid(rows=vars(.data$variable),
+             cols=vars(.data$component)) +
+  # cleaning
+  ggtitle(NULL,NULL) +
+  labs(x='Dose (g) coefficient', y=NULL) +
+  scale_y_continuous(breaks=NULL) +
+  theme(axis.line.y=element_blank(),
+        strip.text.y=element_blank())
+
+powerscale_sensitivity(fit_hier2, variable='b_doseg'
+                       )$sensitivity |>
+                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+
+#' 
 #' The posterior for the probability of event given certain dose and a
 #' new study for hierarchical model 2.
 data.frame(study='new',
            doseg=seq(0.1,1,by=0.1),
+           dose=seq(100,1000,by=100),
            total=1) |>
-  add_linpred_draws(fit_hier1, transform=TRUE, allow_new_levels=TRUE) |>
-  ggplot(aes(x=doseg, y=.linpred)) +
+  add_linpred_draws(fit_hier2, transform=TRUE, allow_new_levels=TRUE) |>
+  ggplot(aes(x=dose, y=.linpred)) +
   stat_lineribbon(.width = c(.95), alpha = 1/2, color=brewer.pal(5, "Blues")[[5]]) +
   scale_fill_brewer()+
-  labs(x= "Dose (g)", y = 'Probability of event', title='Hierarchical model') +
+  labs(x= "Dose (mg)", y = 'Probability of event', title='Hierarchical model') +
   theme(legend.position="none") +
   geom_hline(yintercept=0) +
-  scale_x_continuous(breaks=seq(0.1,1,by=0.1)) +
-  ylim(c(0,0.15))
+  scale_x_continuous(breaks=seq(100,1000,by=100)) 
 
 #' If we plot individual posterior draws, we see that there is a lot of
 #' uncertainty about the overall probability (explained by the
@@ -1078,15 +1193,16 @@ data.frame(study='new',
 #' about the slope.
 data.frame(study='new',
            doseg=seq(0.1,1,by=0.1),
+           dose=seq(100,1000,by=100),
            total=1) |>
-  add_linpred_draws(fit_hier1, transform=TRUE, allow_new_levels=TRUE, ndraws=100) |>
-  ggplot(aes(x=doseg, y=.linpred)) +
+  add_linpred_draws(fit_hier2, transform=TRUE, allow_new_levels=TRUE, ndraws=100) |>
+  ggplot(aes(x=dose, y=.linpred)) +
   geom_line(aes(group=.draw), alpha = 1/2, color = brewer.pal(5, "Blues")[[3]])+
   scale_fill_brewer()+
   labs(x= "Dose (g)", y = 'Probability of event') +
   theme(legend.position="none") +
   geom_hline(yintercept=0) +
-  scale_x_continuous(breaks=seq(0.1,1,by=0.1))
+  scale_x_continuous(breaks=seq(100,1000,by=100)) 
 
 #' 
 #' # Hierarchical binomial model 2
@@ -1135,6 +1251,17 @@ plot_studies <- data.frame(number_of_treatments=rowSums(crosstab), study=rowname
   scale_x_continuous(breaks=c(0,2,4,6,8))
 #
 plot_treatments + plot_studies
+
+#' The following plot shows which treatments were in which studies
+crosstab |>
+  as_tibble() |>
+  ggplot(aes(x=study, y=treatment, fill=as.factor(n))) +
+  geom_tile() +
+  scale_fill_manual(name = "", values = c("white",4)) +
+  labs(x="Study", y="Treatment") +
+  theme(aspect.ratio=2*8/39,
+        legend.position='none',
+        axis.text.x = element_text(angle = 45, hjust=1, vjust=1))
 
 #' The first model is pooling the information over studies, but estimating separate
 #' theta for each treatment (including placebo).
@@ -1267,6 +1394,23 @@ theta |>
 #' distributions as when looking at the thetas, as all thetas include
 #' similar uncertainty about the overall theta due to high variation
 #' between studies.
+
+#' We check the prior sensitivity with focus in odds-ratios in hierarchical model
+theta <- fit_hier |>
+  spread_rvars(b_Intercept, r_treatment[treatment,]) |>
+  mutate(theta_treatment = rfun(plogis)(b_Intercept + r_treatment))
+theta_placebo <- filter(theta,treatment=='Placebo')$theta_treatment[[1]]
+oddsratio <- theta |>
+  mutate(treatment_oddsratio = (theta_treatment/(1-theta_treatment))/(theta_placebo/(1-theta_placebo))) |>
+  filter(treatment != "Placebo")
+oddsratio <- oddsratio$treatment_oddsratio |>
+  as_draws_df() |>
+  set_variables(oddsratio$treatment)
+powerscale_sensitivity(fit_hier,
+                       prediction = \(x, ...) oddsratio,
+                       )$sensitivity |>
+                         filter(variable %in% variables(oddsratio)) |>
+                         mutate(across(where(is.double),  ~num(.x, digits=2)))
 
 #' The third model includes interaction so that the treatment can depend on study.
 #+ results='hide'
