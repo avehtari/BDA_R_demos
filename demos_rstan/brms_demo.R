@@ -17,7 +17,7 @@
 #' # Setup  {.unnumbered}
 
 #+ setup, include=FALSE
-knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
+knitr::opts_chunk$set(cache=TRUE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
 
 
 #' **Load packages**
@@ -424,7 +424,7 @@ data_lin |>
 #' coefficients.
 #' 
 #' Formula `temp ~ year` corresponds to model $\mathrm{temp} ~
-#' \mathrm{normal}(\alpha + \beta \times \mathrm{temp}, \sigma).  The
+#' \mathrm{normal}(\alpha + \beta \times \mathrm{temp}, \sigma)$.  The
 #' model could also be defined as `temp ~ 1 + year` which explicitly
 #' shows the intercept ($\alpha$) part. Using the variable names
 #' `brms` uses the model can be written also as `temp ~
@@ -1004,13 +1004,6 @@ fit_pooled <- brm(events | trials(total) ~ doseg,
                             prior(normal(0, 5), class='b')),
                   family=binomial(), data=dat.ursino2021)
 fitp_pooled <- update(fit_pooled, sample_prior='only')
-dat.ursino2021 |>
-  add_linpred_draws(fitp_pooled, transform=TRUE) |>
-  ggplot(aes(x=.linpred)) +
-  stat_slab() +
-  xlim(c(0,1)) +
-  labs(x='theta', y='') +
-  theme(axis.line.y=element_blank())
 
 #' And the prior-data conflict has gone.
 fit_pooled |>
@@ -1107,9 +1100,9 @@ loo_compare(loo(fit_pooled), loo(fit_hier1), loo(fit_hier2))
 pp_check(fit_pooled, type = "rootogram") +
   labs(title='Pooled model')
 pp_check(fit_hier1, type = "rootogram") +
-  labs(title='Hierarchical model')
+  labs(title='Hierarchical model 1')
 pp_check(fit_hier2, type = "rootogram") +
-  labs(title='Hierarchical model')
+  labs(title='Hierarchical model 2')
 
 #' We see that the hierarchical models have higher probability for
 #' future counts that are bigger than maximum observed count and
