@@ -1,26 +1,35 @@
 #' ---
 #' title: "Bayesian data analysis - BRMS demos"
 #' author: "Aki Vehtari"
-#' date: "First version 2023-12-05. Last modified `r format(Sys.Date())`."
-#' output:
-#'   html_document:
-#'     fig_caption: yes
-#'     toc: TRUE
-#'     toc_depth: 2
-#'     number_sections: TRUE
-#'     toc_float:
-#'       smooth_scroll: FALSE
+#' date: 2023-12-05
+#' date-modified: today
+#' date-format: iso
+#' format:
+#'   html:
+#'     toc: true
+#'     toc-location: left
+#'     toc-depth: 2
+#'     number-sections: true
+#'     smooth-scroll: true
 #'     theme: readable
-#'     code_download: true
+#'     code-copy: true
+#'     code-download: true
+#'     code-tools: true
+#'     embed-resources: true
+#'     anchor-sections: true
 #' ---
 
-#' # Setup  {.unnumbered}
+#' # Introduction
+#' 
+#' This notebook contains several examples of how to use [Stan](https://mc-stan.org) in R with [__brms__](https://paul-buerkner.github.io/brms/). This notebook assumes basic knowledge of Bayesian inference and MCMC. The examples are related to [Bayesian data analysis course](https://avehtari.github.io/BDA_course_Aa/lto/).
+#' 
 
 #+ setup, include=FALSE
-knitr::opts_chunk$set(cache=TRUE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
-
+knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, comment=NA, out.width='95%')
 
 #' **Load packages**
+#| code-fold: true
+#| cache: FALSE
 library(tidyr)
 library(dplyr)
 library(tibble)
@@ -29,6 +38,7 @@ library(stringr)
 library(brms)
 options(brms.backend = "cmdstanr", mc.cores = 2)
 library(posterior)
+options(posterior.num_args=list(digits=2))
 options(pillar.negative = FALSE)
 library(loo)
 library(priorsense)
@@ -39,27 +49,24 @@ library(tidybayes)
 library(ggdist)
 library(patchwork)
 library(RColorBrewer)
-SEED <- 48927 # set random seed for reproducability
+library(tinytable)
+SEED <- 48927 # set random seed for reproducibility
 
-#' # Introduction
-#' 
-#' This notebook contains several examples of how to use [Stan](https://mc-stan.org) in R with [__brms__](https://paul-buerkner.github.io/brms/). This notebook assumes basic knowledge of Bayesian inference and MCMC. The examples are related to [Bayesian data analysis course](https://avehtari.github.io/BDA_course_Aalto/).
-#' 
 #' # Bernoulli model
 #' 
 #' Toy data with sequence of failures (0) and successes (1). We would
 #' like to learn about the unknown probability of success.
 data_bern <- data.frame(y = c(1, 1, 1, 0, 1, 1, 1, 0, 1, 0))
 
-#' As usual in case of generalizd linear models, (GLMs) brms defines
+#' As usual in case of generalized linear models, (GLMs) brms defines
 #' the priors on the latent model parameters. With Bernoulli the
 #' default link function is logit, and thus the prior is set on
 #' logit(theta). As there are no covariates logit(theta)=Intercept.
-#' The brms default prior for Intercept is student_t(3, 0, 2.5), but
-#' we use student_t(7, 0, 1.5) which is close to logistic
+#' The brms default prior for Intercept is `student_t(3, 0, 2.5)`, but
+#' we use `student_t(7, 0, 1.5)` which is close to logistic
 #' distribution, and thus makes the prior near-uniform for theta.
 #' We can simulate from these priors to check the implied prior on theta.
-#' We next compare the result to using normal(0, 1) prior on logit
+#' We next compare the result to using `normal(0, 1)` prior on logit
 #' probability. We visualize the implied priors by sampling from the priors.
 data.frame(theta = plogis(ggdist::rstudent_t(n=20000, df=3, mu=0, sigma=2.5))) |>
   mcmc_hist() +
@@ -75,9 +82,10 @@ data.frame(theta = plogis(rnorm(n=20000, mean=0, sd=1.5))) |>
   xlim(c(0,1)) +
   labs(title='normal(0, 1.5) prior on Intercept')
 
-#' Formula `y ~ 1` corresponds to a model $\mathrm{logit}(\theta) =
-#\alpha\times 1 = \alpha$. `brms? denotes the $\alpha$ as `Intercept`.
-#+ results='hide'
+#' Formula `y ~ 1` corresponds to a model $\mathrm{logit}(\theta) = \alpha\times 1 = \alpha$.
+#' `brms` denotes the $\alpha$ as `Intercept`.
+#| results: hide
+#| cache: true
 fit_bern <- brm(y ~ 1, family = bernoulli(), data = data_bern,
                 prior = prior(student_t(7, 0, 1.5), class='Intercept'),
                 seed = SEED, refresh = 0)
@@ -87,19 +95,27 @@ fit_bern
 
 #' Extract the posterior draws
 draws <- as_draws_df(fit_bern)
-#' We can get summary information using summarise_draws()
+#' We can get summary information using `summarise_draws()`
 draws |>
   subset_draws(variable='b_Intercept') |>
   summarise_draws()
+
+#' We get slightly prettier table using `tinytable::tt()`
+draws |>
+  subset_draws(variable='b_Intercept') |>
+  summarise_draws() |>
+  tt(digits=2)
 
 #' We can compute the probability of success by using plogis which is
 #' equal to inverse-logit function
 draws <- draws |>
   mutate_variables(theta=plogis(b_Intercept))
-#' Summary of theta by using summarise_draws()
+
+#' Summary of theta
 draws |>
   subset_draws(variable='theta') |>
-  summarise_draws()
+  summarise_draws() |>
+  tt(digits=2)
 
 #' Histogram of theta
 mcmc_hist(draws, pars='theta') +
@@ -109,6 +125,7 @@ mcmc_hist(draws, pars='theta') +
 #' Prior and likelihood sensitivity plot shows posterior density estimate
 #' depending on amount of power-scaling. Overlapping line indicate low
 #' sensitivity and wider gaps between line indicate greater sensitivity.
+#| warning: false
 theta <- draws |>
   subset_draws(variable='theta')
 powerscale_sequence(fit_bern, prediction = \(x, ...) theta) |>
@@ -127,8 +144,9 @@ powerscale_sequence(fit_bern, prediction = \(x, ...) theta) |>
 #' We can summarise the prior and likelihood sensitivity using
 #' cumulative Jensen-Shannon distance.
 powerscale_sensitivity(fit_bern, prediction = \(x, ...) theta)$sensitivity |>
-                         filter(variable=='theta') |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                                                               filter(variable=='theta') |>
+                                                               tt() |>
+                                                               format_tt(digits=2, num_fmt="decimal")
 
 #'
 #' # Binomial model
@@ -145,7 +163,8 @@ data_bin <- data.frame(N = c(10), y = c(7))
 #' Formula `y | trials(N) ~ 1` corresponds to a model
 #' $\mathrm{logit}(\theta) = \alpha$, and the number of trials for
 #' each observation is provided by `| trials(N)`
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_bin <- brm(y | trials(N) ~ 1, family = binomial(), data = data_bin,
                prior = prior(student_t(7, 0,1.5), class='Intercept'),
                seed = SEED, refresh = 0)
@@ -157,25 +176,27 @@ fit_bin
 #' and likelihood are informative. If there is true strong prior
 #' information that would justify the normal(0,1) prior, then this is
 #' fine, but otherwise more thinking is required (goal is not adjust
-#' prior to remove diagnostic warnings withoyt thinking). In this toy
+#' prior to remove diagnostic warnings without thinking). In this toy
 #' example, we proceed with this prior.
 #' 
 
 #' Extract the posterior draws
 draws <- as_draws_df(fit_bin)
-#' We can get summary information using summarise_draws()
+#' Summary of latent intercept
 draws |>
   subset_draws(variable='b_Intercept') |>
-  summarise_draws()
+  summarise_draws() |>
+  tt(digits=2)
 
 #' We can compute the probability of success by using plogis which is
 #' equal to inverse-logit function
 draws <- draws |>
   mutate_variables(theta=plogis(b_Intercept))
-#' Summary of theta by using summarise_draws()
+#' Summary of theta
 draws |>
   subset_draws(variable='theta') |>
-  summarise_draws()
+  summarise_draws() |>
+  tt(digits=2)
 
 #' Histogram of theta
 mcmc_hist(draws, pars='theta') +
@@ -183,6 +204,8 @@ mcmc_hist(draws, pars='theta') +
   xlim(c(0,1))
 
 #' Re-run the model with a new data dataset without recompiling
+#| results: hide
+#| cache: true
 data_bin <- data.frame(N = c(5), y = c(4))
 fit_bin <- update(fit_bin, newdata = data_bin)
 
@@ -191,19 +214,21 @@ fit_bin
 
 #' Extract the posterior draws
 draws <- as_draws_df(fit_bin)
-#' We can get summary information using summarise_draws()
+#' Summary of latent intercept
 draws |>
   subset_draws(variable='b_Intercept') |>
-  summarise_draws()
+  summarise_draws() |>
+  tt(digits=2)
 
 #' We can compute the probability of success by using plogis which is
 #' equal to inverse-logit function
 draws <- draws |>
   mutate_variables(theta=plogis(b_Intercept))
-#' Summary of theta by using summarise_draws()
+#' Summary of theta
 draws |>
   subset_draws(variable='theta') |>
-  summarise_draws()
+  summarise_draws() |>
+  tt(digits=2)
 
 #' Histogram of theta
 mcmc_hist(draws, pars='theta') +
@@ -244,6 +269,7 @@ data_bin2 <- data.frame(N = c(674, 680),
 #' $\beta$'s by setting the prior with `class='b'`. With prior
 #' `student_t(7, 0,1.5)`, both $\beta$'s are shrunk towards 0, but
 #' independently.
+#| results: hide
 fit_bin2 <- brm(y | trials(N) ~ 0 + grp2, family = binomial(), data = data_bin2,
                 prior = prior(student_t(7, 0,1.5), class='b'),
                 seed = SEED, refresh = 0)
@@ -260,7 +286,7 @@ fit_bin2 <- brm(y | trials(N) ~ 0 + grp2, family = binomial(), data = data_bin2,
 fit_bin2
 
 #' Compute theta for each group and the odds-ratio. `brms` uses
-#' bariable names `b_grp2control` and `b_grp2treatment` for
+#' variable names `b_grp2control` and `b_grp2treatment` for
 #' $\beta_\mathrm{control}$ and $\beta_\mathrm{treatment}$
 #' respectively.
 draws_bin2 <- as_draws_df(fit_bin2) |>
@@ -276,12 +302,14 @@ mcmc_hist(draws_bin2, pars='oddsratio') +
 draws_bin2 |>
   mutate(poddsratio = oddsratio<1) |>
   subset(variable='poddsratio') |>
-  summarise_draws(mean, mcse_mean)
+  summarise_draws(mean, mcse_mean)  |>
+  tt(digits=2)
 
 #' oddsratio 95% posterior interval
 draws_bin2 |>
   subset(variable='oddsratio') |>
-  summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975)))
+  summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975))) |>
+  tt(digits=2)
 
 
 #' Make prior sensitivity analysis by power-scaling both prior and
@@ -295,6 +323,7 @@ oddsratio <- draws_bin2 |>
 #' Prior and likelihood sensitivity plot shows posterior density estimate
 #' depending on amount of power-scaling. Overlapping line indicate low
 #' sensitivity and wider gaps between line indicate greater sensitivity.
+#| warning: false
 powerscale_sequence(fit_bin2, prediction = \(x, ...) oddsratio) |>
   powerscale_plot_dens(variables='oddsratio') +
   # switch rows and cols
@@ -313,15 +342,16 @@ powerscale_sequence(fit_bin2, prediction = \(x, ...) oddsratio) |>
 #' cumulative Jensen-Shannon distance.
 powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio, num_args=list(digits=2)
                        )$sensitivity |>
-                         filter(variable=='oddsratio') |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         filter(variable=='oddsratio')  |>
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
 #' Above we used formula `y | trials(N) ~ 0 + grp2` to have separate
 #' model for control and treatment group. An alternative model `y |
 #' trials(N) ~ grp2` which is equal to `y | trials(N) ~ 1 + grp2`,
 #' would correspond to a model $\mathrm{logit}(\theta) = \alpha \times
 #' 1 + \beta_\mathrm{treatment}\times x_\mathrm{treatment} = \alpha +
-#' \beta_\mathrm{treatment}\times x_\mathrm{treatment}. Now $\alpha$
+#' \beta_\mathrm{treatment}\times x_\mathrm{treatment}$. Now $\alpha$
 #' models the probability of death (via logistic link) in the control
 #' group and $\alpha + \beta_\mathrm{treatment}$ models the
 #' probability of death (via logistic link) in the treatment
@@ -335,8 +365,8 @@ data.frame(theta_control = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=
   mcmc_hist() +
   xlim(c(0,1)) +
   labs(title='student_t(7, 0, 1.5) prior on Intercept') +
-data.frame(theta_treatment = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))+
-             plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))) |>
+  data.frame(theta_treatment = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))+
+               plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))) |>
   mcmc_hist() +
   xlim(c(0,1)) +
   labs(title='student_t(7, 0, 1.5) prior on Intercept and b_grp2treatment')
@@ -354,7 +384,7 @@ data.frame(theta_treatment = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigm
 #' prior on $\beta_\mathrm{control}$ and $\beta_\mathrm{treatment}$ is
 #' $\mathrm{normal}(0, \sigma_\mathrm{grp})$. The default `brms` prior
 #' for $\sigma_\mathrm{grp}$ is `student_t(3, 0, 2.5)`. Now $\alpha$
-#' models the overall probablity of death (via logistic link), and
+#' models the overall probability of death (via logistic link), and
 #' $\beta_\mathrm{control}$ and $\beta_\mathrm{treatment}$ model the
 #' difference from that having the same prior. Prior for
 #' $\beta_\mathrm{control}$ and $\beta_\mathrm{treatment}$ includes
@@ -369,7 +399,8 @@ data.frame(theta_treatment = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigm
 #' more than two groups. In the following, we use the previously used
 #' `student_t(7, 0,1.5)` prior on intercept and the default `brms`
 #' prior `student_t(3, 0, 2.5)` on $\sigma_\mathrm{grp}$.
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_bin2 <- brm(y | trials(N) ~ 1 + (1 | grp2), family = binomial(), data = data_bin2,
                 prior = prior(student_t(7, 0,1.5), class='Intercept'),
                 seed = SEED, refresh = 0, control=list(adapt_delta=0.99))
@@ -379,12 +410,15 @@ fit_bin2 <- brm(y | trials(N) ~ 1 + (1 | grp2), family = binomial(), data = data
 #' reports that there are Group-Level Effects: `~grp2` with 2 levels
 #' (control and treatment), with `sd(Intercept)` denoting
 #' $\sigma_\mathrm{grp}$. In addition, the summary lists
-#' Population-Level Effects: `Intercept` ($\alpha$) as in the prevous
+#' Population-Level Effects: `Intercept` ($\alpha$) as in the previous
 #' non-hierarchical models.
 fit_bin2
 
 #' We can also look at the variable names `brms` uses internally
-as_draws_rvars(fit_bin2)
+as_draws_rvars(fit_bin2) |>
+  subset_draws(variable=c('lprior','lp__'), exclude=TRUE) |>
+  summarise_draws() |>
+  tt(digits=1)
 
 #' Although there is no difference, illustrate how to compute the
 #' oddsratio from hierarchical model
@@ -401,8 +435,9 @@ oddsratio |> mcmc_hist() +
 #' Make also prior sensitivity analysis with focus on oddsratio.
 powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio, num_args=list(digits=2)
                        )$sensitivity |>
-                         filter(variable=='oddsratio') |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         filter(variable=='oddsratio')  |>
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
 #' # Linear Gaussian model
 #' 
@@ -431,6 +466,7 @@ data_lin |>
 #' normal(b_Intercept*1 + b_year*year, sigma)`. We start with the
 #' default priors to see some tricks that `brms` does behind the
 #' curtain.
+#| results: hide
 fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
                seed = SEED, refresh = 0)
 
@@ -445,13 +481,16 @@ fit_lin
 #' summer temperature is increasing 0.02°C per year (which would make
 #' 1°C in 50 years).
 #' 
-#' We can check $R^2$ which corresponds to the proporion of variance
+#' We can check $R^2$ which corresponds to the proportion of variance
 #' explained by the model. The linear model explains 0.16=16% of the
 #' total data variance.
-bayes_R2(fit_lin) |> round(2)
+bayes_R2(fit_lin) |>
+  as_tibble() |>
+  tt(digits=2)
 
 #' We can check the all the priors used. 
-prior_summary(fit_lin)
+prior_summary(fit_lin) |>
+  tt()
 
 #' We see that `class=b` and `coef=year` have `flat`, that is,
 #' improper uniform prior, `Intercept` has `student_t(3, 9.5, 2.5)`,
@@ -470,7 +509,7 @@ prior_summary(fit_lin)
 #' `center=FALSE`, and we can set the prior on original intercept by
 #' using a formula `temp ~ 0 + Intercept + year`. In this case, we are
 #' happy with the default prior for the intercept. In this specific
-#' casse, the flat prior on coefficient is also fine, but we add an
+#' case, the flat prior on coefficient is also fine, but we add an
 #' weakly informative prior just for the illustration. Let's assume we
 #' expect the temperature to change less than 1°C in 10 years. With
 #' `student_t(3, 0, 0.03)` about 95% prior mass has less than 0.1°C
@@ -480,6 +519,7 @@ prior_summary(fit_lin)
 #' temperature change, and naturally a hierarchical spatio-temporal
 #' model with all temperature measurement locations would be even
 #' better.
+#| results: hide
 fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
                prior = prior(student_t(3, 0, 0.03), class='b'),
                seed = SEED, refresh = 0)
@@ -488,17 +528,19 @@ fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
 fit_lin
 
 #' Make prior sensitivity analysis by power-scaling both prior and likelihood.
-powerscale_sensitivity(fit_lin)$sensitivity |>
-                                mutate(across(where(is.double),  ~num(.x, digits=2)))
+powerscale_sensitivity(fit_lin)$sensitivity  |>
+                                tt() |>
+                                format_tt(digits=2, num_fmt="decimal")
 
 #' Our weakly informative proper prior has negligible sensitivity, and
 #' the likelihood is informative.
 
 #' Extract the posterior draws and check the summaries
 draws_lin <- as_draws_df(fit_lin) 
-draws_lin |> summarise_draws()
-#' If one of the columns is hidden we can force printing all columns
-draws_lin |> summarise_draws() |> print(width=Inf)
+draws_lin |>
+  subset_draws(variable=c('lprior','lp__'), exclude=TRUE) |>
+  summarise_draws() |> 
+  tt(digits=1)
 
 #' Histogram of b_year
 draws_lin |>
@@ -509,9 +551,10 @@ draws_lin |>
 draws_lin |>
   mutate(I_b_year_gt_0 = b_year>0) |>
   subset_draws(variable='I_b_year_gt_0') |>
-  summarise_draws(mean, mcse_mean)
+  summarise_draws(mean, mcse_mean)  |>
+  tt(digits=2)
 #' All posterior draws have `b_year>0`, the probability gets rounded
-#' to 1, and MCSE is not available as the obserevd posterior variance
+#' to 1, and MCSE is not available as the observed posterior variance
 #' is 0.
 #' 
 
@@ -521,7 +564,8 @@ draws_lin |>
   subset_draws(variable='b_year_100') |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)),
                   ~mcse_quantile(.x, probs = c(0.025, 0.975)),
-                  .num_args = list(digits = 2, notation = "dec"))
+                  .num_args = list(digits = 2, notation = "dec")) |>
+  tt(digits=2)
 
 #' Plot posterior draws of the linear function values at each year.
 #' `add_linpred_draws()` takes the years from the data and uses `fit_lin` to make
@@ -539,7 +583,7 @@ data_lin |>
   theme(legend.position="none")+
   scale_x_continuous(breaks=seq(1950,2020,by=10))
 
-#' Alternativelly plot a spaghetti plot for 100 draws
+#' Alternatively plot a spaghetti plot for 100 draws
 data_lin |>
   add_linpred_draws(fit_lin, ndraws=100) |>
   # plot data
@@ -576,8 +620,8 @@ pp_check(fit_lin, type='dens_overlay', ndraws=20)
 
 #' LOO-PIT check is good for checking whether the normal distribution
 #' is well describing the variation as it is examines the calibration
-#' of LOO predictive distributions conditonally on each year. LOO-PIT
-#' ploty looks good.
+#' of LOO predictive distributions conditionally on each year. LOO-PIT
+#' plot looks good.
 pp_check(fit_lin, type='loo_pit_qq', ndraws=4000)
 
 #' # Linear Student's $t$ model
@@ -606,11 +650,16 @@ fit_lin_t
 #' We can use leave-one-out cross-validation to compare the expected predictive performance.
 #' 
 #' LOO comparison shows normal and Student's $t$ model have similar performance.
-loo_compare(loo(fit_lin), loo(fit_lin_t))
+loo_compare(loo(fit_lin), loo(fit_lin_t)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' # Heteroskedastic linear model
 #' 
-#' Heteroskedasticity assumes that the variation around the linear
+#' Heteroscedasticity assumes that the variation around the linear
 #' mean can also vary. We can allow sigma to depend on year, too.
 #' Although the additional component is written as `sigma ~ year`, the
 #' log link function is used and the model is for log(sigma). `bf()` allows
@@ -625,7 +674,7 @@ fit_lin_h <- brm(bf(temp ~ year,
 
 #' Check the summary of the posterior and inference diagnostics. The b_year
 #' posterior looks similar as before. The posterior for sigma_year
-#' looks like having mosst of the ma for negative values, indicating
+#' looks like having most of the ma for negative values, indicating
 #' decrease in temperature variation around the mean.
 fit_lin_h
 
@@ -655,32 +704,40 @@ data_lin |>
   scale_x_continuous(breaks=seq(1950,2030,by=10))
 
 #' Make prior sensitivity analysis by power-scaling both prior and likelihood.
-powerscale_sensitivity(fit_lin_h)$sensitivity |>
-                                mutate(across(where(is.double),  ~num(.x, digits=2)))
+powerscale_sensitivity(fit_lin_h)$sensitivity  |>
+                                  tt() |>
+                                  format_tt(digits=2, num_fmt="decimal")
 
 
 #' We can use leave-one-out cross-validation to compare the expected predictive performance.
 #' 
 #' LOO comparison shows homoskedastic normal and heteroskedastic
 #' normal models have similar performances.
-loo_compare(loo(fit_lin), loo(fit_lin_h))
+loo_compare(loo(fit_lin), loo(fit_lin_h)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' # Heteroskedastic non-linear model
 #' 
 #' We can test the linearity assumption by using non-linear spline
-#' functions, by uing `s(year)` terms. Sampling is slower as the
+#' functions, by using `s(year)` terms. Sampling is slower as the
 #' posterior gets more complex.
 #' 
 #+  results='hide'
 fit_spline_h <- brm(bf(temp ~ s(year),
-                     sigma ~ s(year)),
-                  data = data_lin, family = gaussian(),
-                  seed = SEED, refresh = 0)
+                       sigma ~ s(year)),
+                    data = data_lin, family = gaussian(),
+                    seed = SEED, refresh = 0)
 
 #' We get warnings about divergences, and try rerunning with higher
 #' adapt_delta, which leads to using smaller step sizes. Often
 #' `adapt_delta=0.999` leads to very slow sampling, but with this
 #' small data, this is not an issue.
+#| results: hide
+#| cache: true
 fit_spline_h <- update(fit_spline_h, control = list(adapt_delta=0.999))
 
 #' Check the summary of the posterior and inference diagnostics. We're not
@@ -708,12 +765,16 @@ data_lin |>
 
 #' And we can use leave-one-out cross-validation to compare the
 #' expected predictive performance.
-#' 
 #' LOO comparison shows homoskedastic normal linear and
 #' heteroskedastic normal spline models have similar
 #' performances. There are not enough observations to make clear
 #' difference between the models.
-loo_compare(loo(fit_lin), loo(fit_spline_h))
+loo_compare(loo(fit_lin), loo(fit_spline_h)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' For spline and other non-parametric models, we can use predictive
 #' estimates and predictions to get interpretable quantities. Let's
@@ -743,7 +804,8 @@ temp_diff |>
 temp_diff |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)),
                   ~mcse_quantile(.x, probs = c(0.025, 0.975)),
-                  .num_args = list(digits = 2, notation = "dec"))
+                  .num_args = list(digits = 2, notation = "dec")) |>
+  tt(digits=2)
 
 #' Make prior sensitivity analysis by power-scaling both prior and
 #' likelihood with focus on average summer temperature increase from
@@ -751,7 +813,8 @@ temp_diff |>
 powerscale_sensitivity(fit_spline_h, prediction = \(x, ...) temp_diff, num_args=list(digits=2)
                        )$sensitivity |>
                          filter(variable=='temp_diff') |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
 #' Probability that the average summer temperature has increased from
 #' 1952 to 2022 is 99.5%.
@@ -759,7 +822,8 @@ temp_diff |>
   mutate(I_temp_diff_gt_0 = temp_diff>0,
          temp_diff = NULL) |>
   subset_draws(variable='I_temp_diff_gt_0') |>
-  summarise_draws(mean, mcse_mean)
+  summarise_draws(mean, mcse_mean) |>
+  tt(digits=2)
 
 
 #' 
@@ -781,7 +845,8 @@ factory
 #' ## Pooled model
 #'
 #' As comparison make also pooled model
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_pooled <- brm(quality ~ 1, data = factory, refresh=0)
 
 #' Check the summary of the posterior and inference diagnostics.
@@ -789,9 +854,10 @@ fit_pooled
 
 #' ## Separate model
 #'
-#' As comparison make also seprate model. To make it completely
+#' As comparison make also separate model. To make it completely
 #' separate we need to have different sigma for each machine, too.
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_separate <- brm(bf(quality ~ 0 + machine,
                        sigma ~ 0 + machine),
                     data = factory, refresh=0)
@@ -800,7 +866,8 @@ fit_separate <- brm(bf(quality ~ 0 + machine,
 fit_separate
 
 #' # Common variance hierarchical model (ANOVA)
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_hier <- brm(quality ~ 1 + (1 | machine),
                 data = factory, refresh = 0)
 
@@ -810,11 +877,16 @@ fit_hier
 #' LOO comparison shows the hierarchical model is the best. The
 #' differences are small as the number of observations is small and
 #' there is a considerable prediction (aleatoric) uncertainty.
-loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier))
+loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' Different model posterior distributions for the mean
-#' quality. Pooled model ignores the varition between
-#' machines. Separate model doesn't take benefit from the similariy of
+#' quality. Pooled model ignores the variation between
+#' machines. Separate model doesn't take benefit from the similarity of
 #' the machines and has higher uncertainty.
 ph <- fit_hier |>
   spread_rvars(b_Intercept, r_machine[machine,]) |>
@@ -857,7 +929,8 @@ machine_mean <- fit_hier |>
 powerscale_sensitivity(fit_hier, prediction = \(x, ...) machine_mean, num_args=list(digits=2)
                        )$sensitivity |>
                          filter(str_detect(variable,'machine_mean')) |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
 #' 
 #' # Hierarchical binomial model
@@ -886,7 +959,7 @@ dat.ursino2021 |>
   scale_x_continuous(breaks=seq(100,1000,by=100))
 
 #' Each study is using $2--6$ different dose levels. Three studies
-#' that include only two dose levels are likelly to provide weak
+#' that include only two dose levels are likely to provide weak
 #' information on slope.
 crosstab <- with(dat.ursino2021,table(dose,study))
 data.frame(count=colSums(crosstab), study=colnames(crosstab)) |>
@@ -897,7 +970,8 @@ data.frame(count=colSums(crosstab), study=colnames(crosstab)) |>
 #' Pooled model assumes all studies have the same dose effect
 #' (reminder: `~ dose` is equivalent to `~ 1 + dose`).
 #' We use similar priors as in earlier binomial models.
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_pooled <- brm(events | trials(total) ~ dose,
                   prior = c(prior(student_t(7, 0, 1.5), class='Intercept'),
                             prior(normal(0, 1), class='b')),
@@ -911,7 +985,8 @@ fit_pooled
 fit_pooled |>
   as_draws() |>
   subset_draws(variable='b_dose') |>
-  summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975)))
+  summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975))) |>
+  tt(digits=2)
 
 #' The dose was reported in mg, and most values are in hundreds. It is
 #' often sensible to switch to a scale in which the range of values is
@@ -920,8 +995,9 @@ fit_pooled |>
 dat.ursino2021 <- dat.ursino2021 |>
   mutate(doseg = dose/1000)
 
-#' Fit the pooled model again uing `doseg`
-#+ results='hide'
+#' Fit the pooled model again using `doseg`
+#| results: hide
+#| cache: true
 fit_pooled <- brm(events | trials(total) ~ doseg,
                   prior = c(prior(student_t(7, 0, 1.5), class='Intercept'),
                             prior(normal(0, 1), class='b')),
@@ -935,6 +1011,7 @@ fit_pooled
 #' Prior and likelihood sensitivity plot shows posterior density estimate
 #' depending on amount of power-scaling. Overlapping line indicate low
 #' sensitivity and wider gaps between line indicate greater sensitivity.
+#| warning: false
 fit_pooled |>
   powerscale_sequence() |>
   powerscale_plot_dens(variables='b_doseg') +
@@ -950,11 +1027,12 @@ fit_pooled |>
 
 #' We see a strong prior prior sensitivity.
 #'
-#' Powerscaling with cumulative Jensen-Shannon distance diagnostic
+#' Power-scaling with cumulative Jensen-Shannon distance diagnostic
 #' indicates prior-data conflict.
 powerscale_sensitivity(fit_pooled, variable='b_doseg'
                        )$sensitivity |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
 #' Comparing the posterior of `b_doesg` (90\%-interval [1.3, 3.6]) to
 #' the prior normal(0,1), we see that when we scaled the covariate, we
@@ -983,8 +1061,8 @@ data.frame(theta=plogis(sample(with(dat.ursino2021, doseg - mean(doseg)),
 #' 
 #' Checking that sd of `doseg` is about 1/5, 
 sd(dat.ursino2021$doseg) |> round(2)
-#' We adujst the prior to be normal(0, 5), so that expected sd of
-#' `doseg * b_doseg` is about 5. Prior predictive checking looks better now.
+#' We adjust the prior to be normal(0, 5), so that expected sd of
+#' `doseg * b_doseg` is about 1. Prior predictive checking looks better now.
 data.frame(theta=plogis(sample(with(dat.ursino2021, doseg - mean(doseg)),
                                4000,replace=TRUE) *
                           rnorm(4000, mean=0, sd=5))) |>
@@ -999,6 +1077,8 @@ data.frame(theta=plogis(sample(with(dat.ursino2021, doseg - mean(doseg)),
 #' having more small doses than large doses.
 #'
 #' We refit the model with the wider prior.
+#| results: hide
+#| cache: true
 fit_pooled <- brm(events | trials(total) ~ doseg,
                   prior = c(prior(student_t(7, 0, 1.5), class='Intercept'),
                             prior(normal(0, 5), class='b')),
@@ -1006,6 +1086,7 @@ fit_pooled <- brm(events | trials(total) ~ doseg,
 fitp_pooled <- update(fit_pooled, sample_prior='only')
 
 #' And the prior-data conflict has gone.
+#| warning: false
 fit_pooled |>
   powerscale_sequence() |>
   powerscale_plot_dens(variables='b_doseg') +
@@ -1021,12 +1102,14 @@ fit_pooled |>
 
 powerscale_sensitivity(fit_pooled, variable='b_doseg'
                        )$sensitivity |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
 #' Separate model assumes all studies have different dose effect.
 #' It would be a bit complicated to set a different prior on study specific
 #' intercepts and other coefficients, so we use the same prior for all.
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_separate <- brm(events | trials(total) ~ 0 + study + doseg:study,
                     prior=prior(student_t(7, 0, 5), class='b'),
                     family=binomial(), data=dat.ursino2021)
@@ -1038,19 +1121,21 @@ fit_separate
 #' hierarchical model for the intercept, that is, each study has a
 #' parameter telling how much that study differs from the common
 #' population intercept.
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_hier1 <- brm(events | trials(total) ~ doseg + (1 | study),
-                    prior=c(prior(student_t(7, 0, 3), class='Intercept'),
-                            prior(normal(0, 5), class='b')),
-                family=binomial(), data=dat.ursino2021)
+                 prior=c(prior(student_t(7, 0, 3), class='Intercept'),
+                         prior(normal(0, 5), class='b')),
+                 family=binomial(), data=dat.ursino2021)
 
 #' The second hierarchical model assumes that also the slope can vary
 #' between the studies.
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_hier2 <- brm(events | trials(total) ~ doseg + (doseg | study),
-                    prior=c(prior(student_t(7, 0, 10), class='Intercept'),
-                            prior(normal(0, 5), class='b')),
-                family=binomial(), data=dat.ursino2021)
+                 prior=c(prior(student_t(7, 0, 10), class='Intercept'),
+                         prior(normal(0, 5), class='b')),
+                 family=binomial(), data=dat.ursino2021)
 
 #' We seem some divergences due to highly varying posterior
 #' curvature. We repeat the sampling with higher adapt_delta, which
@@ -1058,12 +1143,18 @@ fit_hier2 <- brm(events | trials(total) ~ doseg + (doseg | study),
 #' computation slower, but that is not an issue in this case. If you
 #' get divergences with `adapt_delta=0.99`, it is likely that even
 #' larger values don't help, and you need to consider different
-#' parameterisation, different model, or more informative priors.
-#+ results='hide'
+#' parameterization, different model, or more informative priors.
+#| results: hide
+#| cache: true
 fit_hier2 <- update(fit_hier2, control=list(adapt_delta=0.99))
 
 #' LOO-CV comparison
-loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier1), loo(fit_hier2))
+loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier1), loo(fit_hier2)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' We get warnings about several Pareto k's > 0.7 in PSIS-LOO for
 #' separate model, but as in that case the LOO-CV estimate is usually
@@ -1077,24 +1168,31 @@ loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier1), loo(fit_hier2))
 #' divergences in case of the second hierarchical model, as leaving
 #' out an observation for a study that has only two dose levels is
 #' making the posterior having a difficult shape.
+#| results: hide
+#| cache: true
 fit_hier1 <- add_criterion(fit_hier1, criterion='loo', reloo=TRUE)
 fit_hier2 <- add_criterion(fit_hier2, criterion='loo', reloo=TRUE)
 
 #' We repeat the LOO-CV comparison (without separate model). `loo()`
-#' function is useing the reults added to the fit objects.
-loo_compare(loo(fit_pooled), loo(fit_hier1), loo(fit_hier2))
+#' function is using the results added to the fit objects.
+loo_compare(loo(fit_pooled), loo(fit_hier1), loo(fit_hier2)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' The results did not change much. The first hierarchical model is
 #' slightly better than other models, but for predictive purposes
 #' there is not much difference (there is high aleatoric uncertainty
-#' in the predictions). Adding hiearchical model for the slope,
-#' decrased the predictive performance and thus it is likely that
+#' in the predictions). Adding hierarchical model for the slope,
+#' decreased the predictive performance and thus it is likely that
 #' there is not enough information about the variation in slopes
 #' between studies.
 #' 
 
 #' Posterior predictive checking showing the observed and predicted
-#' number of events. Rootgram uses square root of counts on y-axis for
+#' number of events. Rootogram uses square root of counts on y-axis for
 #' better scaling. Rootogram is useful for count data when the range
 #' of counts is small or moderate.
 pp_check(fit_pooled, type = "rootogram") +
@@ -1107,7 +1205,7 @@ pp_check(fit_hier2, type = "rootogram") +
 #' We see that the hierarchical models have higher probability for
 #' future counts that are bigger than maximum observed count and
 #' longer predictive distribution tail. This is natural as uncertainty
-#' in the variation between tudies increases predictive uncertainty,
+#' in the variation between studies increases predictive uncertainty,
 #' too, especially as the number of studies is relatively small.
 #' 
 
@@ -1137,7 +1235,7 @@ plot_posterior_hier2 <- mcmc_areas(as_draws_df(fit_hier2), regex_pars='b_doseg')
    labs(title='Hierarchical model 1')) /
   (mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*Intercept') +
      labs(title='Hierarchical model 2'))
-  
+
 #'
 #' There are no clear differences in slopes.
 mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*doseg') +
@@ -1149,11 +1247,12 @@ mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*doseg') +
 #' unknown possible study variations, it is best to continue with the
 #' hierarchical model 2.  We could reduce the uncertainty by spending
 #' some effort to elicit a more informative priors for the between
-#' study variation, by searching open study databses for similar
+#' study variation, by searching open study databases for similar
 #' studies. In this example, we skip that and continue with other
 #' parts of the workflow.
 
 #' We check the prior sensitivity in hierarchical model 2
+#| warning: false
 fit_hier2 |>
   powerscale_sequence() |>
   powerscale_plot_dens(variables='b_doseg') +
@@ -1169,7 +1268,8 @@ fit_hier2 |>
 
 powerscale_sensitivity(fit_hier2, variable='b_doseg'
                        )$sensitivity |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
 #' 
 #' The posterior for the probability of event given certain dose and a
@@ -1215,7 +1315,7 @@ data.frame(study='new',
 #'
 #' Load data
 load(url('https://github.com/wviechtb/metadat/raw/master/data/dat.baker2009.rda'))
-# force character strings to factors for easier ploting
+# force character strings to factors for easier plotting
 dat.baker2009 <- dat.baker2009 |>
   mutate(study = factor(study),
          treatment = factor(treatment),
@@ -1252,7 +1352,7 @@ plot_studies <- data.frame(number_of_treatments=rowSums(crosstab), study=rowname
 #
 plot_treatments + plot_studies
 
-#' The following plot shows which treatments were in which studies
+#' The following plot shows which treatments were in which studies.
 crosstab |>
   as_tibble() |>
   ggplot(aes(x=study, y=treatment, fill=as.factor(n))) +
@@ -1265,7 +1365,8 @@ crosstab |>
 
 #' The first model is pooling the information over studies, but estimating separate
 #' theta for each treatment (including placebo).
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_pooled <- brm(exac | trials(total) ~ 0 + treatment,
                   prior = prior(student_t(7, 0, 1.5), class='b'),
                   family=binomial(), data=dat.baker2009)
@@ -1324,9 +1425,10 @@ pp_check(fit_pooled, type='loo_pit_qq', ndraws=4000) +
   geom_abline() +
   ylim(c(0,1))
 
-#' The second model uses a hiearchical model both for treatment
+#' The second model uses a hierarchical model both for treatment
 #' effects and study effects.
-#+ results='hide'
+#| results: hide
+#| cache: true
 fit_hier <- brm(exac | trials(total) ~ (1 | treatment) + (1 | study),
                 family=binomial(), data=dat.baker2009)
 
@@ -1334,7 +1436,12 @@ fit_hier <- brm(exac | trials(total) ~ (1 | treatment) + (1 | study),
 fit_hier
 
 #' LOO-CV comparison
-loo_compare(loo(fit_pooled), loo(fit_hier))
+loo_compare(loo(fit_pooled), loo(fit_hier)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' We get warnings about Pareto k's > 0.7 in PSIS-LOO, but as the
 #' difference between the models is huge, we can be confident that the
@@ -1354,7 +1461,7 @@ pp_check(fit_hier, type='dens_overlay')
 pp_check(fit_hier, type='pit_ecdf', ndraws=4000)
 
 #' Posterior predictive checking with LOO-PIT values look good
-#' (alhough as there are Pareto-khat warnings, it is possible that
+#' (although as there are Pareto-khat warnings, it is possible that
 #' this diagnostic is optimistic).
 pp_check(fit_hier, type='loo_pit_qq', ndraws=4000) +
   geom_abline() +
@@ -1410,19 +1517,29 @@ powerscale_sensitivity(fit_hier,
                        prediction = \(x, ...) oddsratio,
                        )$sensitivity |>
                          filter(variable %in% variables(oddsratio)) |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                         tt() |>
+                         format_tt(digits=2, num_fmt="decimal")
 
-#' The third model includes interaction so that the treatment can depend on study.
-#+ results='hide'
+#' The third model includes interaction so that the treatment can depend on study. 
+#| results: hide
+#| cache: true
 fit_hier2 <- brm(exac | trials(total) ~ (1 | treatment) + (treatment | study),
-                family=binomial(), data=dat.baker2009, control=list(adapt_delta=0.9))
+                 family=binomial(), data=dat.baker2009, control=list(adapt_delta=0.9))
 
-#' LOO comparison shows
-loo_compare(loo(fit_hier), loo(fit_hier2))
+#' LOO comparison shows that the added interaction doesn't improve the model.
+loo_compare(loo(fit_hier), loo(fit_hier2)) |>
+  as.data.frame() |>
+  rownames_to_column("model") |>
+  select(model, elpd_diff, se_diff) |>
+  tt() |>
+  format_tt(digits=1, num_fmt="decimal")
 
 #' We get warnings about Pareto k's > 0.7 in PSIS-LOO, but as the
 #' models are similar, and the difference is small, we can be
-#' relatively confident that the more complex model is not better.
+#' relatively confident that the more complex model is not better. In
+#' this case, the likely reason is that the data do not have enough
+#' information to learn about the interactions and adding them just
+#' increases the posterior uncertainty.
 #' 
 
 #' <br />
