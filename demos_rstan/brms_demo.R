@@ -50,6 +50,7 @@ library(ggdist)
 library(patchwork)
 library(RColorBrewer)
 library(tinytable)
+options(tinytable_format_num_fmt = "significant_cell", tinytable_format_digits = 2, tinytable_tt_digits=2)
 SEED <- 48927 # set random seed for reproducibility
 
 #' # Bernoulli model
@@ -104,7 +105,7 @@ draws |>
 draws |>
   subset_draws(variable='b_Intercept') |>
   summarise_draws() |>
-  tt(digits=2)
+  tt()
 
 #' We can compute the probability of success by using plogis which is
 #' equal to inverse-logit function
@@ -115,7 +116,7 @@ draws <- draws |>
 draws |>
   subset_draws(variable='theta') |>
   summarise_draws() |>
-  tt(digits=2)
+  tt()
 
 #' Histogram of theta
 mcmc_hist(draws, pars='theta') +
@@ -143,10 +144,10 @@ powerscale_sequence(fit_bern, prediction = \(x, ...) theta) |>
 
 #' We can summarise the prior and likelihood sensitivity using
 #' cumulative Jensen-Shannon distance.
-powerscale_sensitivity(fit_bern, prediction = \(x, ...) theta)$sensitivity |>
-                                                               filter(variable=='theta') |>
-                                                               tt() |>
-                                                               format_tt(digits=2, num_fmt="decimal")
+powerscale_sensitivity(fit_bern,
+                       prediction = \(x, ...) theta)$sensitivity |>
+                                                     filter(variable=='theta') |>
+                                                     tt()
 
 #'
 #' # Binomial model
@@ -186,7 +187,7 @@ draws <- as_draws_df(fit_bin)
 draws |>
   subset_draws(variable='b_Intercept') |>
   summarise_draws() |>
-  tt(digits=2)
+  tt()
 
 #' We can compute the probability of success by using plogis which is
 #' equal to inverse-logit function
@@ -303,13 +304,13 @@ draws_bin2 |>
   mutate(poddsratio = oddsratio<1) |>
   subset(variable='poddsratio') |>
   summarise_draws(mean, mcse_mean)  |>
-  tt(digits=2)
+  tt()
 
 #' oddsratio 95% posterior interval
 draws_bin2 |>
   subset(variable='oddsratio') |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975))) |>
-  tt(digits=2)
+  tt()
 
 
 #' Make prior sensitivity analysis by power-scaling both prior and
@@ -340,11 +341,11 @@ powerscale_sequence(fit_bin2, prediction = \(x, ...) oddsratio) |>
 
 #' We can summarise the prior and likelihood sensitivity using
 #' cumulative Jensen-Shannon distance.
-powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio, num_args=list(digits=2)
+powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio
                        )$sensitivity |>
                          filter(variable=='oddsratio')  |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' Above we used formula `y | trials(N) ~ 0 + grp2` to have separate
 #' model for control and treatment group. An alternative model `y |
@@ -418,7 +419,7 @@ fit_bin2
 as_draws_rvars(fit_bin2) |>
   subset_draws(variable=c('lprior','lp__'), exclude=TRUE) |>
   summarise_draws() |>
-  tt(digits=1)
+  tt()
 
 #' Although there is no difference, illustrate how to compute the
 #' oddsratio from hierarchical model
@@ -433,11 +434,11 @@ oddsratio |> mcmc_hist() +
   geom_vline(xintercept=1, linetype='dashed')
 
 #' Make also prior sensitivity analysis with focus on oddsratio.
-powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio, num_args=list(digits=2)
+powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio
                        )$sensitivity |>
                          filter(variable=='oddsratio')  |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' # Linear Gaussian model
 #' 
@@ -486,7 +487,7 @@ fit_lin
 #' total data variance.
 bayes_R2(fit_lin) |>
   as_tibble() |>
-  tt(digits=2)
+  tt()
 
 #' We can check the all the priors used. 
 prior_summary(fit_lin) |>
@@ -530,7 +531,7 @@ fit_lin
 #' Make prior sensitivity analysis by power-scaling both prior and likelihood.
 powerscale_sensitivity(fit_lin)$sensitivity  |>
                                 tt() |>
-                                format_tt(digits=2, num_fmt="decimal")
+                                format_tt(num_fmt="decimal")
 
 #' Our weakly informative proper prior has negligible sensitivity, and
 #' the likelihood is informative.
@@ -540,7 +541,7 @@ draws_lin <- as_draws_df(fit_lin)
 draws_lin |>
   subset_draws(variable=c('lprior','lp__'), exclude=TRUE) |>
   summarise_draws() |> 
-  tt(digits=1)
+  tt()
 
 #' Histogram of b_year
 draws_lin |>
@@ -563,9 +564,9 @@ draws_lin |>
   mutate(b_year_100 = b_year*100) |>
   subset_draws(variable='b_year_100') |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)),
-                  ~mcse_quantile(.x, probs = c(0.025, 0.975)),
-                  .num_args = list(digits = 2, notation = "dec")) |>
-  tt(digits=2)
+                  ~mcse_quantile(.x, probs = c(0.025, 0.975))) |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' Plot posterior draws of the linear function values at each year.
 #' `add_linpred_draws()` takes the years from the data and uses `fit_lin` to make
@@ -654,8 +655,7 @@ loo_compare(loo(fit_lin), loo(fit_lin_t)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' # Heteroskedastic linear model
 #' 
@@ -706,7 +706,7 @@ data_lin |>
 #' Make prior sensitivity analysis by power-scaling both prior and likelihood.
 powerscale_sensitivity(fit_lin_h)$sensitivity  |>
                                   tt() |>
-                                  format_tt(digits=2, num_fmt="decimal")
+                                  format_tt(num_fmt="decimal")
 
 
 #' We can use leave-one-out cross-validation to compare the expected predictive performance.
@@ -717,8 +717,7 @@ loo_compare(loo(fit_lin), loo(fit_lin_h)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' # Heteroskedastic non-linear model
 #' 
@@ -773,8 +772,7 @@ loo_compare(loo(fit_lin), loo(fit_spline_h)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' For spline and other non-parametric models, we can use predictive
 #' estimates and predictions to get interpretable quantities. Let's
@@ -803,18 +801,18 @@ temp_diff |>
 #' 95% posterior interval for average summer temperature increase from 1952 to 2022
 temp_diff |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)),
-                  ~mcse_quantile(.x, probs = c(0.025, 0.975)),
-                  .num_args = list(digits = 2, notation = "dec")) |>
-  tt(digits=2)
+                  ~mcse_quantile(.x, probs = c(0.025, 0.975))) |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' Make prior sensitivity analysis by power-scaling both prior and
 #' likelihood with focus on average summer temperature increase from
 #' 1952 to 2022.
-powerscale_sensitivity(fit_spline_h, prediction = \(x, ...) temp_diff, num_args=list(digits=2)
+powerscale_sensitivity(fit_spline_h, prediction = \(x, ...) temp_diff
                        )$sensitivity |>
                          filter(variable=='temp_diff') |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' Probability that the average summer temperature has increased from
 #' 1952 to 2022 is 99.5%.
@@ -881,8 +879,7 @@ loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' Different model posterior distributions for the mean
 #' quality. Pooled model ignores the variation between
@@ -926,11 +923,11 @@ machine_mean <- fit_hier |>
   mutate(across(matches('r_machine'), ~ .x - b_Intercept)) |>
   subset_draws(variable='r_machine', regex=TRUE) |>
   set_variables(paste0('machine_mean[', 1:6, ']'))
-powerscale_sensitivity(fit_hier, prediction = \(x, ...) machine_mean, num_args=list(digits=2)
+powerscale_sensitivity(fit_hier, prediction = \(x, ...) machine_mean
                        )$sensitivity |>
                          filter(str_detect(variable,'machine_mean')) |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' 
 #' # Hierarchical binomial model
@@ -986,7 +983,7 @@ fit_pooled |>
   as_draws() |>
   subset_draws(variable='b_dose') |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975))) |>
-  tt(digits=2)
+  tt()
 
 #' The dose was reported in mg, and most values are in hundreds. It is
 #' often sensible to switch to a scale in which the range of values is
@@ -1032,7 +1029,7 @@ fit_pooled |>
 powerscale_sensitivity(fit_pooled, variable='b_doseg'
                        )$sensitivity |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' Comparing the posterior of `b_doesg` (90\%-interval [1.3, 3.6]) to
 #' the prior normal(0,1), we see that when we scaled the covariate, we
@@ -1103,7 +1100,7 @@ fit_pooled |>
 powerscale_sensitivity(fit_pooled, variable='b_doseg'
                        )$sensitivity |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' Separate model assumes all studies have different dose effect.
 #' It would be a bit complicated to set a different prior on study specific
@@ -1153,8 +1150,7 @@ loo_compare(loo(fit_pooled), loo(fit_separate), loo(fit_hier1), loo(fit_hier2)) 
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' We get warnings about several Pareto k's > 0.7 in PSIS-LOO for
 #' separate model, but as in that case the LOO-CV estimate is usually
@@ -1179,8 +1175,7 @@ loo_compare(loo(fit_pooled), loo(fit_hier1), loo(fit_hier2)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' The results did not change much. The first hierarchical model is
 #' slightly better than other models, but for predictive purposes
@@ -1269,7 +1264,7 @@ fit_hier2 |>
 powerscale_sensitivity(fit_hier2, variable='b_doseg'
                        )$sensitivity |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' 
 #' The posterior for the probability of event given certain dose and a
@@ -1440,8 +1435,7 @@ loo_compare(loo(fit_pooled), loo(fit_hier)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' We get warnings about Pareto k's > 0.7 in PSIS-LOO, but as the
 #' difference between the models is huge, we can be confident that the
@@ -1518,7 +1512,7 @@ powerscale_sensitivity(fit_hier,
                        )$sensitivity |>
                          filter(variable %in% variables(oddsratio)) |>
                          tt() |>
-                         format_tt(digits=2, num_fmt="decimal")
+                         format_tt(num_fmt="decimal")
 
 #' The third model includes interaction so that the treatment can depend on study. 
 #| results: hide
@@ -1531,8 +1525,7 @@ loo_compare(loo(fit_hier), loo(fit_hier2)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
   select(model, elpd_diff, se_diff) |>
-  tt() |>
-  format_tt(digits=1, num_fmt="decimal")
+  tt()
 
 #' We get warnings about Pareto k's > 0.7 in PSIS-LOO, but as the
 #' models are similar, and the difference is small, we can be
