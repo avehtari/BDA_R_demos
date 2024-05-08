@@ -30,6 +30,7 @@ library(stringr)
 library(brms)
 options(brms.backend = "cmdstanr", mc.cores = 2)
 library(posterior)
+options(posterior.num_args=list(digits=2))
 options(pillar.negative = FALSE)
 library(loo)
 library(priorsense)
@@ -40,6 +41,7 @@ library(tidybayes)
 library(ggdist)
 library(patchwork)
 library(RColorBrewer)
+library(gt)
 SEED <- 48927 # set random seed for reproducability
 ```
 
@@ -115,7 +117,8 @@ We can get summary information using summarise_draws()
 ```{r}
 draws |>
   subset_draws(variable='b_Intercept') |>
-  summarise_draws()
+  summarise_draws() |>
+  tt(digits=2)
 ```
 
 We can compute the probability of success by using plogis which is
@@ -131,7 +134,8 @@ Summary of theta by using summarise_draws()
 ```{r}
 draws |>
   subset_draws(variable='theta') |>
-  summarise_draws()
+  summarise_draws() |>
+  tt(digits=2)
 ```
 
 Histogram of theta
@@ -169,7 +173,9 @@ cumulative Jensen-Shannon distance.
 ```{r}
 powerscale_sensitivity(fit_bern, prediction = \(x, ...) theta)$sensitivity |>
                          filter(variable=='theta') |>
-                         mutate(across(where(is.double),  ~num(.x, digits=2)))
+                           tt(digits=2, caption='Powerscaling sensitivity analysis')
+
+#                         mutate(across(where(is.double),  ~num(.x, digits=2)))
 ```
 
 
@@ -1299,7 +1305,7 @@ sd(dat.ursino2021$doseg) |> round(2)
 ```
 
 We adujst the prior to be normal(0, 5), so that expected sd of
-`doseg * b_doseg` is about 5. Prior predictive checking looks better now.
+`doseg * b_doseg` is about 1. Prior predictive checking looks better now.
 
 ```{r}
 data.frame(theta=plogis(sample(with(dat.ursino2021, doseg - mean(doseg)),
@@ -1633,7 +1639,7 @@ plot_studies <- data.frame(number_of_treatments=rowSums(crosstab), study=rowname
 plot_treatments + plot_studies
 ```
 
-The following plot shows which treatments were in which studies
+The following plot shows which treatments were in which studies.
 
 ```{r}
 crosstab |>
@@ -1843,7 +1849,7 @@ powerscale_sensitivity(fit_hier,
                          mutate(across(where(is.double),  ~num(.x, digits=2)))
 ```
 
-The third model includes interaction so that the treatment can depend on study.
+The third model includes interaction so that the treatment can depend on study. 
 
 ```{r results='hide'}
 fit_hier2 <- brm(exac | trials(total) ~ (1 | treatment) + (treatment | study),
