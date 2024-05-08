@@ -17,6 +17,7 @@
 #'     code-tools: true
 #'     embed-resources: true
 #'     anchor-sections: true
+#'     html-math-method: katex
 #' ---
 
 #' # Introduction
@@ -42,9 +43,10 @@ options(posterior.num_args=list(digits=2))
 options(pillar.negative = FALSE)
 library(loo)
 library(priorsense)
+#options(priorsense.use_plot_theme=FALSE)
 library(ggplot2)
 library(bayesplot)
-theme_set(bayesplot::theme_default(base_family = "sans"))
+theme_set(bayesplot::theme_default(base_family = "sans", base_size=14))
 library(tidybayes)
 library(ggdist)
 library(patchwork)
@@ -72,16 +74,16 @@ data_bern <- data.frame(y = c(1, 1, 1, 0, 1, 1, 1, 0, 1, 0))
 data.frame(theta = plogis(ggdist::rstudent_t(n=20000, df=3, mu=0, sigma=2.5))) |>
   mcmc_hist() +
   xlim(c(0,1)) +
-  labs(title='Default brms student_t(3, 0, 2.5) prior on Intercept')
+  labs(title='Default brms student_t(3, 0, 2.5) for Intercept')
 data.frame(theta = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))) |>
   mcmc_hist() +
   xlim(c(0,1)) +
-  labs(title='student_t(7, 0, 1.5) prior on Intercept')
+  labs(title='student_t(7, 0, 1.5) for Intercept')
 #' Almost uniform prior on theta could be obtained also with normal(0,1.5)
 data.frame(theta = plogis(rnorm(n=20000, mean=0, sd=1.5))) |>
   mcmc_hist() +
   xlim(c(0,1)) +
-  labs(title='normal(0, 1.5) prior on Intercept')
+  labs(title='normal(0, 1.5) for Intercept')
 
 #' Formula `y ~ 1` corresponds to a model $\mathrm{logit}(\theta) = \alpha\times 1 = \alpha$.
 #' `brms` denotes the $\alpha$ as `Intercept`.
@@ -124,30 +126,17 @@ mcmc_hist(draws, pars='theta') +
   xlim(c(0,1))
 
 #' Prior and likelihood sensitivity plot shows posterior density estimate
-#' depending on amount of power-scaling. Overlapping line indicate low
-#' sensitivity and wider gaps between line indicate greater sensitivity.
+#' depending on amount of power-scaling. Overlapping lines indicate low
+#' sensitivity and wider gaps between lines indicate greater sensitivity.
 #| warning: false
-theta <- draws |>
-  subset_draws(variable='theta')
-powerscale_sequence(fit_bern, prediction = \(x, ...) theta) |>
-  powerscale_plot_dens(variables='theta') +
-  # switch rows and cols
-  facet_grid(rows=vars(.data$variable),
-             cols=vars(.data$component)) +
-  # cleaning
-  ggtitle(NULL,NULL) +
-  labs(x='theta', y=NULL) +
-  scale_y_continuous(breaks=NULL) +
-  theme(axis.line.y=element_blank(),
-        strip.text.y=element_blank()) +
+powerscale_plot_dens(draws, fit=fit_bern, variable='theta',
+                     help_text=FALSE) +
   xlim(c(0,1))
 
 #' We can summarise the prior and likelihood sensitivity using
 #' cumulative Jensen-Shannon distance.
-powerscale_sensitivity(fit_bern,
-                       prediction = \(x, ...) theta)$sensitivity |>
-                                                     filter(variable=='theta') |>
-                                                     tt()
+powerscale_sensitivity(draws, fit=fit_bern, variable="theta") |>
+  tt()
 
 #'
 #' # Binomial model
@@ -319,33 +308,22 @@ draws_bin2 |>
 #' the prior, and we would expect to see a different posterior only
 #' with a highly informative prior (possibly based on previous similar
 #' experiments).
-oddsratio <- draws_bin2 |>
-  subset_draws(variable='oddsratio')
 #' Prior and likelihood sensitivity plot shows posterior density estimate
-#' depending on amount of power-scaling. Overlapping line indicate low
-#' sensitivity and wider gaps between line indicate greater sensitivity.
+#' depending on amount of power-scaling. Overlapping lines indicate low
+#' sensitivity and wider gaps between lines indicate greater sensitivity.
 #| warning: false
-powerscale_sequence(fit_bin2, prediction = \(x, ...) oddsratio) |>
-  powerscale_plot_dens(variables='oddsratio') +
-  # switch rows and cols
-  facet_grid(rows=vars(.data$variable),
-             cols=vars(.data$component)) +
-  # cleaning
-  ggtitle(NULL,NULL) +
+powerscale_plot_dens(draws_bin2, fit=fit_bin2, variable='oddsratio',
+                     help_text=FALSE) +
   labs(x='Odds-ratio', y=NULL) +
-  scale_y_continuous(breaks=NULL) +
-  theme(axis.line.y=element_blank(),
-        strip.text.y=element_blank()) +
+  scale_x_continuous(breaks=seq(0.2,1.4,by=0.2))+
   # reference line
   geom_vline(xintercept=1, linetype='dashed')
 
 #' We can summarise the prior and likelihood sensitivity using
 #' cumulative Jensen-Shannon distance.
-powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio
-                       )$sensitivity |>
-                         filter(variable=='oddsratio')  |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(draws_bin2, fit=fit_bin2, variable='oddsratio')  |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' Above we used formula `y | trials(N) ~ 0 + grp2` to have separate
 #' model for control and treatment group. An alternative model `y |
@@ -365,12 +343,12 @@ powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio
 data.frame(theta_control = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))) |>
   mcmc_hist() +
   xlim(c(0,1)) +
-  labs(title='student_t(7, 0, 1.5) prior on Intercept') +
+  labs(title='student_t(7, 0, 1.5) for Intercept') +
   data.frame(theta_treatment = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))+
                plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=1.5))) |>
   mcmc_hist() +
   xlim(c(0,1)) +
-  labs(title='student_t(7, 0, 1.5) prior on Intercept and b_grp2treatment')
+  labs(title='student_t(7, 0, 1.5) for Intercept and b_grp2treatment')
 
 #' In this case, with relatively big treatment and control group, the
 #' likelihood is informative, and the difference between using `y |
@@ -402,10 +380,10 @@ data.frame(theta_control = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=
 #' prior `student_t(3, 0, 2.5)` on $\sigma_\mathrm{grp}$.
 #| results: hide
 #| cache: true
-fit_bin2 <- brm(y | trials(N) ~ 1 + (1 | grp2), family = binomial(), data = data_bin2,
+fit_bin2 <- brm(y | trials(N) ~ 1 + (1 | grp2), family = binomial(),
+                data = data_bin2,
                 prior = prior(student_t(7, 0,1.5), class='Intercept'),
                 seed = SEED, refresh = 0, control=list(adapt_delta=0.99))
-
 
 #' Check the summary of the posterior and inference diagnostics. The summary
 #' reports that there are Group-Level Effects: `~grp2` with 2 levels
@@ -423,22 +401,19 @@ as_draws_rvars(fit_bin2) |>
 
 #' Although there is no difference, illustrate how to compute the
 #' oddsratio from hierarchical model
-draws_bin2 <- as_draws_df(fit_bin2)
-oddsratio <- draws_bin2 |>
+draws_bin2 <- as_draws_df(fit_bin2) |>
   mutate_variables(theta_control = plogis(b_Intercept + `r_grp2[control,Intercept]`),
                    theta_treatment = plogis(b_Intercept + `r_grp2[treatment,Intercept]`),
-                   oddsratio = (theta_treatment/(1-theta_treatment))/(theta_control/(1-theta_control))) |>
-  subset_draws(variable='oddsratio')
-oddsratio |> mcmc_hist() +
+                   oddsratio = (theta_treatment/(1-theta_treatment))/(theta_control/(1-theta_control)))
+
+draws_bin2 |> mcmc_hist(pars="oddsratio") +
   scale_x_continuous(breaks=seq(0.2,1.6,by=0.2))+
   geom_vline(xintercept=1, linetype='dashed')
 
 #' Make also prior sensitivity analysis with focus on oddsratio.
-powerscale_sensitivity(fit_bin2, prediction = \(x, ...) oddsratio
-                       )$sensitivity |>
-                         filter(variable=='oddsratio')  |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(draws_bin2, fit=fit_bin2, variable='oddsratio')  |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' # Linear Gaussian model
 #' 
@@ -529,9 +504,9 @@ fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
 fit_lin
 
 #' Make prior sensitivity analysis by power-scaling both prior and likelihood.
-powerscale_sensitivity(fit_lin)$sensitivity  |>
-                                tt() |>
-                                format_tt(num_fmt="decimal")
+powerscale_sensitivity(fit_lin)  |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' Our weakly informative proper prior has negligible sensitivity, and
 #' the likelihood is informative.
@@ -704,9 +679,9 @@ data_lin |>
   scale_x_continuous(breaks=seq(1950,2030,by=10))
 
 #' Make prior sensitivity analysis by power-scaling both prior and likelihood.
-powerscale_sensitivity(fit_lin_h)$sensitivity  |>
-                                  tt() |>
-                                  format_tt(num_fmt="decimal")
+powerscale_sensitivity(fit_lin_h)  |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 
 #' We can use leave-one-out cross-validation to compare the expected predictive performance.
@@ -808,11 +783,9 @@ temp_diff |>
 #' Make prior sensitivity analysis by power-scaling both prior and
 #' likelihood with focus on average summer temperature increase from
 #' 1952 to 2022.
-powerscale_sensitivity(fit_spline_h, prediction = \(x, ...) temp_diff
-                       )$sensitivity |>
-                         filter(variable=='temp_diff') |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(temp_diff, fit=fit_spline_h, variable='temp_diff') |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' Probability that the average summer temperature has increased from
 #' 1952 to 2022 is 99.5%.
@@ -923,11 +896,9 @@ machine_mean <- fit_hier |>
   mutate(across(matches('r_machine'), ~ .x - b_Intercept)) |>
   subset_draws(variable='r_machine', regex=TRUE) |>
   set_variables(paste0('machine_mean[', 1:6, ']'))
-powerscale_sensitivity(fit_hier, prediction = \(x, ...) machine_mean
-                       )$sensitivity |>
-                         filter(str_detect(variable,'machine_mean')) |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(machine_mean, fit=fit_hier, variable='machine_mean') |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' 
 #' # Hierarchical binomial model
@@ -1006,30 +977,20 @@ fit_pooled
 #' Now it is easier to interpret the presented values.
 #'
 #' Prior and likelihood sensitivity plot shows posterior density estimate
-#' depending on amount of power-scaling. Overlapping line indicate low
-#' sensitivity and wider gaps between line indicate greater sensitivity.
+#' depending on amount of power-scaling. Overlapping lines indicate low
+#' sensitivity and wider gaps between lines indicate greater sensitivity.
 #| warning: false
 fit_pooled |>
-  powerscale_sequence() |>
-  powerscale_plot_dens(variables='b_doseg') +
-  # switch rows and cols
-  facet_grid(rows=vars(.data$variable),
-             cols=vars(.data$component)) +
-  # cleaning
-  ggtitle(NULL,NULL) +
-  labs(x='Dose (g) coefficient', y=NULL) +
-  scale_y_continuous(breaks=NULL) +
-  theme(axis.line.y=element_blank(),
-        strip.text.y=element_blank())
+  powerscale_plot_dens(variable='b_doseg', help_text=FALSE) +
+  labs(x='Dose (g) coefficient', y=NULL) 
 
 #' We see a strong prior prior sensitivity.
 #'
 #' Power-scaling with cumulative Jensen-Shannon distance diagnostic
 #' indicates prior-data conflict.
-powerscale_sensitivity(fit_pooled, variable='b_doseg'
-                       )$sensitivity |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(fit_pooled, variable='b_doseg') |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' Comparing the posterior of `b_doesg` (90\%-interval [1.3, 3.6]) to
 #' the prior normal(0,1), we see that when we scaled the covariate, we
@@ -1085,22 +1046,12 @@ fitp_pooled <- update(fit_pooled, sample_prior='only')
 #' And the prior-data conflict has gone.
 #| warning: false
 fit_pooled |>
-  powerscale_sequence() |>
-  powerscale_plot_dens(variables='b_doseg') +
-  # switch rows and cols
-  facet_grid(rows=vars(.data$variable),
-             cols=vars(.data$component)) +
-  # cleaning
-  ggtitle(NULL,NULL) +
-  labs(x='Dose (g) coefficient', y=NULL) +
-  scale_y_continuous(breaks=NULL) +
-  theme(axis.line.y=element_blank(),
-        strip.text.y=element_blank())
+  powerscale_plot_dens(variable='b_doseg', help_text=FALSE) +
+  labs(x='Dose (g) coefficient', y=NULL)
 
-powerscale_sensitivity(fit_pooled, variable='b_doseg'
-                       )$sensitivity |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(fit_pooled, variable='b_doseg') |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' Separate model assumes all studies have different dose effect.
 #' It would be a bit complicated to set a different prior on study specific
@@ -1121,18 +1072,20 @@ fit_separate
 #| results: hide
 #| cache: true
 fit_hier1 <- brm(events | trials(total) ~ doseg + (1 | study),
+                 family=binomial(),
                  prior=c(prior(student_t(7, 0, 3), class='Intercept'),
                          prior(normal(0, 5), class='b')),
-                 family=binomial(), data=dat.ursino2021)
+                 data=dat.ursino2021)
 
 #' The second hierarchical model assumes that also the slope can vary
 #' between the studies.
 #| results: hide
 #| cache: true
 fit_hier2 <- brm(events | trials(total) ~ doseg + (doseg | study),
+                 family=binomial(),
                  prior=c(prior(student_t(7, 0, 10), class='Intercept'),
                          prior(normal(0, 5), class='b')),
-                 family=binomial(), data=dat.ursino2021)
+                 data=dat.ursino2021)
 
 #' We seem some divergences due to highly varying posterior
 #' curvature. We repeat the sampling with higher adapt_delta, which
@@ -1249,22 +1202,12 @@ mcmc_areas(as_draws_df(fit_hier2), regex_pars='r_study\\[.*doseg') +
 #' We check the prior sensitivity in hierarchical model 2
 #| warning: false
 fit_hier2 |>
-  powerscale_sequence() |>
-  powerscale_plot_dens(variables='b_doseg') +
-  # switch rows and cols
-  facet_grid(rows=vars(.data$variable),
-             cols=vars(.data$component)) +
-  # cleaning
-  ggtitle(NULL,NULL) +
-  labs(x='Dose (g) coefficient', y=NULL) +
-  scale_y_continuous(breaks=NULL) +
-  theme(axis.line.y=element_blank(),
-        strip.text.y=element_blank())
+  powerscale_plot_dens(variable='b_doseg', help_text=FALSE) +
+  labs(x='Dose (g) coefficient', y=NULL)
 
-powerscale_sensitivity(fit_hier2, variable='b_doseg'
-                       )$sensitivity |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(fit_hier2, variable='b_doseg') |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' 
 #' The posterior for the probability of event given certain dose and a
@@ -1507,12 +1450,9 @@ oddsratio <- theta |>
 oddsratio <- oddsratio$treatment_oddsratio |>
   as_draws_df() |>
   set_variables(oddsratio$treatment)
-powerscale_sensitivity(fit_hier,
-                       prediction = \(x, ...) oddsratio,
-                       )$sensitivity |>
-                         filter(variable %in% variables(oddsratio)) |>
-                         tt() |>
-                         format_tt(num_fmt="decimal")
+powerscale_sensitivity(oddsratio, fit=fit_hier) |>
+  tt() |>
+  format_tt(num_fmt="decimal")
 
 #' The third model includes interaction so that the treatment can depend on study. 
 #| results: hide
