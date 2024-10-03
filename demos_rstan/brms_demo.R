@@ -259,8 +259,8 @@ data_bin2 <- data.frame(N = c(674, 680),
 #' \beta_\mathrm{control}\times x_\mathrm{control} +
 #' \beta_\mathrm{treatment}\times x_\mathrm{treatment}$, where
 #' $x_\mathrm{control}$ is a vector with 1 for control and 0 for
-#' treatment, and $x_\mathrm{treatemnt}$ is a vector with 1 for
-#' treatemnt and 0 for control. As only of the vectors have 1, this
+#' treatment, and $x_\mathrm{treatment}$ is a vector with 1 for
+#' treatment and 0 for control. As only of the vectors have 1, this
 #' corresponds to separate models
 #' $\mathrm{logit}(\theta_\mathrm{control}) = \beta_\mathrm{control}$
 #' and $\mathrm{logit}(\theta_\mathrm{treatment}) =
