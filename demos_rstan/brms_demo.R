@@ -955,7 +955,7 @@ dat.ursino2021 |>
   labs(x='Dose (mg)', y='Count') +
   scale_x_continuous(breaks=seq(100,1000,by=100))
 
-#' Each study is using $2--6$ different dose levels. Three studies
+#' Each study is using 2--6 different dose levels. Three studies
 #' that include only two dose levels are likely to provide weak
 #' information on slope.
 crosstab <- with(dat.ursino2021,table(dose,study))
