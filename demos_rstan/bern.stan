@@ -26,3 +26,10 @@ model {
   //    target += bernoulli_lpmf(y[i] | theta);
   //  }
 }
+generated quantities {
+  vector[N] log_lik;
+  real lprior = beta_lpdf(theta | 1, 1);
+   for (i in 1:N) {
+     log_lik[i] = bernoulli_lpmf(y[i] | theta);
+   }
+}

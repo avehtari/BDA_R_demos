@@ -329,4 +329,4 @@ I thank Ben Goodrich, Ben Bales, and Bob Carpenter for useful comments on the dr
 ### Appendix: Licenses
 
 * Code &copy; 2017, Aki Vehtari, licensed under BSD-3.
-* Text &copy; 2017, Aki Vehtari, licensed under CC-BY-NC 4.0.
+* Text &copy; 2017, Aki Vehtari, licensed under CC-BY 4.0.
