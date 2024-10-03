@@ -24,9 +24,11 @@ knitr::opts_chunk$set(cache=FALSE, message=FALSE, error=FALSE, warning=TRUE, out
 #+  comment=NA
 library(ggplot2)
 library(tidyr)
+library(dplyr)
 library(gridExtra)
 library(rstanarm)
 library(brms)
+options(brms.backend = "cmdstanr")
 library(bayesplot)
 theme_set(bayesplot::theme_default(base_family = "sans", base_size = 16))
 library(patchwork)
@@ -53,15 +55,26 @@ root<-has_file(".BDA_R_demos_root")$make_fix_file()
 # file preview shows a header row
 deaths <- read.csv(root("demos_rstan", "trafficdeaths.csv"), header = TRUE)
 head(deaths)
+deaths2013 <- deaths |> filter(year<=2013)
 
 
 #' First plot just the data.
 #+
-deaths |>
+deaths2013 |>
   ggplot(aes(x=year, y=deaths)) +
   geom_point() +
-  labs(y = 'Traffic deaths', x= "Year") +
+  labs(y = 'Number of traffic deaths in Finland', x= "Year") +
   guides(linetype = "none")
+#ggsave('traffic1.pdf',width=6,height=4)
+
+
+deaths2013 |>
+  ggplot(aes(x=year, y=deaths)) +
+  geom_point() +
+  geom_line() +
+  labs(y = 'Number of traffic deaths in Finland', x= "Year") +
+  guides(linetype = "none")
+#ggsave('traffic2.pdf',width=6,height=4)
 
 #' # Poisson regression model
 #' 
@@ -85,17 +98,34 @@ y_predict_lin <- posterior_predict(fit_lin, newdata=data.frame(year=x_predict))
 mu <- apply(t(y_predict_lin), 1, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = x_predict, .) %>% gather(pct, y, -x)
 pfit <- ggplot() +
+  geom_point(aes(year, deaths), data = deaths2013, size = 1) +
+  geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
+  scale_linetype_manual(values = c(2,1,2)) +
+  annotate(geom="text", x=2031, y=mu$y[mu$x==2030], label=c('5%','50%','95%'))+
+  theme(legend.position="none")+
+  labs(x = 'Year', y = 'Number of traffic deaths in Finland') +
+  guides(title='f')
+(pfit)
+
+x_predict <- seq(1993,2030)
+N_predict <- length(x_predict)
+y_predict_lin <- posterior_predict(fit_lin, newdata=data.frame(year=x_predict))
+mu <- apply(t(y_predict_lin), 1, quantile, c(0.05, 0.5, 0.95)) %>%
+  t() %>% data.frame(x = x_predict, .) %>% gather(pct, y, -x)
+pfit <- ggplot() +
   geom_point(aes(year, deaths), data = deaths, size = 1) +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
-  labs(x = 'Year', y = 'Traffic deaths') +
-  guides(linetype = F)
+  annotate(geom="text", x=2031, y=mu$y[mu$x==2030], label=c('5%','50%','95%'))+
+  theme(legend.position="none")+
+  labs(x = 'Year', y = 'Number of traffic deaths in Finland') +
+  guides(title='f')
 (pfit)
-
+#ggsave('traffic5.pdf',width=6,height=4)
 
 #' Next we fit a non-linear spline model with `stan_gamm4`
 #+ 
-fit_gam <- stan_gamm4(deaths ~ year + s(year), data=deaths,
+fit_gam <- stan_gamm4(deaths ~ year + s(year), data=deaths2020,
                       family=poisson, adapt_delta=0.999, 
                       refresh=1000, iter=2000, chain=4, seed=583829, refresh=0)
 
@@ -109,11 +139,12 @@ y_predict_gam <- posterior_predict(fit_gam, newdata=data.frame(year=x_predict))
 mu <- apply(t(y_predict_gam), 1, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = x_predict, .) %>% gather(pct, y, -x)
 pfit <- ggplot() +
-  geom_point(aes(year, deaths), data = deaths, size = 1) +
+  geom_point(aes(year, deaths), data = deaths2020, size = 1) +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
+  annotate(geom="text", x=2031, y=mu$y[mu$x==2030], label=c('5%','50%','95%'))+
   labs(x = 'Year', y = 'Traffic deaths') +
-  guides(linetype = F)
+  guides(linetype = 'none')
 (pfit)
 
 
@@ -124,10 +155,9 @@ pfit <- ggplot() +
 #' Finally we fit Gaussian process centered on linear model. We use
 #' brms for this:
 #+  comment=NA
-fit_gp <- brm(deaths ~ year + gp(year), data=deaths,
+fit_gp <- brm(deaths ~ year + gp(year), data=deaths2020,
                       family=poisson, adapt_delta=0.95, 
-              refresh=1000, iter=2000, chain=4, seed=583829, refresh=0,
-              backend='cmdstanr')
+              refresh=1000, iter=2000, chain=4, seed=583829, refresh=0)
 
 x_predict=seq(1993,2030)
 N_predict=length(x_predict)
@@ -135,9 +165,10 @@ y_predict_gp <- posterior_predict(fit_gp, newdata=data.frame(year=x_predict))
 mu <- apply(t(y_predict_gp), 1, quantile, c(0.05, 0.5, 0.95)) %>%
   t() %>% data.frame(x = x_predict, .) %>% gather(pct, y, -x)
 pfit <- ggplot() +
-  geom_point(aes(year, deaths), data = deaths, size = 1) +
+  geom_point(aes(year, deaths), data = deaths2020, size = 1) +
   geom_line(aes(x, y, linetype = pct), data = mu, color = 'red') +
   scale_linetype_manual(values = c(2,1,2)) +
+  annotate(geom="text", x=2031, y=mu$y[mu$x==2030], label=c('5%','50%','95%'))+
   labs(x = 'Year', y = 'Traffic deaths') +
   guides(linetype = F)
 (pfit)
