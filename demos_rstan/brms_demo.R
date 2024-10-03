@@ -58,7 +58,9 @@ SEED <- 48927 # set random seed for reproducibility
 #' # Bernoulli model
 #' 
 #' Toy data with sequence of failures (0) and successes (1). We would
-#' like to learn about the unknown probability of success.
+#' like to learn about the unknown probability of success. brms wants
+#' the data in a data frame format (tibble which is a variant of data
+#' frame can be used, too).
 data_bern <- data.frame(y = c(1, 1, 1, 0, 1, 1, 1, 0, 1, 0))
 
 #' As usual in case of generalized linear models, (GLMs) brms defines
@@ -71,6 +73,11 @@ data_bern <- data.frame(y = c(1, 1, 1, 0, 1, 1, 1, 0, 1, 0))
 #' We can simulate from these priors to check the implied prior on theta.
 #' We next compare the result to using `normal(0, 1)` prior on logit
 #' probability. We visualize the implied priors by sampling from the priors.
+#'
+#' `plogis` is the cumulative density function for logistic
+#' distribution, which is equal to inverse-logit transformation.
+#' Base-R's Student's t-distribution does not have `mu` and `sigma`
+#' arguments, and thus we use a function from `ggdist` package.
 data.frame(theta = plogis(ggdist::rstudent_t(n=20000, df=3, mu=0, sigma=2.5))) |>
   mcmc_hist() +
   xlim(c(0,1)) +
@@ -96,31 +103,39 @@ fit_bern <- brm(y ~ 1, family = bernoulli(), data = data_bern,
 #' Check the summary of the posterior and inference diagnostics.
 fit_bern
 
-#' Extract the posterior draws
+#' Extract the posterior draws in data frame (df) format
 draws <- as_draws_df(fit_bern)
-#' We can get summary information using `summarise_draws()`
+#' We can select subset of stored variables with `subset_draws()`
+#' and get summary information using `summarise_draws()`
 draws |>
   subset_draws(variable='b_Intercept') |>
   summarise_draws()
 
-#' We get slightly prettier table using `tinytable::tt()`
+#' We get a prettier table using `tinytable::tt()`. Earlier we had
+#' defined options
+#' ```
+#' options(tinytable_format_num_fmt = "significant_cell", tinytable_format_digits = 2, tinytable_tt_digits=2)
+#' ```
+#' which makes the table to show only 2 significant digits for each value,
+#' which is sufficient accuracy and having fewer digits makes the table
+#' easier to read.
 draws |>
   subset_draws(variable='b_Intercept') |>
   summarise_draws() |>
   tt()
 
-#' We can compute the probability of success by using plogis which is
+#' We can compute the probability of success by using `plogis` which is
 #' equal to inverse-logit function
 draws <- draws |>
   mutate_variables(theta=plogis(b_Intercept))
 
-#' Summary of theta
+#' Summary of `theta`
 draws |>
   subset_draws(variable='theta') |>
   summarise_draws() |>
   tt()
 
-#' Histogram of theta
+#' Histogram of `theta` using `bayesplot::mcmc_hist()`
 mcmc_hist(draws, pars='theta') +
   xlab('theta') +
   xlim(c(0,1))
@@ -162,15 +177,7 @@ fit_bin <- brm(y | trials(N) ~ 1, family = binomial(), data = data_bin,
 #' Check the summary of the posterior and inference diagnostics.
 fit_bin
 
-#' The diagnostic indicates prior-data conflict, that is, both prior
-#' and likelihood are informative. If there is true strong prior
-#' information that would justify the normal(0,1) prior, then this is
-#' fine, but otherwise more thinking is required (goal is not adjust
-#' prior to remove diagnostic warnings without thinking). In this toy
-#' example, we proceed with this prior.
-#' 
-
-#' Extract the posterior draws
+#' Extract the posterior draws in data frame format
 draws <- as_draws_df(fit_bin)
 #' Summary of latent intercept
 draws |>
@@ -178,7 +185,7 @@ draws |>
   summarise_draws() |>
   tt()
 
-#' We can compute the probability of success by using plogis which is
+#' We can compute the probability of success by using `plogis()` which is
 #' equal to inverse-logit function
 draws <- draws |>
   mutate_variables(theta=plogis(b_Intercept))
@@ -188,12 +195,13 @@ draws |>
   summarise_draws() |>
   tt(digits=2)
 
-#' Histogram of theta
+#' Histogram of `theta`
 mcmc_hist(draws, pars='theta') +
   xlab('theta') +
   xlim(c(0,1))
 
-#' Re-run the model with a new data dataset without recompiling
+#' Re-run the model with a new data dataset without recompiling using
+#' argument `newdata`.
 #| results: hide
 #| cache: true
 data_bin <- data.frame(N = c(5), y = c(4))
@@ -202,7 +210,7 @@ fit_bin <- update(fit_bin, newdata = data_bin)
 #' Check the summary of the posterior and inference diagnostics.
 fit_bin
 
-#' Extract the posterior draws
+#' Extract the posterior draws in data frame format
 draws <- as_draws_df(fit_bin)
 #' Summary of latent intercept
 draws |>
@@ -210,17 +218,17 @@ draws |>
   summarise_draws() |>
   tt(digits=2)
 
-#' We can compute the probability of success by using plogis which is
+#' We can compute the probability of success by using `plogis()` which is
 #' equal to inverse-logit function
 draws <- draws |>
   mutate_variables(theta=plogis(b_Intercept))
-#' Summary of theta
+#' Summary of `theta`
 draws |>
   subset_draws(variable='theta') |>
   summarise_draws() |>
   tt(digits=2)
 
-#' Histogram of theta
+#' Histogram of `theta`
 mcmc_hist(draws, pars='theta') +
   xlab('theta') +
   xlim(c(0,1))
@@ -235,7 +243,8 @@ mcmc_hist(draws, pars='theta') +
 #' - out of 680 receiving the treatment, 22 died
 #' 
 #' Data, where `grp2` is an indicator variable defined as a factor
-#' type, which is useful for categorical variables.
+#' type (using `factor()` function), which is useful for categorical
+#' variables.
 data_bin2 <- data.frame(N = c(674, 680),
                         y = c(39,22),
                         grp2 = factor(c('control','treatment')))
@@ -260,14 +269,10 @@ data_bin2 <- data.frame(N = c(674, 680),
 #' `student_t(7, 0,1.5)`, both $\beta$'s are shrunk towards 0, but
 #' independently.
 #| results: hide
-fit_bin2 <- brm(y | trials(N) ~ 0 + grp2, family = binomial(), data = data_bin2,
+fit_bin2 <- brm(y | trials(N) ~ 0 + grp2, family = binomial(),
+                data = data_bin2,
                 prior = prior(student_t(7, 0,1.5), class='b'),
                 seed = SEED, refresh = 0)
-
-#' Check the summary of the posterior and inference diagnostics. brms is using
-#' the first factor level `control` as the baseline and thus reports
-#' the coefficient (population-level effect) for `treatment` (shown s
-#' `grp2treatment`)
 
 #' Check the summary of the posterior and inference diagnostics. With `~ 0 +
 #' grp2` there is no `Intercept` and \beta_\mathrm{control} and
@@ -283,19 +288,25 @@ draws_bin2 <- as_draws_df(fit_bin2) |>
   mutate(theta_control = plogis(b_grp2control),
          theta_treatment = plogis(b_grp2treatment),
          oddsratio = (theta_treatment/(1-theta_treatment))/(theta_control/(1-theta_control)))
-#' Plot oddsratio
+#' Plot histogram of odds-ratio
 mcmc_hist(draws_bin2, pars='oddsratio') +
   scale_x_continuous(breaks=seq(0.2,1.6,by=0.2))+
   geom_vline(xintercept=1, linetype='dashed')
 
-#' Probability that the oddsratio<1
+#' Compute probability that the oddsratio<1 and associated Monte Carlo
+#' standard error (MCSE). To compute the probability we use comparison
+#' `oddsratio<1` to find out for which posterior draws this is true,
+#' and when we compute mean over TRUE and FALSE values, these values
+#' are converted to 1 and 0, and the `mean()` is then equal to the
+#' proportion of 1's. The usual MCSE estimate for mean can be use to
+#' get the MCSE for this proportion.
 draws_bin2 |>
   mutate(poddsratio = oddsratio<1) |>
   subset(variable='poddsratio') |>
   summarise_draws(mean, mcse_mean)  |>
   tt()
 
-#' oddsratio 95% posterior interval
+#' Compute odds-ratio 95% posterior interval, and associated MCSEs
 draws_bin2 |>
   subset(variable='oddsratio') |>
   summarise_draws(~quantile(.x, probs = c(0.025, 0.975)), ~mcse_quantile(.x, probs = c(0.025, 0.975))) |>
@@ -303,7 +314,7 @@ draws_bin2 |>
 
 
 #' Make prior sensitivity analysis by power-scaling both prior and
-#' likelihood.  Focus on oddsratio which is the quantity of
+#' likelihood.  Focus on odds-ratio which is the quantity of
 #' interest. We see that the likelihood is much more informative than
 #' the prior, and we would expect to see a different posterior only
 #' with a highly informative prior (possibly based on previous similar
@@ -320,7 +331,8 @@ powerscale_plot_dens(draws_bin2, fit=fit_bin2, variable='oddsratio',
   geom_vline(xintercept=1, linetype='dashed')
 
 #' We can summarise the prior and likelihood sensitivity using
-#' cumulative Jensen-Shannon distance.
+#' cumulative Jensen-Shannon distance. Here we prefer to show
+#' 2 decimal digits (instead of the 2 significant digits we used before)
 powerscale_sensitivity(draws_bin2, fit=fit_bin2, variable='oddsratio')  |>
   tt() |>
   format_tt(num_fmt="decimal")
@@ -376,7 +388,7 @@ data.frame(theta_control = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=
 #' informative prior on $\sigma_\mathrm{grp}$, two group hierarchical
 #' model is not that useful. Hierarchical models are more useful with
 #' more than two groups. In the following, we use the previously used
-#' `student_t(7, 0,1.5)` prior on intercept and the default `brms`
+/#' `student_t(7, 0,1.5)` prior on intercept and the default `brms`
 #' prior `student_t(3, 0, 2.5)` on $\sigma_\mathrm{grp}$.
 #| results: hide
 #| cache: true
@@ -389,18 +401,20 @@ fit_bin2 <- brm(y | trials(N) ~ 1 + (1 | grp2), family = binomial(),
 #' reports that there are Group-Level Effects: `~grp2` with 2 levels
 #' (control and treatment), with `sd(Intercept)` denoting
 #' $\sigma_\mathrm{grp}$. In addition, the summary lists
-#' Population-Level Effects: `Intercept` ($\alpha$) as in the previous
+#' `Population-Level Effects: Intercept` ($\alpha$) as in the previous
 #' non-hierarchical models.
 fit_bin2
 
-#' We can also look at the variable names `brms` uses internally
+#' We can also look at the variable names `brms` uses internally.
+#' We exclude variables `lprior` (log prior density) and `lp__`
+#' (log posterior density).
 as_draws_rvars(fit_bin2) |>
   subset_draws(variable=c('lprior','lp__'), exclude=TRUE) |>
   summarise_draws() |>
   tt()
 
 #' Although there is no difference, illustrate how to compute the
-#' oddsratio from hierarchical model
+#' oddsratio from a hierarchical model.
 draws_bin2 <- as_draws_df(fit_bin2) |>
   mutate_variables(theta_control = plogis(b_Intercept + `r_grp2[control,Intercept]`),
                    theta_treatment = plogis(b_Intercept + `r_grp2[treatment,Intercept]`),
@@ -410,14 +424,14 @@ draws_bin2 |> mcmc_hist(pars="oddsratio") +
   scale_x_continuous(breaks=seq(0.2,1.6,by=0.2))+
   geom_vline(xintercept=1, linetype='dashed')
 
-#' Make also prior sensitivity analysis with focus on oddsratio.
+#' Make also prior sensitivity analysis with focus on odds-ratio.
 powerscale_sensitivity(draws_bin2, fit=fit_bin2, variable='oddsratio')  |>
   tt() |>
   format_tt(num_fmt="decimal")
 
 #' # Linear Gaussian model
 #' 
-#' Use the Kilpisjärvi summer month temperatures 1952--2022 data from `aaltobda` package
+#' Use the Kilpisjärvi summer month temperatures 1952--2022 data from `aaltobda` package. We can read data directly from a URL.
 load(url('https://github.com/avehtari/BDA_course_Aalto/raw/master/rpackage/data/kilpisjarvi2022.rda'))
 data_lin <- data.frame(year = kilpisjarvi2022$year,
                        temp = kilpisjarvi2022$temp.summer)
@@ -429,7 +443,7 @@ data_lin |>
   labs(x= "Year", y = 'Summer temp. @Kilpisjärvi') +
   guides(linetype = "none")
 
-#' To analyse has there been change in the average summer month
+#' To analyse whether there has been change in the average summer month
 #' temperature we use a linear model with Gaussian model for the
 #' unexplained variation. By default brms uses uniform prior for the
 #' coefficients.
@@ -438,10 +452,12 @@ data_lin |>
 #' \mathrm{normal}(\alpha + \beta \times \mathrm{temp}, \sigma)$.  The
 #' model could also be defined as `temp ~ 1 + year` which explicitly
 #' shows the intercept ($\alpha$) part. Using the variable names
-#' `brms` uses the model can be written also as `temp ~
-#' normal(b_Intercept*1 + b_year*year, sigma)`. We start with the
-#' default priors to see some tricks that `brms` does behind the
-#' curtain.
+#' `brms` uses the model can be written also as
+#' $$
+#' \mathrm{temp} \sim \mathrm{normal}(\mathrm{b\_Intercept}*1 + \mathrm{b\_year}*\mathrm{year}, \mathrm{sigma})
+#' $$
+#' We start with the default priors to see some tricks that `brms`
+#' does behind the curtain.
 #| results: hide
 fit_lin <- brm(temp ~ year, data = data_lin, family = gaussian(),
                seed = SEED, refresh = 0)
@@ -464,11 +480,11 @@ bayes_R2(fit_lin) |>
   as_tibble() |>
   tt()
 
-#' We can check the all the priors used. 
+#' We can check the all the priors used with `prior_summary()`
 prior_summary(fit_lin) |>
   tt()
 
-#' We see that `class=b` and `coef=year` have `flat`, that is,
+#' We see that `class=b` and `coef=year` have prior `flat`, that is,
 #' improper uniform prior, `Intercept` has `student_t(3, 9.5, 2.5)`,
 #' and `sigma` has `student_t(3, 0, 2.5)` prior.  In general it is
 #' good to use proper priors, but sometimes flat priors are fine and
@@ -511,19 +527,22 @@ powerscale_sensitivity(fit_lin)  |>
 #' Our weakly informative proper prior has negligible sensitivity, and
 #' the likelihood is informative.
 
-#' Extract the posterior draws and check the summaries
+#' Extract the posterior draws and check the summaries. We exclude
+#' variables `lprior` (log prior density) and `lp__` (log posterior
+#' density).
 draws_lin <- as_draws_df(fit_lin) 
 draws_lin |>
   subset_draws(variable=c('lprior','lp__'), exclude=TRUE) |>
   summarise_draws() |> 
   tt()
 
-#' Histogram of b_year
+#' Histogram of `b_year`
 draws_lin |>
   mcmc_hist(pars='b_year') +
   xlab('Average temperature increase per year')
 
-#' Probability that the coefficient b_year > 0 and the corresponding MCSE
+#' Compute the probability that the coefficient `b_year` > 0 and the
+#' corresponding MCSE.
 draws_lin |>
   mutate(I_b_year_gt_0 = b_year>0) |>
   subset_draws(variable='I_b_year_gt_0') |>
@@ -534,7 +553,8 @@ draws_lin |>
 #' is 0.
 #' 
 
-#' 95% posterior interval for temperature increase per 100 years
+#' 95% posterior interval for temperature increase per 100 years and
+#' associated MCSEs.
 draws_lin |>
   mutate(b_year_100 = b_year*100) |>
   subset_draws(variable='b_year_100') |>
@@ -544,8 +564,9 @@ draws_lin |>
   format_tt(num_fmt="decimal")
 
 #' Plot posterior draws of the linear function values at each year.
-#' `add_linpred_draws()` takes the years from the data and uses `fit_lin` to make
-#' the predictions.
+#' `add_linpred_draws()` takes the years from the data passed via
+#' pipe, and uses `fit_lin` to make the linear model predictions.
+#' `add_linpred_draws()` corresponds to `brms::posterior_linpred()`
 data_lin |>
   add_linpred_draws(fit_lin) |>
   # plot data
@@ -559,7 +580,7 @@ data_lin |>
   theme(legend.position="none")+
   scale_x_continuous(breaks=seq(1950,2020,by=10))
 
-#' Alternatively plot a spaghetti plot for 100 draws
+#' Plot a spaghetti plot for 100 posterior draws.
 data_lin |>
   add_linpred_draws(fit_lin, ndraws=100) |>
   # plot data
@@ -573,9 +594,10 @@ data_lin |>
   theme(legend.position="none")+
   scale_x_continuous(breaks=seq(1950,2020,by=10))
 
-#' Plot posterior predictive distribution at each year until 2030
+#' Plot posterior predictive distribution at each year until 2030.
 #' `add_predicted_draws()` takes the years from the data and uses
-#' `fit_lin` to make the predictions.
+#' `fit_lin` to draw from the posterior predictive distribution.
+#' `add_predicted_draws()` corresponds to `brms::posterior_predict()`.
 data_lin |>
   add_row(year=2023:2030) |>
   add_predicted_draws(fit_lin) |>
@@ -591,13 +613,15 @@ data_lin |>
   scale_x_continuous(breaks=seq(1950,2030,by=10))
 
 #' Posterior predictive check with density overlays examines the whole
-#' temperature distribution
+#' temperature distribution. We generate replicate data using 20 different
+#' posterior draws (with argument `ndraws`).
 pp_check(fit_lin, type='dens_overlay', ndraws=20)
 
 #' LOO-PIT check is good for checking whether the normal distribution
-#' is well describing the variation as it is examines the calibration
+#' is well describing the variation as it examines the calibration
 #' of LOO predictive distributions conditionally on each year. LOO-PIT
-#' plot looks good.
+#' plot looks good. We use all posterior draws to estimate LOO predictive
+#' distributions.
 pp_check(fit_lin, type='loo_pit_qq', ndraws=4000)
 
 #' # Linear Student's $t$ model
@@ -610,22 +634,27 @@ pp_check(fit_lin, type='loo_pit_qq', ndraws=4000)
 #' that the normal would be good).
 #' 
 #+  results='hide'
-fit_lin_t <- brm(temp ~ year, data = data_lin, family = student(),
+fit_lin_t <- brm(temp ~ year, data = data_lin,
+                 family = student(),
                  prior = prior(student_t(3, 0, 0.03), class='b'),
                  seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and inference diagnostics. The b_year
-#' posterior looks similar as before and the posterior for degrees of
-#' freedom `nu` has most of the posterior mass for quite large values
-#' indicating there is no strong support for thick tailed variation in
-#' average summer temperatures.
+#' Check the summary of the posterior and inference diagnostics. The
+#' `b_year` posterior looks similar as before and the posterior for
+#' degrees of freedom `nu` has most of the posterior mass for quite
+#' large values indicating there is no strong support for thick tailed
+#' variation in average summer temperatures.
 fit_lin_t
 
 #' # Pareto-smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO)
 #' 
-#' We can use leave-one-out cross-validation to compare the expected predictive performance.
+#' We can use leave-one-out cross-validation to compare the expected
+#' predictive performance.
 #' 
-#' LOO comparison shows normal and Student's $t$ model have similar performance.
+#' LOO comparison shows normal and Student's $t$ model have similar
+#' performance. As `loo_compare()` returns it's own specific object
+#' type, we need to do some manipulation to change it to a data frame
+#' suitable for `tt()`.
 loo_compare(loo(fit_lin), loo(fit_lin_t)) |>
   as.data.frame() |>
   rownames_to_column("model") |>
@@ -636,10 +665,10 @@ loo_compare(loo(fit_lin), loo(fit_lin_t)) |>
 #' 
 #' Heteroscedasticity assumes that the variation around the linear
 #' mean can also vary. We can allow sigma to depend on year, too.
+#' `brms` supports multiple models using `bf()` function, and `sigma`
+#' is a special keyword for the residual standard deviation.
 #' Although the additional component is written as `sigma ~ year`, the
-#' log link function is used and the model is for log(sigma). `bf()` allows
-#' listing several formulas.
-#' 
+#' log link function is used and the model is for log(sigma). 
 #+  results='hide'
 fit_lin_h <- brm(bf(temp ~ year,
                     sigma ~ year),
@@ -647,23 +676,24 @@ fit_lin_h <- brm(bf(temp ~ year,
                  prior = prior(student_t(3, 0, 0.03), class='b'),
                  seed = SEED, refresh = 0)
 
-#' Check the summary of the posterior and inference diagnostics. The b_year
-#' posterior looks similar as before. The posterior for sigma_year
-#' looks like having most of the ma for negative values, indicating
+#' Check the summary of the posterior and inference diagnostics. The `b_year`
+#' posterior looks similar as before. The posterior for `sigma_year`
+#' looks like having most of the mass for negative values, indicating
 #' decrease in temperature variation around the mean.
 fit_lin_h
 
-#' Histogram of b_year and b_sigma_year
+#' Histograms of `b_year` and `b_sigma_year`
 as_draws_df(fit_lin_h) |>
   mcmc_areas(pars=c('b_year', 'b_sigma_year'))
 
-#' As log(x) is almost linear when x is close to zero, we can see that the
-#' sigma is decreasing about 1% per year (95% interval from 0% to 2%).
+#' As $log(x)$ is almost linear when $x$ is close to zero, we can see
+#' that the `sigma` is decreasing about 1% per year (95% interval from
+#' 0% to 2%).
 #' 
 
-#' Plot posterior predictive distribution at each year until 2030
+#' Plot the posterior predictive distribution at each year until 2030
 #' `add_predicted_draws()` takes the years from the data and uses
-#' `fit_lin_h` to make the predictions.
+#' `fit_lin_h` to draw from the posterior predictive distribution.
 data_lin |>
   add_row(year=2023:2030) |>
   add_predicted_draws(fit_lin_h) |>
@@ -683,8 +713,8 @@ powerscale_sensitivity(fit_lin_h)  |>
   tt() |>
   format_tt(num_fmt="decimal")
 
-
-#' We can use leave-one-out cross-validation to compare the expected predictive performance.
+#' We can use leave-one-out cross-validation to compare the expected
+#' predictive performance.
 #' 
 #' LOO comparison shows homoskedastic normal and heteroskedastic
 #' normal models have similar performances.
@@ -708,8 +738,9 @@ fit_spline_h <- brm(bf(temp ~ s(year),
 
 #' We get warnings about divergences, and try rerunning with higher
 #' adapt_delta, which leads to using smaller step sizes. Often
-#' `adapt_delta=0.999` leads to very slow sampling, but with this
-#' small data, this is not an issue.
+#' `adapt_delta=0.999` leads to very slow sampling and is not
+#' generally recommended, but with this small data, this is not an
+#' issue.
 #| results: hide
 #| cache: true
 fit_spline_h <- update(fit_spline_h, control = list(adapt_delta=0.999))
@@ -722,7 +753,7 @@ fit_spline_h
 
 #' We can still plot posterior predictive distribution at each year
 #' until 2030 `add_predicted_draws()` takes the years from the data
-#' and uses `fit_lin_h` to make the predictions.
+#' and uses `fit_lin_h` to draw from the posterior predictive distribution.
 data_lin |>
   add_row(year=2023:2030) |>
   add_predicted_draws(fit_spline_h) |>
@@ -737,7 +768,7 @@ data_lin |>
   theme(legend.position="none")+
   scale_x_continuous(breaks=seq(1950,2030,by=10))
 
-#' And we can use leave-one-out cross-validation to compare the
+#' And we can use LOO-CV to compare the
 #' expected predictive performance.
 #' LOO comparison shows homoskedastic normal linear and
 #' heteroskedastic normal spline models have similar
@@ -992,7 +1023,7 @@ powerscale_sensitivity(fit_pooled, variable='b_doseg') |>
   tt() |>
   format_tt(num_fmt="decimal")
 
-#' Comparing the posterior of `b_doesg` (90\%-interval [1.3, 3.6]) to
+#' Comparing the posterior of `b_doseg` (90\%-interval [1.3, 3.6]) to
 #' the prior normal(0,1), we see that when we scaled the covariate, we
 #' forgot to check that the prior still makes sense.
 #'
