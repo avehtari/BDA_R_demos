@@ -95,7 +95,6 @@ data.frame(theta = plogis(rnorm(n=20000, mean=0, sd=1.5))) |>
 #' Formula `y ~ 1` corresponds to a model $\mathrm{logit}(\theta) = \alpha\times 1 = \alpha$.
 #' `brms` denotes the $\alpha$ as `Intercept`.
 #| results: hide
-#| cache: true
 fit_bern <- brm(y ~ 1, family = bernoulli(), data = data_bern,
                 prior = prior(student_t(7, 0, 1.5), class='Intercept'),
                 seed = SEED, refresh = 0)
@@ -169,7 +168,6 @@ data_bin <- data.frame(N = c(10), y = c(7))
 #' $\mathrm{logit}(\theta) = \alpha$, and the number of trials for
 #' each observation is provided by `| trials(N)`
 #| results: hide
-#| cache: true
 fit_bin <- brm(y | trials(N) ~ 1, family = binomial(), data = data_bin,
                prior = prior(student_t(7, 0,1.5), class='Intercept'),
                seed = SEED, refresh = 0)
@@ -388,7 +386,7 @@ data.frame(theta_control = plogis(ggdist::rstudent_t(n=20000, df=7, mu=0, sigma=
 #' informative prior on $\sigma_\mathrm{grp}$, two group hierarchical
 #' model is not that useful. Hierarchical models are more useful with
 #' more than two groups. In the following, we use the previously used
-/#' `student_t(7, 0,1.5)` prior on intercept and the default `brms`
+#' `student_t(7, 0,1.5)` prior on intercept and the default `brms`
 #' prior `student_t(3, 0, 2.5)` on $\sigma_\mathrm{grp}$.
 #| results: hide
 #| cache: true
