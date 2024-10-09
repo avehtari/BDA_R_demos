@@ -495,9 +495,14 @@ prior_summary(fit_lin) |>
 #' `Intercept` prior is centered on median of the target (here target
 #' is `year`). If we would like to set informative priors, we need to
 #' set the informative prior on `Intercept` given the centered
-#' covariate values. We can turn of the centering by setting argument
-#' `center=FALSE`, and we can set the prior on original intercept by
-#' using a formula `temp ~ 0 + Intercept + year`. In this case, we are
+#' covariate values.
+#'
+#' We can turn of the automatic centering by replacing the formula
+#' with `bf(temp ~ year, center=FALSE)`. Or we can set the prior on
+#' original intercept by using a formula `temp ~ 0 + Intercept +
+#' year`.
+#'
+#' In this case, we are
 #' happy with the default prior for the intercept. In this specific
 #' case, the flat prior on coefficient is also fine, but we add an
 #' weakly informative prior just for the illustration. Let's assume we
