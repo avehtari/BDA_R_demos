@@ -112,8 +112,10 @@ draws |>
 
 #' We get a prettier table using `tinytable::tt()`. Earlier we had
 #' defined options
-#' ```
-#' options(tinytable_format_num_fmt = "significant_cell", tinytable_format_digits = 2, tinytable_tt_digits=2)
+#' ```r
+#' options(tinytable_format_num_fmt = "significant_cell",
+#'         tinytable_format_digits = 2,
+#'         tinytable_tt_digits=2)
 #' ```
 #' which makes the table to show only 2 significant digits for each value,
 #' which is sufficient accuracy and having fewer digits makes the table
