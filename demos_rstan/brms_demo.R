@@ -966,6 +966,7 @@ dat.ursino2021 |>
 #' Each study is using 2--6 different dose levels. Three studies that
 #' include only two dose levels (200 and 400) are likely to provide
 #' weak information on slope.
+crosstab <- with(dat.ursino2021,table(dose,study))
 crosstab |>
   as_tibble() |>
   ggplot(aes(x=study, y=as.numeric(dose), fill=as.factor(n))) +
