@@ -963,14 +963,19 @@ dat.ursino2021 |>
   labs(x='Dose (mg)', y='Count') +
   scale_x_continuous(breaks=seq(100,1000,by=100))
 
-#' Each study is using 2--6 different dose levels. Three studies
-#' that include only two dose levels are likely to provide weak
-#' information on slope.
-crosstab <- with(dat.ursino2021,table(dose,study))
-data.frame(count=colSums(crosstab), study=colnames(crosstab)) |>
-  ggplot(aes(x=count, y=study)) +
-  geom_col(fill=4) +
-  labs(x='Number of dose levels per study', y='Study')
+#' Each study is using 2--6 different dose levels. Three studies that
+#' include only two dose levels (200 and 400) are likely to provide
+#' weak information on slope.
+crosstab |>
+  as_tibble() |>
+  ggplot(aes(x=study, y=as.numeric(dose), fill=as.factor(n))) +
+  geom_tile() +
+  scale_fill_manual(name = "", values = c("white",4)) +
+  scale_y_continuous(breaks=c(100,300,200,400,600,800,1000)) +
+  labs(x="Study", y="Treatment") +
+  theme(legend.position='none',
+        axis.text.x = element_text(angle = 45, hjust=1, vjust=1))
+
 
 #' Pooled model assumes all studies have the same dose effect
 #' (reminder: `~ dose` is equivalent to `~ 1 + dose`).
