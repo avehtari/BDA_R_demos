@@ -491,18 +491,19 @@ prior_summary(fit_lin) |>
 #' produce proper posterior (like in this case). Important part here
 #' is that by default, `brms` sets the prior on Intercept after
 #' centering the covariate values (design matrix). In this case,
-#' `brms` uses `temp - mean(temp) = temp - 1987` instead of original
-#' years. This in general improves the sampling efficiency. As the
-#' `Intercept` is now defined at the middle of the data, the default
-#' `Intercept` prior is centered on median of the target (here target
-#' is `year`). If we would like to set informative priors, we need to
-#' set the informative prior on `Intercept` given the centered
-#' covariate values.
+#' `brms` centers the covariate `year` by subracting the mean year (1987),
+#' and does the regression on centered covariate `year-1987`.
+#' This in general improves the sampling efficiency. The
+#' `Intercept` is now defined at the mean year, and by default
+#' `brms` uses a weak proper prior on `Intercept` centered on median
+#' of the target (`year`). If we would like to set informative priors,
+#' we need to set the informative prior on `Intercept` given the
+#' centered covariate values.
 #'
-#' We can turn of the automatic centering by replacing the formula
-#' with `bf(temp ~ year, center=FALSE)`. Or we can set the prior on
-#' original intercept by using a formula `temp ~ 0 + Intercept +
-#' year`.
+#' Sometimes we prefer to turn of the automatic centering, and we can
+#' do that by replacing the formula with `bf(temp ~ year, center=FALSE)`.
+#' Or we can set the prior on original intercept by
+#' using a formula `temp ~ 0 + Intercept + year`.
 #'
 #' In this case, we are
 #' happy with the default prior for the intercept. In this specific
@@ -1465,7 +1466,7 @@ theta |>
   mutate(treatment_oddsratio = (theta_treatment/(1-theta_treatment))/(theta_placebo/(1-theta_placebo))) |>
   filter(treatment != "Placebo") |>
   ggplot(aes(xdist=treatment_oddsratio, y=treatment)) +
-  stat_halfeye() +
+  stat_slab(scale=1) +
   labs(x='Odds-ratio', y='Treatment', title='Hierarchical over studies, hierarchical over treatments') +
   geom_vline(xintercept=1, linetype='dashed')
 
