@@ -1293,6 +1293,18 @@ data.frame(study='new',
 #' includes results from 39 trials examining pharmacologic treatments
 #' for chronic obstructive pulmonary disease (COPD).
 #'
+#' The dataset comes from a systematic review of randomized
+#' controlled trials on pharmacologic treatments for chronic
+#' obstructive pulmonary disease (COPD)
+#' ([Baker et al., 2009](https://doi.org/10.1592/phco.29.8.891).
+#' 
+#' The primary outcome, occurrence of one or more episodes of COPD
+#' exacerbation, is binary (yes / no). For this outcome, five drug
+#' treatments (fluticasone, budesonide, salmeterol, formoterol,
+#' tiotropium) and two combinations (fluticasone + salmeterol,
+#' budesonide + formoterol) were compared to placebo.
+#' 
+#'
 #' Load data
 load(url('https://github.com/wviechtb/metadat/raw/master/data/dat.baker2009.rda'))
 # force character strings to factors for easier plotting
@@ -1394,7 +1406,8 @@ theta |>
 #' choice.  Posterior predictive checking with kernel density
 #' estimates for the data and 10 posterior predictive replicates shows
 #' clear discrepancy.
-pp_check(fit_pooled, type='dens_overlay')
+pp_check(fit_pooled, type='dens_overlay') +
+ labs(x="Number of individuals with COPD exacerbation(s)")
 
 #' Posterior predictive checking with PIT values and ECDF difference
 #' plot with envelope shows clear discrepancy.
@@ -1432,7 +1445,8 @@ loo_compare(loo(fit_pooled), loo(fit_hier)) |>
 #' Posterior predictive checking with kernel density estimates for the
 #' data and 10 posterior predictive replicates looks good (although
 #' with this many parameters, this check is likely to be optimistic).
-pp_check(fit_hier, type='dens_overlay')
+pp_check(fit_hier, type='dens_overlay') +
+ labs(x="Number of individuals with COPD exacerbation(s)")
 
 #' Posterior predictive checking with PIT values and ECDF difference
 #' plot with envelope looks good (although with this many parameters,
