@@ -973,10 +973,9 @@ crosstab |>
   geom_tile() +
   scale_fill_manual(name = "", values = c("white",4)) +
   scale_y_continuous(breaks=c(100,300,200,400,600,800,1000)) +
-  labs(x="Study", y="Treatment") +
+  labs(x="Study", y="Dose") +
   theme(legend.position='none',
         axis.text.x = element_text(angle = 45, hjust=1, vjust=1))
-
 
 #' Pooled model assumes all studies have the same dose effect
 #' (reminder: `~ dose` is equivalent to `~ 1 + dose`).
