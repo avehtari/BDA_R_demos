@@ -169,14 +169,16 @@ mcmc_hist(draws, pars = 'oddsratio') +
   geom_vline(xintercept = 1) +
   scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))
 
-#' Dots plot with median and 66% and 95% intervals
+#' Quantile dots plot with 100 dots and median and 66% and 95%
+#' intervals. With 100 quantile dots, it's easy too estimate the tail
+#' quantiles and ,tail probabilities from the plot.
 #+ warning=FALSE
 draws |>
   ggplot(aes(x=oddsratio)) + 
-    geom_dotsinterval() + 
-    geom_vline(xintercept = 1) +
-    scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))+
-    labs(x='Odds ratio', y='')
+  stat_dotsinterval(quantiles = 100) + 
+  geom_vline(xintercept = 1) +
+  scale_x_continuous(breaks = c(seq(0.25,1.5,by=0.25)))+
+  labs(x='Odds ratio', y='')
 
 #' Probability (and corresponding MCSE) that oddsratio<1
 draws |>
@@ -400,7 +402,7 @@ fit_grp$summary()
 fit_grp$diagnostic_summary(diagnostics = c("divergences", "treedepth"))
 
 #' We got a small number of divergences, so we increase
-#' `adapt_delta=0.95`. Note that thisis useful only in case of small
+#' `adapt_delta=0.95`. Note that this is useful only in case of small
 #' number of divergences, and increasing `adapt_delta>0.99` doesn't
 #' usually make sense, and in such cases there is need to investigate the
 #' identifiability or parameter transformations.
