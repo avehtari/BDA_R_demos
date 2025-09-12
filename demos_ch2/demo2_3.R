@@ -10,7 +10,7 @@
 
 #' ## Probability of a girl birth given placenta previa (BDA3 p. 37).
 #' 
-#' Simulate samples from Beta(438,544), draw a histogram with
+#' Simulate draws from Beta(438,544), draw a histogram with
 #' quantiles, and do the same for a transformed variable.
 #' 
 
@@ -20,7 +20,7 @@ library(ggplot2)
 theme_set(theme_minimal())
 library(tidyr)
 
-#' Sample from posterior Beta(438,544).
+#' Sample draws from posterior Beta(438,544).
 #' Obtain all draws at once and store them in vector 'theta'
 a <- 438
 b <- 544
@@ -28,7 +28,7 @@ theta <- rbeta(10000, a, b)
 #' Compute odds ratio for all draws
 phi <- (1 - theta) / theta
 
-#' Compute 2.5% and 97.5% quantile approximation using samples
+#' Compute 2.5% and 97.5% quantile approximation using the draws
 quantiles <- c(0.025, 0.975)
 thetaq <- quantile(theta, quantiles)
 phiq <- quantile(phi, quantiles)

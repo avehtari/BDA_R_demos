@@ -30,7 +30,7 @@ S <- diag(2)
 S[1, 2] <- r
 S[2, 1] <- r
 
-#' Draw samples from the toy distribution to visualize 90% HPD
+#' Draw from the toy distribution to visualize 90% HPD
 #' interval with ggplot's stat_ellipse()
 dft <- data.frame(mvrnorm(100000, c(0, 0), S))
 #' see BDA3 p. 85 for how to compute HPD for multivariate normal
@@ -48,12 +48,12 @@ t2 <- 2.5
 M <- 5000
 
 #' Insert your own HMC sampling here
-# Allocate memory for the samples
+# Allocate memory for the draws
 tt <- matrix(rep(0, 2*M), ncol = 2)
 tt[1,] <- c(t1, t2)    # Save starting point
 # For demonstration load pre-computed values
 # Replace this with your algorithm!
-# tt is a M x 2 array, with M samples of both theta_1 and theta_2
+# tt is a M x 2 array, with M draws of both theta_1 and theta_2
 load(root("demos_ch11","demo12_1b.RData"))
 # Here we have intentionally used a very small step size for smooth
 # simulations, but for more efficient simulations larger step size
@@ -74,7 +74,7 @@ dfs <- data.frame(th1 = tt[seq(41,40001,by=40), 1], th2 = tt[seq(41,40001,by=40)
 
 #' Base for the plot
 # Labels and frame indices for the plot
-labs1 <- c('Samples', 'Steps of the sampler', '90% HPD')
+labs1 <- c('Draws', 'Steps of the sampler', '90% HPD')
 p0 <- ggplot() +
   stat_ellipse(data = dft, aes(x = X1, y = X2, color = '3'), level = 0.9) +
   coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3)) +

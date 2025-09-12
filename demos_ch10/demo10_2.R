@@ -48,7 +48,7 @@ distr <- ggplot(data = df1) +
   scale_color_discrete(labels = c('g(theta|y)', 'q(theta)')) +
   theme(legend.position = 'bottom', legend.title = element_blank())
 
-#' Create a plot of the samples and importance weights
+#' Create a plot of the draws and importance weights
 samp <- ggplot() +
   geom_line(aes(x, w, color = '1')) +
   geom_segment(aes(x = x[rsi], xend = x[rsi], y = 0, yend = wr),

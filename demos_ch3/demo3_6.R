@@ -101,7 +101,7 @@ pos <- ggplot(data = data.frame(cA ,cB, p), aes(cA, cB)) +
   scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
   scale_alpha(range = c(0, 1), guide = F)
 
-#' Plot of the samples
+#' Plot of the draws
 sam <- ggplot(data = samps) +
   geom_point(aes(alpha, beta), color = 'blue') +
   coord_cartesian(xlim = xl, ylim = yl) +

@@ -71,7 +71,7 @@ pos <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
   scale_alpha(range = c(0, 1), guide = F)
 
-#' Plot of the samples
+#' Plot of the draws
 sam <- ggplot(data = data.frame(samp_A, samp_B)) +
   geom_point(aes(samp_A, samp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
@@ -109,7 +109,7 @@ p <- apply(cbind(cA, cB), 1, dmvnorm, w, S)
 # sample from the multivariate normal 
 normsamp <- mvrnorm(nsamp, w, S)
 
-#' Samples of LD50 conditional beta > 0:
+#' Draws of LD50 conditional beta > 0:
 #' Normal approximation does not take into account that the posterior
 #' is not symmetric and that there is very low density for negative
 #' beta values. Based on the draws from the normal approximation
@@ -126,7 +126,7 @@ pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
   scale_alpha(range = c(0, 1), guide = F)
 
-#' Plot of the samples
+#' Plot of the draws
 sam_norm <- ggplot(data = data.frame(samp_A=normsamp[,1], samp_B=normsamp[,2])) +
   geom_point(aes(samp_A, samp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +

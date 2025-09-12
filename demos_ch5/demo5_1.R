@@ -101,9 +101,9 @@ df_psamp <- mapply(function(a, b, x) dbeta(x, a, b),
   pivot_longer(cols = !x, names_to = "ind", values_to = "p")
 
 
-#' Create plot for samples from the distribution of distributions
+#' Create plot for draws from the distribution of distributions
 #' Beta(alpha,beta), that is, plot Beta(alpha,beta) using posterior
-#' samples of alpha and beta
+#' draws of alpha and beta
 # helper function to convert ind to numeric for subsetting
 indtonum <- function(x) strtoi(substring(x,2))
 title2 <- TeX('Beta($\\alpha,\\beta$) given posterior draws of $\\alpha$ and $\\beta$')
@@ -117,7 +117,7 @@ plot_psamp <- ggplot(data = subset(df_psamp, indtonum(ind) <= 20)) +
 df_psampmean <- spread(df_psamp, ind, p) %>% subset(select = -x) %>%
     rowMeans() %>% data.frame(x = x, p = .)
 
-#' Create plot for samples from the predictive distribution for new theta
+#' Create plot for draws from the predictive distribution for new theta
 title3 <- TeX('Population distribution (prior) for $\\theta_j$')
 plot_psampmean <- ggplot(data = df_psampmean) +
   geom_line(aes(x = x, y = p), color='forestgreen') +
@@ -145,7 +145,7 @@ plot_sep7 <- ggplot(data = subset(df_sep, indtonum(ind)%%7==0)) +
 #' in the separate model case, due to the borrowed information from the
 #' other theta_j's
 #' 
-#' Average density over samples (of a and b) for each (n,y)-pair
+#' Average density over the draws (of a and b) for each (n,y)-pair
 #' at each point x
 bdens2 <- function(n, y, a, b, x)
   rowMeans(mapply(dbeta, a + y, n - y + b, MoreArgs = list(x = x)))

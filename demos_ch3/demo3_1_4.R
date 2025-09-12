@@ -66,7 +66,7 @@ xynew <- seq(nl[1], nl[2], length.out = ns)
 # variable z=(x-mean(y))/sqrt(s2/n), see BDA3 p. 21
 pm <- dt((t1-my) / sqrt(s2/n), n-1) / sqrt(s2/n)
 
-#' Estimate the marginal density using samples
+#' Estimate the marginal density using the draws
 #' and ad hoc Gaussian kernel approximation
 pmk <- density(mu, adjust = 2, n = ns, from = t1l[1], to = t1l[2])$y
 
@@ -75,7 +75,7 @@ pmk <- density(mu, adjust = 2, n = ns, from = t1l[1], to = t1l[2])$y
 # variable z=t2^2, see BDA3 p. 21
 ps <- dsinvchisq(t2^2, n-1, s2) * 2*t2
 
-#' Estimate the marginal density using samples
+#' Estimate the marginal density using the draws
 #' and ad hoc Gaussian kernel approximation
 psk <- density(sigma, n = ns, from = t2l[1], to = t2l[2])$y
 
@@ -125,7 +125,7 @@ margsig <- ggplot(dfs) +
         legend.title = element_blank())
 
 #' Create a plot of the joint density
-joint1labs <- c('Samples','Exact contour')
+joint1labs <- c('Draws','Exact contour')
 joint1 <- ggplot() +
   geom_point(data = data.frame(mu,sigma), aes(mu, sigma, col = '1'), size = 0.1) +
   geom_contour(data = dfj, aes(t1, t2, z = z, col = '2'), breaks = cl) +
@@ -193,12 +193,12 @@ grid.arrange(joint2, margsig2, ncol = 2)
 condpdfs <- sapply(t1, function(x) dnorm(x, my, sqrt(sigma2/n)))
 
 #' Create a plot of some of them
-# data frame of 25 first samples
+# data frame of 25 first draws
 dfm25 <- data.frame(t1, t(condpdfs[1:25,])) %>%
   pivot_longer(cols = !t1, names_to="grp", values_to="p")
 condmu <- ggplot(data = dfm25) +
   geom_line(aes(t1, p, group = grp), linetype = 'dashed') +
-  labs(title = 'Conditional distribution of mu for first 25 samples', y = '', x = '') +
+  labs(title = 'Conditional distribution of mu for first 25 draws', y = '', x = '') +
   scale_y_continuous(breaks = NULL)
 
 #' create a plot of their mean
@@ -230,12 +230,12 @@ ynewdists <- sapply(xynew, function(x) dnorm(x, mu, sigma))
 #' create a plot of the joint density
 # data frame of dirst draw from sample the predictive along with the exact value for plotting
 dfp <- data.frame(xynew, draw = ynewdists[1,], exact = p_new)
-# data frame for plotting the samples
+# data frame for plotting the draws
 dfy <- data.frame(ynew, p = 0.02*max(ynewdists))
 # legend labels
 pred1labs <- c('Sample from the predictive distribution', 'Predictive distribution given the posterior sample')
-pred2labs <- c('Samples from the predictive distribution', 'Exact predictive distribution')
-joint3labs <- c('Samples', 'Exact contour')
+pred2labs <- c('Draws from the predictive distribution', 'Exact predictive distribution')
+joint3labs <- c('Draws', 'Exact contour')
 joint3 <- ggplot() +
   geom_point(data = data.frame(mu, sigma), aes(mu, sigma, col = '1'), size = 0.1) +
   geom_contour(data = dfj, aes(t1, t2, z = z, col = '2'), breaks = cl) +

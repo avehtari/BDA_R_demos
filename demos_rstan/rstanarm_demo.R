@@ -79,13 +79,13 @@ mean(draws$theta)
 mcmc_hist(draws, pars='theta') + xlab('theta')
 
 
-#' We next compare the result to using the default prior which is normal(0, 2.5) on logit probability. Visualize the prior by drawing samples from it
+#' We next compare the result to using the default prior which is normal(0, 2.5) on logit probability. Visualize the prior with prior draws
 prior_mean <- 0
 prior_sd <- 2.5
 prior_intercept <- normal(location = prior_mean, scale = prior_sd)
-prior_samples <- data.frame(
+prior_draws <- data.frame(
                  theta = plogis(rnorm(20000, prior_mean, prior_sd)))
-mcmc_hist(prior_samples)
+mcmc_hist(prior_draws)
 
 
 fit_bern <- stan_glm(y ~ 1, family = binomial(), data = data_bern,
@@ -115,13 +115,13 @@ mcmc_hist(draws, pars='theta') + xlab('theta')
 #' 
 #' Instead of sequence of 0's and 1's, we can summarize the data with the number of experiments and the number successes. Binomial model with a approximately uniform prior for the probability of success. The prior is specified in the 'latent space'. The actual probability of success, theta = plogis(alpha), where plogis is the inverse of the logistic function.
 #' 
-#' Visualize the prior by drawing samples from it
+#' Visualize the prior with prior draws
 prior_mean <- 0
 prior_sd <- 1.5
 prior_intercept <- normal(location = prior_mean, scale = prior_sd)
-prior_samples <- data.frame(
+prior_draws <- data.frame(
                  theta = plogis(rnorm(20000, prior_mean, prior_sd)))
-mcmc_hist(prior_samples)
+mcmc_hist(prior_draws)
 
 
 #' Binomial model (we are not able to replicate the Binomial example in rstan_demo exactly, as `stan_glm` does not accept just one observation, so the Bernoulli is needed for the same model, and Binomial will be demonstrated first with other data).

@@ -81,7 +81,7 @@ pos <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   scale_alpha(range = c(0, 1), guide = "none")
 pos
 
-#' Plot of the samples
+#' Plot of the draws
 sam <- ggplot(data = data.frame(samp_A, samp_B)) +
   geom_point(aes(samp_A, samp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
@@ -139,7 +139,7 @@ pos_norm <- ggplot(data = data.frame(cA ,cB, p), aes(x = cA, y = cB)) +
   scale_alpha(range = c(0, 1), guide = "none")
 pos_norm
 
-#' Plot of the samples
+#' Plot of the draws
 sam_norm <- ggplot(data = data.frame(samp_A=samp_norm[,1], samp_B=samp_norm[,2])) +
   geom_point(aes(samp_A, samp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
@@ -185,10 +185,10 @@ rissamp_B <- samp_norm[samp_indices,2]
 # add random jitter, see BDA3 p. 76
 rissamp_A <- rissamp_A + runif(nsamp, (A[1] - A[2])/2, (A[2] - A[1])/2)
 rissamp_B <- rissamp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
-# samples of LD50 
+# posterior draws of LD50 
 rissamp_ld50 <- -rissamp_A/rissamp_B
 
-#' Plot of the samples
+#' Plot of the draws
 sam_ris <- ggplot(data = data.frame(rissamp_A, rissamp_B)) +
   geom_point(aes(rissamp_A, rissamp_B), color = 'blue', size = 0.3) +
   coord_cartesian(xlim = xl, ylim = yl) +
