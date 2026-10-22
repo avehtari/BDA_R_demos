@@ -114,12 +114,20 @@ ppc_hist(y, y_rep[1:8, ], binwidth = 1)
 ppc_dens_overlay(y, y_rep[1:50, ])
 ```
 
-## Rootogram shows the square root of counts
+## Rootograms
 
-Rootogram shows the square root of counts, with histogram for the observed data and and model predictions (yrep) as a ribbon
+Rootograms are a graphical tool to assess the fit of count data models
+(Tukey 1977; Kleiber and Zeileis 2016). There are a few variations of
+this type of plots. For the one presented here we use the square root of the frequency 
+(the number of observations with each count value) on the y-axis. The square root scale makes
+it easier to compare observed and expected frequencies, even for low frequencies. The observed 
+data are represented by points, while the model predictions are shown as point-intervals. 
+Squares indicate that the observed data match the model predictions within the uncertainty
+intervals, and diamonds indicate that the observed data fall outside the predictive intervals.
+
 
 ```{r ppc-rootogram}
-ppc_rootogram(y, y_rep)
+ppc_rootogram(y, y_rep, style="discrete")
 ```
 
 ## Compare proportion of zeros in `y` to the distribution of that proportion over all `y_rep`s
@@ -194,7 +202,7 @@ ppc_dens_overlay(y, y_rep2[1:50, ])
 ```
 
 ```{r ppc-rootogram-2}
-ppc_rootogram(y, y_rep2)
+ppc_rootogram(y, y_rep2, style="discrete")
 ```
 
 ```{r, prop-zero-2, message=FALSE}
@@ -219,3 +227,11 @@ loo_compare(loo1, loo2)
 
 Model 2 is a clear winner in the predictive performance.
 
+
+# References {.unnumbered}
+
+- Kleiber, C. and Zeileis, A. (2016). Visualizing count data regressions
+  using rootograms. *The American Statistician*, 70(3):296-303.
+  [doi:10.1080/00031305.2016.1173590](https://doi.org/10.1080/00031305.2016.1173590)
+
+- Tukey, J. W. (1977). *Exploratory Data Analysis*. 1st edition. Pearson.
